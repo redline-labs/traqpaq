@@ -1,4 +1,3 @@
-/*This file is prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief Preprocessor utils.

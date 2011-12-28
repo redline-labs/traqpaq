@@ -38,6 +38,14 @@
 #ifndef _WDT_H_
 #define _WDT_H_
 
+/**
+ * \defgroup group_avr32_drivers_wdt TIMING - WDT - Watchdog Timer
+ *
+ * Driver for the Watchdog Timer. Provides functions for selecting the mode, setting the time-out period, and enabling/disabling the Watchdog Timer.
+ *
+ * \{
+ */
+
 // These defines are missing from or wrong in the toolchain header file ip_xxx.h or part.h
 #if !defined(AVR32_SCIF_OSC32_FREQUENCY)
 #define AVR32_SCIF_OSC32_FREQUENCY         32768
@@ -136,5 +144,9 @@ void wdt_clear(void);
  * \brief Resets the MCU with the WatchDog Timer as fast as possible.
  */
 void wdt_reset_mcu(void);
+
+/**
+ * \}
+ */
 
 #endif  // _WDT_H_

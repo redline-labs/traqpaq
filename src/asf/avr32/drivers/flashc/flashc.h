@@ -40,6 +40,14 @@
 #ifndef _FLASHC_H_
 #define _FLASHC_H_
 
+/**
+ * \defgroup group_avr32_drivers_flashc MEMORY - FLASHC - Flash Controller
+ *
+ * FLASHC interfaces a flash block with the 32-bit internal HSB bus.
+ *
+ * \{
+ */
+
 #include <avr32/io.h>
 #include <stddef.h>
 #include "compiler.h"
@@ -540,7 +548,7 @@ extern bool flashc_erase_all_gp_fuses(bool check);
  * \note The FLASHC error status returned by \ref flashc_is_lock_error and
  *       \ref flashc_is_programming_error is updated.
  *
- * \note A write operation can only clear bits; in other words, an erase operation 
+ * \note A write operation can only clear bits; in other words, an erase operation
  *  must first be done if some bits need to be set to 1.
  *
  * \note The actual number of general-purpose fuse bits implemented by hardware
@@ -563,7 +571,7 @@ extern void flashc_write_gp_fuse_bit(unsigned int gp_fuse_bit, bool value);
  * \note The FLASHC error status returned by \ref flashc_is_lock_error and
  *       \ref flashc_is_programming_error is updated.
  *
- * \note A write operation can only clear bits; in other words, an erase operation 
+ * \note A write operation can only clear bits; in other words, an erase operation
  *  must first be done if some bits need to be set to 1.
  *
  * \note The actual number of general-purpose fuse bits implemented by hardware
@@ -582,7 +590,7 @@ extern void flashc_write_gp_fuse_bitfield(unsigned int pos, unsigned int width, 
  * \note The FLASHC error status returned by \ref flashc_is_lock_error and
  *       \ref flashc_is_programming_error is updated.
  *
- * \note A write operation can only clear bits; in other words, an erase operation 
+ * \note A write operation can only clear bits; in other words, an erase operation
  *  must first be done if some bits need to be set to 1.
  *
  * \note The actual number of general-purpose fuse bits implemented by hardware
@@ -600,7 +608,7 @@ extern void flashc_write_gp_fuse_byte(unsigned int gp_fuse_byte, uint8_t value);
  * \note The FLASHC error status returned by \ref flashc_is_lock_error and
  *       \ref flashc_is_programming_error is updated.
  *
- * \note A write operation can only clear bits; in other words, an erase operation 
+ * \note A write operation can only clear bits; in other words, an erase operation
  *  must first be done if some bits need to be set to 1.
  *
  * \note The actual number of general-purpose fuse bits implemented by hardware
@@ -775,7 +783,7 @@ extern bool flashc_erase_all_pages(bool check);
  * \note The FLASHC error status returned by \ref flashc_is_lock_error and
  *       \ref flashc_is_programming_error is updated.
  *
- * \note A write operation can only clear bits; in other words, an erase operation 
+ * \note A write operation can only clear bits; in other words, an erase operation
  *  must first be done if some bits need to be set to 1.
  */
 extern void flashc_write_page(int page_number);
@@ -810,7 +818,7 @@ extern bool flashc_erase_user_page(bool check);
  * \note The FLASHC error status returned by \ref flashc_is_lock_error and
  *       \ref flashc_is_programming_error is updated.
  *
- * \note A write operation can only clear bits; in other words, an erase operation 
+ * \note A write operation can only clear bits; in other words, an erase operation
  *  must first be done if some bits need to be set to 1.
  */
 extern void flashc_write_user_page(void);
@@ -992,5 +1000,8 @@ void flashc_set_flash_waitstate_and_readmode(unsigned long cpu_f_hz);
 
 //! @}
 
+/**
+ * \}
+ */
 
 #endif  // _FLASHC_H_

@@ -1,4 +1,3 @@
-/*This file is prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief Arch file for AVR32.
@@ -52,24 +51,20 @@
 #define UC3A0    (( defined (__GNUC__) && \
                    ( defined (__AVR32_UC3A0128__)   || \
                      defined (__AVR32_UC3A0256__)   || \
-                     defined (__AVR32_UC3A0512__)   || \
-                     defined (__AVR32_UC3A0512ES__)))  \
+                     defined (__AVR32_UC3A0512__)))  \
             ||((defined(__ICCAVR32__) || defined(__AAVR32__)) && \
                    ( defined (__AT32UC3A0128__)     || \
                      defined (__AT32UC3A0256__)     || \
-                     defined (__AT32UC3A0512__)     || \
-                     defined (__AT32UC3A0512ES__))))
+                     defined (__AT32UC3A0512__))))
 
 #define UC3A1    (( defined (__GNUC__) && \
                    ( defined (__AVR32_UC3A1128__)   || \
                      defined (__AVR32_UC3A1256__)   || \
-                     defined (__AVR32_UC3A1512__)   || \
-                     defined (__AVR32_UC3A1512ES__)))  \
+                     defined (__AVR32_UC3A1512__)))  \
             ||((defined(__ICCAVR32__) || defined(__AAVR32__)) && \
                    ( defined (__AT32UC3A1128__)     || \
                      defined (__AT32UC3A1256__)     || \
-                     defined (__AT32UC3A1512__)     || \
-                     defined (__AT32UC3A1512ES__))))
+                     defined (__AT32UC3A1512__))))
 
 #define UC3A3  (( defined (__GNUC__) && \
                    ( defined (__AVR32_UC3A364__)    || \
@@ -108,46 +103,27 @@
                    ( defined (__AVR32_UC3B064__)     || \
                      defined (__AVR32_UC3B0128__)    || \
                      defined (__AVR32_UC3B0256__)    || \
-                     defined (__AVR32_UC3B0256ES__)  || \
-                     defined (__AVR32_UC3B0512__)    || \
-                     defined (__AVR32_UC3B0512REVC_))) \
+                     defined (__AVR32_UC3B0512__))) \
             ||((defined(__ICCAVR32__) || defined(__AAVR32__)) && \
                    ( defined (__AT32UC3B064__)       || \
                      defined (__AT32UC3B0128__)      || \
                      defined (__AT32UC3B0256__)      || \
-                     defined (__AT32UC3B0256ES__)    || \
-                     defined (__AT32UC3B0512__)      || \
-                     defined (__AT32UC3B0512REVC__))))
+                     defined (__AT32UC3B0512__))))
 
 #define UC3B1  (( defined (__GNUC__) && \
                    ( defined (__AVR32_UC3B164__)     || \
                      defined (__AVR32_UC3B1128__)    || \
                      defined (__AVR32_UC3B1256__)    || \
-                     defined (__AVR32_UC3B1256ES__)  || \
-                     defined (__AVR32_UC3B1512__)    || \
-                     defined (__AVR32_UC3B1512ES__))) \
+                     defined (__AVR32_UC3B1512__))) \
             ||((defined(__ICCAVR32__) || defined(__AAVR32__)) && \
                    ( defined (__AT32UC3B164__)       || \
                      defined (__AT32UC3B1128__)      || \
                      defined (__AT32UC3B1256__)      || \
-                     defined (__AT32UC3B1256ES__)    || \
-                     defined (__AT32UC3B1512__)      || \
-                     defined (__AT32UC3B1512REVC__))))
+                     defined (__AT32UC3B1512__))))
 
 #define UC3B (UC3B0 || UC3B1 )
 
 // UC3 C Series
-#define UC3C0_REVC    (( defined (__GNUC__) && \
-                   ( defined (__AVR32_UC3C064CREVC__)   || \
-                     defined (__AVR32_UC3C0128CREVC__)  || \
-                     defined (__AVR32_UC3C0256CREVC__)  || \
-                     defined (__AVR32_UC3C0512CREVC__)))  \
-            ||((defined(__ICCAVR32__) || defined(__AAVR32__)) && \
-                   ( defined (__AT32UC3C064CREVC__)     || \
-                     defined (__AT32UC3C0128CREVC__)    || \
-                     defined (__AT32UC3C0256CREVC__)    || \
-                     defined (__AT32UC3C0512CREVC__))))
-
 #define UC3C0    (( defined (__GNUC__) && \
                    ( defined (__AVR32_UC3C064C__)       || \
                      defined (__AVR32_UC3C0128C__)      || \
@@ -158,17 +134,6 @@
                      defined (__AT32UC3C0128C__)        || \
                      defined (__AT32UC3C0256C__)        || \
                      defined (__AT32UC3C0512C__))))
-
-#define UC3C1_REVC    (( defined (__GNUC__) && \
-                   ( defined (__AVR32_UC3C164CREVC__)   || \
-                     defined (__AVR32_UC3C1128CREVC__)  || \
-                     defined (__AVR32_UC3C1256CREVC__)  || \
-                     defined (__AVR32_UC3C1512CREVC__)))  \
-            ||((defined(__ICCAVR32__) || defined(__AAVR32__)) && \
-                   ( defined (__AT32UC3C164CREVC__)     || \
-                     defined (__AT32UC3C1128CREVC__)    || \
-                     defined (__AT32UC3C1256CREVC__)    || \
-                     defined (__AT32UC3C1512CREVC__))))
 
 #define UC3C1    (( defined (__GNUC__) && \
                    ( defined (__AVR32_UC3C164C__)       || \
@@ -181,17 +146,6 @@
                      defined (__AT32UC3C1256C__)        || \
                      defined (__AT32UC3C1512C__))))
 
-#define UC3C2_REVC    (( defined (__GNUC__) && \
-                   ( defined (__AVR32_UC3C264CREVC__)   || \
-                     defined (__AVR32_UC3C2128CREVC__)  || \
-                     defined (__AVR32_UC3C2256CREVC__)  || \
-                     defined (__AVR32_UC3C2512CREVC__)))  \
-            ||((defined(__ICCAVR32__) || defined(__AAVR32__)) && \
-                   ( defined (__AT32UC3C264CREVC__)     || \
-                     defined (__AT32UC3C2128CREVC__)    || \
-                     defined (__AT32UC3C2256CREVC__)    || \
-                     defined (__AT32UC3C2512CREVC__))))
-
 #define UC3C2    (( defined (__GNUC__) && \
                    ( defined (__AVR32_UC3C264C__)       || \
                      defined (__AVR32_UC3C2128C__)      || \
@@ -203,8 +157,8 @@
                      defined (__AT32UC3C2256C__)        || \
                      defined (__AT32UC3C2512C__))))
 
-#define UC3C_REVC (UC3C0_REVC || UC3C1_REVC || UC3C2_REVC)
-#define UC3C (UC3C0 || UC3C0_REVC || UC3C1 || UC3C1_REVC || UC3C2 || UC3C2_REVC)
+
+#define UC3C (UC3C0 || UC3C1 || UC3C2 )
 
 // UC3 L Device series
 #define UC3L0 (( defined (__GNUC__) && \
@@ -216,6 +170,25 @@
                     defined (__AT32UC3L032__)     || \
                     defined (__AT32UC3L064__))))
 
+#define UC3L3 (( defined (__GNUC__) && \
+                  ( defined (__AVR32_UC64L3U__)     || \
+                    defined (__AVR32_UC128L3U__)     || \
+                    defined (__AVR32_UC256L3U__))) \
+             ||((defined(__ICCAVR32__) || defined(__AAVR32__)) && \
+                  ( defined (__ATUC64L3U__)     || \
+                    defined (__ATUC128L3U__)     || \
+                    defined (__ATUC256L3U__))))
+#define UC3L4 (( defined (__GNUC__) && \
+                  ( defined (__AVR32_UC64L4U__)     || \
+                    defined (__AVR32_UC128L4U__)     || \
+                    defined (__AVR32_UC256L4U__))) \
+             ||((defined(__ICCAVR32__) || defined(__AAVR32__)) && \
+                  ( defined (__ATUC64L4U__)     || \
+                    defined (__ATUC128L4U__)     || \
+                    defined (__ATUC256L4U__))))
+
+#define UC3L3_L4 (UC3L3 || UC3L4)
+
 #define UC3L0128 (( defined (__GNUC__) && \
                   ( defined (__AVR32_UC3L0128__))) \
            ||((defined(__ICCAVR32__) || defined(__AAVR32__)) && \
@@ -226,7 +199,7 @@
            ||((defined(__ICCAVR32__) || defined(__AAVR32__)) && \
                   ( defined (__AT32UC3L0256__))))
 
-#define UC3L ( UC3L0 || UC3L0128 || UC3L0256 )
+#define UC3L ( UC3L0 || UC3L0128 || UC3L0256 || UC3L3_L4)
 
 // UC3 D Device series
 #define UC3D3 (( defined (__GNUC__) && \

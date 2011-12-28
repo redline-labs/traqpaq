@@ -1,4 +1,3 @@
-/*This file is prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief Preprocessor token pasting utils.
@@ -45,6 +44,13 @@
 #ifndef _TPASTE_H_
 #define _TPASTE_H_
 
+/**
+ * \defgroup group_avr32_utils_tpaste Preprocessor - Token Paste
+ *
+ * \ingroup group_avr32_utils
+ *
+ * \{
+ */
 
 /*! \name Token Paste
  *
@@ -89,5 +95,8 @@
 #define ATPASTE10(a, b, c, d, e, f, g, h, i, j)   TPASTE10(a, b, c, d, e, f, g, h, i, j)
 //! @}
 
+/**
+ * \}
+ */
 
 #endif  // _TPASTE_H_

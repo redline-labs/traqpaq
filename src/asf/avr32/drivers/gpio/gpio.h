@@ -1,4 +1,3 @@
-/*This file has been prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief GPIO software driver interface for AVR UC3.
@@ -45,6 +44,14 @@
 
 #ifndef _GPIO_H_
 #define _GPIO_H_
+
+/**
+ * \defgroup group_avr32_drivers_gpio GPIO - General-Purpose Input/Output
+ *
+ * GPIO gives access to the MCU pins.
+ *
+ * \{
+ */
 
 #include <avr32/io.h>
 #include "compiler.h"
@@ -676,5 +683,8 @@ extern int gpio_configure_pin_periph_event_mode(uint32_t pin, uint32_t mode, uin
 //! @}
 #endif
 
+/**
+ * \}
+ */
 
 #endif  // _GPIO_H_

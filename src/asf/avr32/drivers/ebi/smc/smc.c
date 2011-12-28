@@ -1,4 +1,3 @@
-/*This file is prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief SMC on EBI driver for AVR32 UC3.

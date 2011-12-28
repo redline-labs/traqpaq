@@ -39,6 +39,15 @@
 #ifndef _COMPILER_AVR32_H_
 #define _COMPILER_AVR32_H_
 
+/**
+ * \defgroup group_avr32_utils Compiler abstraction layer and code utilities
+ *
+ * Compiler abstraction layer and code utilities for 32-bit AVR.
+ * This module provides various abstraction layers and utilities to make code compatible between different compilers.
+ *
+ * \{
+ */
+
 #if (defined __ICCAVR32__)
 #  include <intrinsics.h>
 #endif
@@ -1238,5 +1247,8 @@ typedef U8                  Byte;       //!< 8-bit unsigned integer.
 
 #endif  // __AVR32_ABI_COMPILER__
 
+/**
+ * \}
+ */
 
 #endif  // _COMPILER_AVR32_H_

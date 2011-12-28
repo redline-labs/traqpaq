@@ -1,4 +1,3 @@
-/*This file is prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief USART driver for AVR32 UC3.
@@ -48,6 +47,15 @@
 
 #ifndef _USART_H_
 #define _USART_H_
+
+/**
+ * \defgroup group_avr32_drivers_usart USART - Univ. Sync/Async Serial Rec/Trans
+ *
+ * Driver for the USART (Universal Synchronous Asynchronous Receiver Transmitter).
+ * The driver supports the following  modes: RS232, RS485, SPI, LIN and ISO7816.
+ *
+ * \{
+ */
 
 #include <avr32/io.h>
 #include "compiler.h"
@@ -883,5 +891,8 @@ static inline int usart_lin_transfer_completed(volatile avr32_usart_t *usart)
 
 //! @}
 
+/**
+ * \}
+ */
 
 #endif  // _USART_H_

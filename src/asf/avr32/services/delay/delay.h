@@ -1,4 +1,3 @@
-/*This file is prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief AT32UC3 delay management header file.
@@ -48,6 +47,15 @@
 #ifndef _DELAY_H_
 #define _DELAY_H_
 
+/**
+ * \defgroup group_avr32_services_basic_delay TIMING - Delay function
+ *
+ * Driver for busy-waiting. Supports delaying a number of milliseconds,
+ * and works in both standalone and with FreeRTOS.
+ *
+ * \{
+ */
+
 #include "compiler.h"
 #ifdef FREERTOS_USED
 # include "FreeRTOS.h"
@@ -55,7 +63,6 @@
 #else
 # include "cycle_counter.h"
 #endif
-
 
 /*!
  * \brief Initialize the delay driver.
@@ -74,5 +81,8 @@ extern void delay_init(unsigned long fcpu_hz);
  */
 extern void delay_ms(unsigned long delay);
 
+/**
+ * \}
+ */
 
 #endif  // _DELAY_H_

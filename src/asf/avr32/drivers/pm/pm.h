@@ -1,4 +1,3 @@
-/*This file has been prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief Power Manager driver.
@@ -13,7 +12,7 @@
  *
  *****************************************************************************/
 
-/* Copyright (c) 2009 Atmel Corporation. All rights reserved.
+/* Copyright (c) 2009-2011 Atmel Corporation. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -47,10 +46,22 @@
 #ifndef _PM_H_
 #define _PM_H_
 
+/**
+ * \defgroup group_avr32_drivers_pm CPU - PM - Power Manager
+ *
+ * The Power Manager (PM) controls the oscillators and PLLs, and generates the clocks and resets in the device.
+ *
+ * \{
+ */
+
 #include <avr32/io.h>
 #include "compiler.h"
 #include "preprocessor.h"
 
+
+/*! \name Sleep Functions
+ */
+//! @{
 
 /*! \brief Sets the MCU in the specified sleep mode.
  *
@@ -63,6 +74,36 @@
  *   \arg \c AVR32_PM_SMODE_STATIC: Static.
  */
 #define SLEEP(mode)   {__asm__ __volatile__ ("sleep "STRINGZ(mode));}
+
+/*! \brief Enable one or several asynchronous wake-up source.
+ *
+ * \param awen_mask Mask of asynchronous wake-up sources (use one of the defines
+ *  AVR32_PM_AWEN_xxxxWEN_MASK in the part-specific header file under
+ *  "toolchain folder"/avr32/inc(lude)/avr32/)
+ */
+#if defined (__GNUC__)
+__attribute__((__always_inline__))
+#endif
+static inline void pm_asyn_wake_up_enable(unsigned long awen_mask)
+{
+  AVR32_PM.awen |= awen_mask;
+}
+
+/*! \brief Disable one or several asynchronous wake-up sources
+ *
+ * \param awen_mask Mask of asynchronous wake-up sources (use one of the defines
+ *  AVR32_PM_AWEN_xxxxWEN_MASK in the part-specific header file under
+ *  "toolchain folder"/avr32/inc(lude)/avr32/)
+ */
+#if defined (__GNUC__)
+__attribute__((__always_inline__))
+#endif
+static inline void pm_asyn_wake_up_disable(unsigned long awen_mask)
+{
+  AVR32_PM.awen &= ~awen_mask;
+}
+
+//! @}
 
 
 //! Input and output parameters when initializing PM clocks using pm_configure_clocks().
@@ -511,5 +552,8 @@ extern int pm_configure_clocks(pm_freq_param_t *param);
  */
 extern void pm_configure_usb_clock(void);
 
+/**
+ * \}
+ */
 
 #endif  // _PM_H_

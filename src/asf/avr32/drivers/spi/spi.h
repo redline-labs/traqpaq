@@ -1,4 +1,3 @@
-/*This file is prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief SPI driver for AVR32 UC3.
@@ -48,6 +47,16 @@
 
 #ifndef _SPI_H_
 #define _SPI_H_
+
+/**
+ * \defgroup group_avr32_drivers_spi SPI - Serial Peripheral Interface
+ *
+ * Driver for the SPI (Serial Peripheral Interface).
+ * The SPI circuit is a synchronous serial data link that provides communication with external devices in Master
+ * or Slave mode. Connection to Peripheral DMA Controller channel capabilities optimizes data transfers.
+ *
+ * \{
+ */
 
 #include "compiler.h"
 
@@ -381,7 +390,7 @@ static inline void spi_set_mode(volatile avr32_spi_t *spi,uint8_t chip_select,
 /*! \brief Put one data to a SPI peripheral.
  *
  * \param spi Base address of the SPI instance.
- * \param data The data byte to be loaded 
+ * \param data The data byte to be loaded
  *
  */
 static inline void spi_put(volatile avr32_spi_t *spi, uint16_t data)
@@ -392,7 +401,7 @@ static inline void spi_put(volatile avr32_spi_t *spi, uint16_t data)
 /*! \brief Get one data to a SPI peripheral.
  *
  * \param spi Base address of the SPI instance.
- * \return The data byte 
+ * \return The data byte
  *
  */
 static inline uint16_t spi_get(volatile avr32_spi_t *spi)
@@ -694,5 +703,9 @@ extern spi_status_t spi_read(volatile avr32_spi_t *spi, uint16_t *data);
  *   \retval SPI_ERROR_OVERRUN_AND_MODE_FAULT Overrun error and mode fault.
  */
 extern unsigned char spi_getStatus(volatile avr32_spi_t *spi);
+
+/**
+ * \}
+ */
 
 #endif  // _SPI_H_

@@ -1,4 +1,3 @@
-/*This file has been prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief TWI driver for AVR32 UC3.
@@ -47,6 +46,17 @@
 
 #ifndef _TWI_H_
 #define _TWI_H_
+
+/**
+ * \defgroup group_avr32_drivers_twi TWI - Two-Wire Interface
+ *
+ * Driver for the TWI (Two-Wire Interface). This driver provides access to the main features of the TWI controller.
+ * The TWI interconnects components on a unique two-wire bus.
+ * The TWI is programmable as a master or a slave with sequential or single-byte access.
+ * Multiple master capability is supported.
+ *
+ * \{
+ */
 
 #include <avr32/io.h>
 
@@ -212,5 +222,8 @@ extern int twi_master_write_ex(volatile avr32_twi_t *twi, const twi_package_t *p
  */
 extern bool twi_is_busy(void);
 
+/**
+ * \}
+ */
 
 #endif  // _TWI_H_

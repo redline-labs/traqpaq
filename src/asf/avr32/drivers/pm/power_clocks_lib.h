@@ -1,4 +1,3 @@
-/*This file has been prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief High-level library abstracting features such as oscillators/pll/dfll
@@ -49,6 +48,13 @@
 #ifndef _POWER_CLOCKS_LIB_H_
 #define _POWER_CLOCKS_LIB_H_
 
+/**
+ * \defgroup group_avr32_drivers_pm_power_clocks_lib Power Clocks Library
+ * \ingroup group_avr32_drivers_pm
+ *
+ * \{
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -61,7 +67,7 @@ extern "C" {
   #include "pm.h"
 #else
 //! Device-specific data
-#if UC3L 
+#if UC3L
   #include "pm_uc3l.h"
   #include "scif_uc3l.h"
   #include "flashcdw.h"
@@ -143,7 +149,7 @@ typedef struct
 
   //! DFLL target frequency (input/output argument) (NOTE: the bigger, the most stable the frequency)
   unsigned long dfll_f;
-  
+
   //! Other parameters that might be necessary depending on the device (implementation-dependent).
   // For the UC3L DFLL setup, this parameter should be pointing to a structure of
   // type (scif_gclk_opt_t *).
@@ -377,5 +383,9 @@ extern void pcl_write_gplp(unsigned long gplp, unsigned long value);
 #ifdef __cplusplus
 }
 #endif
+
+/**
+ * \}
+ */
 
 #endif  // _POWER_CLOCKS_LIB_H_

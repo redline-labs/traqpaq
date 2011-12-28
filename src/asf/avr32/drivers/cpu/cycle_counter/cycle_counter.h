@@ -1,4 +1,3 @@
-/*This file has been prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief Cycle counter driver.
@@ -45,6 +44,14 @@
 
 #ifndef _CYCLE_COUNTER_H_
 #define _CYCLE_COUNTER_H_
+
+/**
+ * \defgroup group_avr32_drivers_cpu_cycle_counter CPU - Cycle Counter
+ *
+ * CPU Cycle Counter provides an interface to the COUNT and COMPARE registers.
+ *
+ * \{
+ */
 
 #include "compiler.h"
 
@@ -303,5 +310,8 @@ static inline void cpu_delay_cy(unsigned long delay)
 #define Get_sys_compare()   ( Get_system_register(AVR32_COMPARE)      )
 #define Set_sys_compare(x)  ( Set_system_register(AVR32_COMPARE, (x)) )
 
+/**
+ * \}
+ */
 
 #endif // _CYCLE_COUNTER_H_

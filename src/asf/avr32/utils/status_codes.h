@@ -42,6 +42,14 @@
 #define STATUS_CODES_H_INCLUDED
 
 /**
+ * \defgroup group_avr32_utils_status_codes Status Codes
+ *
+ * \ingroup group_avr32_utils
+ *
+ * \{
+ */
+
+/**
  * Status code that may be returned by shell commands and protocol
  * implementations.
  *
@@ -77,5 +85,9 @@ enum status_code {
 };
 
 typedef enum status_code status_code_t;
+
+/**
+ * \}
+ */
 
 #endif /* STATUS_CODES_H_INCLUDED */

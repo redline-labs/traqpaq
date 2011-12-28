@@ -1,4 +1,3 @@
-/*This file is prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief SMC on EBI driver for AVR32 UC3.
@@ -45,6 +44,14 @@
 
 #ifndef _SMC_H_
 #define _SMC_H_
+
+/**
+ * \defgroup group_avr32_drivers_ebi_smc MEMORY - EBI Static Memory Controller
+ *
+ * EBI (External Bus Interface) SMC (Static Memory Controller) allows to connect a Static Memory to the microcontroller.
+ *
+ * \{
+ */
 
 #include <avr32/io.h>
 
@@ -147,5 +154,9 @@ extern void smc_init(unsigned long hsb_hz);
  *  \param cs The chip select value
  */
 extern unsigned char smc_get_cs_size(unsigned char cs);
+
+/**
+ * \}
+ */
 
 #endif  // _SMC_H_

@@ -1,4 +1,3 @@
-/*This file is prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief Preprocessor stringizing utils.
@@ -45,6 +44,13 @@
 #ifndef _STRINGZ_H_
 #define _STRINGZ_H_
 
+/**
+ * \defgroup group_avr32_utils_stringz Preprocessor - Stringize
+ *
+ * \ingroup group_avr32_utils
+ *
+ * \{
+ */
 
 /*! \brief Stringize.
  *
@@ -69,5 +75,8 @@
  */
 #define ASTRINGZ(x)                               STRINGZ(x)
 
+/**
+ * \}
+ */
 
 #endif  // _STRINGZ_H_

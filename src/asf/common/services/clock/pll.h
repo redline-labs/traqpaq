@@ -51,7 +51,7 @@
 # include "uc3c/pll.h"
 #elif UC3D
 # include "uc3d/pll.h"
-#elif (UC3L0128 || UC3L0256)
+#elif (UC3L0128 || UC3L0256 || UC3L3_L4)
 # include "uc3l/pll.h"
 #elif XMEGA
 # include "xmega/pll.h"

@@ -1,4 +1,3 @@
-/*This file has been prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief PWM driver for AVR32 UC3.
@@ -48,6 +47,15 @@
 
 #ifndef _PWM_H_
 #define _PWM_H_
+
+/**
+ * \defgroup group_avr32_drivers_pwm PWM - Pulse Width Modulation
+ *
+ * Pulse Width Modulation (PWM) Software Driver for modules below revision v4.0.0.
+ * This driver provides an API to get access to the main features of the PWM controller.
+ *
+ * \{
+ */
 
 #include <avr32/io.h>
 
@@ -148,5 +156,8 @@ extern int pwm_sync_update_channel(unsigned int channel_id, const avr32_pwm_chan
  */
 extern int pwm_async_update_channel(unsigned int channel_id, const avr32_pwm_channel_t *pwm_channel);
 
+/**
+ * \}
+ */
 
 #endif  // _PWM_H_

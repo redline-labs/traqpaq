@@ -42,8 +42,8 @@
 #include "sysclk.h"
 
 /**
+ * \defgroup group_avr32_drivers_cpu AVR32 reset cause
  * \ingroup reset_cause_group
- * \defgroup avr32_reset_cause_group AVR32 reset cause
  *
  * @{
  */

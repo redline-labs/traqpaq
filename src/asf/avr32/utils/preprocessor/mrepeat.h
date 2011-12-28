@@ -1,4 +1,3 @@
-/*This file is prepared for Doxygen automatic documentation generation.*/
 /*! \file *********************************************************************
  *
  * \brief Preprocessor macro repeating utils.
@@ -44,6 +43,14 @@
 
 #ifndef _MREPEAT_H_
 #define _MREPEAT_H_
+
+/**
+ * \defgroup group_avr32_utils_mrepeat Preprocessor - Macro Repeat
+ *
+ * \ingroup group_avr32_utils
+ *
+ * \{
+ */
 
 #include "preprocessor.h"
 
@@ -322,5 +329,8 @@
 #define MREPEAT255(macro, data)       MREPEAT254(macro, data)   macro(254, data)
 #define MREPEAT256(macro, data)       MREPEAT255(macro, data)   macro(255, data)
 
+/**
+ * \}
+ */
 
 #endif  // _MREPEAT_H_
