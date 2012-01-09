@@ -127,7 +127,7 @@ typedef struct tGPSRXDBuffer{
 //void gps_processMsg(struct tGPSRXDBuffer *GPSRXDBuffer, unsigned char index, struct tGPSMsgGGA *GPSMsgGGA, struct tGPSMsgGSV *GPSMsgGSV);
 
 void gps_task_init( void );
-void gps_task( void );
+void gps_task( void *pvParameters );
 void gps_irq( void );
 
 #endif /* GPS_H_ */

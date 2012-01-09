@@ -171,7 +171,7 @@ typedef struct tBatteryInfo{
 
 
 void fuel_task_init( void );
-void fuel_task( void );
+void fuel_task( void *pvParameters );
 void fuel_read_register(unsigned char command, unsigned short *pointer);
 unsigned short fuel_read_voltage(void);
 unsigned short fuel_read_current(unsigned char measurement);

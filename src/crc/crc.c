@@ -65,49 +65,36 @@
     *                                                                   *
     \*******************************************************************/
 
-static int              crc_tab16_init          = FALSE;
-static int              crc_tab32_init          = FALSE;
-static int              crc_tabccitt_init       = FALSE;
-static int              crc_tabdnp_init         = FALSE;
-static int              crc_tabkermit_init      = FALSE;
 
 #if(CRC_ENABLED_CRC16)
 static unsigned short   crc_tab16[256];
+static int              crc_tab16_init = FALSE;
+static void				init_crc16_tab( void );
 #endif
 
 #if(CRC_ENABLED_CRC32)
 static unsigned long    crc_tab32[256];
+static int              crc_tab32_init = FALSE;
+static void				init_crc32_tab( void );
 #endif
 
 #if(CRC_ENABLED_CRC_CCITT)
 static unsigned short   crc_tabccitt[256];
+static int              crc_tabccitt_init = FALSE;
+static void				init_crcccitt_tab( void );
 #endif
 
 #if(CRC_ENABLED_CRC_DNP)
 static unsigned short   crc_tabdnp[256];
+static int              crc_tabdnp_init = FALSE;
+static void				init_crcdnp_tab( void );
 #endif
 
 #if(CRC_ENABLED_CRC_KERMIT)
 static unsigned short   crc_tabkermit[256];
+static int              crc_tabkermit_init = FALSE;
+static void				init_crckermit_tab( void );
 #endif
-
-
-
-    /*******************************************************************\
-    *                                                                   *
-    *   static void init_crc...tab();                                   *
-    *                                                                   *
-    *   Three local functions are used  to  initialize  the  tables     *
-    *   with values for the algorithm.                                  *
-    *                                                                   *
-    \*******************************************************************/
-
-static void init_crc16_tab( void );
-static void init_crc32_tab( void );
-static void init_crcccitt_tab( void );
-static void init_crcdnp_tab( void );
-static void init_crckermit_tab( void );
-
 
 
     /*******************************************************************\

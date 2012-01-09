@@ -67,14 +67,16 @@ typedef struct tRecordData {
 	unsigned long altitude;
 };	// tRecordData - 16 Bytes
 
-typedef struct tRecordPageInfo{
+#define RECORD_DATA_SIZE		sizeof(tRecordData)
+
+typedef struct tRecordPageInfo {
 	unsigned long timestamp;
 	unsigned long fixdata[3];	//TODO: Seperate this into more detailed variables.
 };	// tRecordPageInfo - 16 Bytes
 
-//#define RECORD_DATA_SIZE		sizeof(tRecordData)
-//#define RECORD_PAGE_INFO_SIZE	sizeof(tRecordPageInfo)
-#define RECORDS_PER_PAGE		15//(DATAFLASH_PAGE_SIZE - RECORD_PAGE_INFO_SIZE) / RECORD_DATA_SIZE
+
+#define RECORD_PAGE_INFO_SIZE	sizeof(tRecordPageInfo)
+#define RECORDS_PER_PAGE		15	//((DATAFLASH_PAGE_SIZE-RECORD_PAGE_INFO_SIZE)/RECORD_DATA_SIZE)
 
 typedef struct tRecordPage{
 	struct tRecordPageInfo info;
@@ -152,10 +154,13 @@ typedef struct tTrackInfo{
 
 #define DATAFLASH_ADDR_USERPREFS_START			0x00000000	// Size is only 41B, but align to page
 #define DATAFLASH_ADDR_USERPREFS_END			0x000000FF
+
 #define DATAFLASH_ADDR_SAVEDTRACKS_START		0x00000100	// Size is exactly 1024B
 #define DATAFLASH_ADDR_SAVEDTRACKS_END			0x000004FF
+
 #define DATAFLASH_ADDR_RECORDTABLE_START		0x00000500	// Size is exactly 1024B
 #define DATAFLASH_ADDR_RECORDTABLE_END			0x000008FF
+
 #define DATAFLASH_ADDR_RECORDDATA_START			0x00000900	// Size is remainder of 16Mb
 #define DATAFLASH_ADDR_RECORDDATA_END			0x001FFFFF
 

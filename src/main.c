@@ -44,8 +44,6 @@
 int main( void ){
 	unsigned short temp = 0;
 	
-	
-	
 	// Initialization ---------------------------------------------
 	Disable_global_interrupt();
 	Disable_global_exception();

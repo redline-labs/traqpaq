@@ -35,7 +35,7 @@
 #define WATCHDOG_UPDATE_INTERVAL_MS	90		// 90ms Watchdog clear interval
 
 void wdt_task_init(void);
-void wdt_task(void);
+void wdt_task( void *pvParameters );
 
 unsigned char wdt_triggered(void);
 

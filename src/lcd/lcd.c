@@ -72,12 +72,12 @@ const unsigned char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', 
 struct tLCDTopBar topBar;
 
 // Create task for FreeRTOS
-void lcd_task_init(void){
+void lcd_task_init( void ){
 	xTaskCreate(lcd_gui_task, configTSK_GUI_TASK_NAME, configTSK_GUI_TASK_STACK_SIZE, NULL, configTSK_GUI_TASK_PRIORITY, NULL);
 }
 
 // LCD GUI Task
-void lcd_gui_task(void){
+void lcd_gui_task( void *pvParameters ){
 	unsigned char i = 0;
 	
 	unsigned char text[5];

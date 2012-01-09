@@ -34,8 +34,8 @@
 #define FOSC0           16000000                              //!< Osc0 frequency: Hz.
 #define OSC0_STARTUP    AVR32_PM_OSCCTRL0_STARTUP_2048_RCOSC  //!< Osc0 startup time: RCOsc periods.
 
-#define APPL_CPU_SPEED	32000000
-#define APPL_PBA_SPEED	16000000
+#define APPL_CPU_SPEED	24000000
+#define APPL_PBA_SPEED	12000000
 
 /* These are documented in services/basic/clock/uc3a0_a1/osc.h */
 #define BOARD_OSC0_HZ           FOSC0

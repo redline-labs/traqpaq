@@ -33,7 +33,7 @@ void wdt_task_init(){
 	xTaskCreate(wdt_task, configTSK_WATCHDOG_TASK_NAME, configTSK_WATCHDOG_TASK_STACK_SIZE, NULL, configTSK_WATCHDOG_TASK_PRIORITY, NULL);
 }
 
-void wdt_task(){
+void wdt_task( void *pvParameters ){
 	portTickType xLastWakeTime;
 	
 	wdt_opt_t wdt_options = {

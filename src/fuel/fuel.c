@@ -39,7 +39,7 @@ void fuel_task_init( void ){
 }
 
 
-void fuel_task( void ){
+void fuel_task( void *pvParameters ){
 	unsigned short current;
 	
 	while(1){
@@ -89,22 +89,22 @@ void fuel_read_register(unsigned char command, unsigned short *pointer){
 
 
 
-unsigned short fuel_read_voltage(void){
+unsigned short fuel_read_voltage( void ){
 	unsigned short battery_voltage;
-	fuel_read_register(FUEL_ADDRESS_VOLTAGE_REGISTER_MSB, &battery_voltage);
+	fuel_read_register( FUEL_ADDRESS_VOLTAGE_REGISTER_MSB, &battery_voltage );
 	
 	return battery_voltage >> FUEL_SHIFTRIGHT_VOLTAGE;
 }
 
 
-unsigned short fuel_read_current(unsigned char measurement){
+unsigned short fuel_read_current( unsigned char measurement ){
 	unsigned short battery_current;
 	
-	if(measurement == FUEL_CURRENT_INSTANTANEOUS){
+	if( measurement == FUEL_CURRENT_INSTANTANEOUS ){	// Read instantaneous current
 		fuel_read_register(FUEL_ADDRESS_CURRENT_REGISTER_MSB, &battery_current);
 		battery_current = battery_current >> FUEL_SHIFTRIGHT_INSTANTANEOUS_CURRENT;
 		
-	}else if(measurement == FUEL_CURRENT_ACCUMULATED){
+	}else{	// Read accumulated current
 		fuel_read_register(FUEL_ADDRESS_ACCUM_CURRENT_REGISTER_MSB, &battery_current);
 		battery_current = battery_current >> FUEL_SHIFTRIGHT_ACCUMULATED_CURRENT;
 	}
@@ -113,7 +113,7 @@ unsigned short fuel_read_current(unsigned char measurement){
 }
 
 
-unsigned short fuel_read_temperature(void){
+unsigned short fuel_read_temperature( void ){
 	unsigned short battery_temperature;
 	fuel_read_register(FUEL_ADDRESS_TEMPERATURE_REGISTER_MSB, &battery_temperature);
 	

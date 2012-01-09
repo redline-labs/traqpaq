@@ -171,7 +171,7 @@ typedef union tDataflashStatus{
 };
 
 void dataflash_task_init( void );
-void dataflash_task( void );
+void dataflash_task( void *pvParameters );
 unsigned char dataflash_checkID(void);
 union tDataflashStatus dataflash_readStatus(void);
 unsigned char dataflash_GlobalUnprotect(void);

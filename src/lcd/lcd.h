@@ -232,8 +232,8 @@
 
 unsigned short lcd_readID(void);
 void lcd_task_init(void);
-void lcd_gui_task(void);
-void lcd_init(void);
+void lcd_gui_task( void *pvParameters );
+void lcd_init( void );
 void lcd_fadeBacklightOut(void);
 void lcd_fadeBacklightIn(void);
 void lcd_updateBacklightDuty(unsigned char duty);

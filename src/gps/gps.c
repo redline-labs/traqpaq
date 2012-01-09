@@ -38,7 +38,7 @@ void gps_task_init( void ){
 }
 
 
-void gps_task( void ){
+void gps_task( void *pvParameters ){
 	
 	while(TRUE){
 		usart_write_char(GPS_USART, 'H');

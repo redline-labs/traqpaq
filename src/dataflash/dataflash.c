@@ -29,18 +29,18 @@
 
 #include <asf.h>
 #include "drivers.h"
-//#include "dataflash_layout.h"
+#include "dataflash_layout.h"
 
 
 void dataflash_task_init( void ){
 	xTaskCreate(dataflash_task, configTSK_DATAFLASH_TASK_NAME, configTSK_DATAFLASH_TASK_STACK_SIZE, NULL, configTSK_DATAFLASH_TASK_PRIORITY, NULL);
 }
 
-void dataflash_task( void ){
+void dataflash_task( void *pvParameters ){
 	unsigned char checkID;
 	
 	if( !dataflash_checkID() ){
-		// Fuck!  We broke it!
+		// Dang!  We broke it!
 		while(1);
 	}
 	
