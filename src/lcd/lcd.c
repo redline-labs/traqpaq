@@ -9,7 +9,7 @@
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
  *
  *
- * Copyright (c) 2011 Redline Electronics LLC.
+ * Copyright (c) 2012 Redline Electronics LLC.
  *
  * This file is part of traq|paq.
  *
@@ -29,6 +29,7 @@
 
 #include <asf.h>
 #include "drivers.h"
+#include "menu.h"
 
 #include <font/fontConsole.h>
 
@@ -79,14 +80,25 @@ void lcd_task_init( void ){
 // LCD GUI Task
 void lcd_gui_task( void *pvParameters ){
 	unsigned char i = 0;
+	struct tMenu mainMenu;
 	
-	unsigned char text[5];
-	
-	text[4] = 0;
+	if( !lcd_checkID() ){
+		// We broke the display!!
+		while( TRUE ){
+			asm("nop");
+		}
+	}
 	
 	lcd_init();
 	
 	topBar = lcd_createTopBar("traqpaq", COLOR_WHITE, COLOR_BLACK);
+	
+	mainMenu = menu_create("Main Menu", &FONTCONSOLE);
+	menu_addItem(&mainMenu, "Item 1", 1);
+	menu_addItem(&mainMenu, "Item 2", 2);
+	menu_addItem(&mainMenu, "Item 3", 3);
+	menu_addItem(&mainMenu, "Item 4", 4);
+	menu_addItem(&mainMenu, "Item 5", 5);
 	
 	// Prevent backlight from turning on while screen is being initialize
 	vTaskDelay( (portTickType)TASK_DELAY_MS(50) );
@@ -94,6 +106,7 @@ void lcd_gui_task( void *pvParameters ){
 	
 	while(1){
 		vTaskDelay( (portTickType)TASK_DELAY_MS(1000) );
+		menu_scrollDown(&mainMenu);
 	}
 }
 
@@ -247,9 +260,14 @@ void lcd_init(void){
 	lcd_fillRGB(COLOR_WHITE);
 }
 
-unsigned short lcd_readID(){
+unsigned char lcd_checkID(){
 	lcd_writeCommand(LCD_CMD_ID_READ);
-	return *LCD_PARAM_ADDR;
+	
+	if( (*LCD_PARAM_ADDR) == LCD_DEVICE_ID ) {
+		return TRUE;
+	}else{
+		return FALSE;
+	}
 }
 
 void lcd_setCur(unsigned int x, unsigned int y){
@@ -269,7 +287,6 @@ void lcd_fillRGB(unsigned int data){
 		}
 	}
 }
-
 
 void lcd_displayImage(unsigned short *pixmap, unsigned short x_offset, unsigned short y_offset, unsigned short image_x, unsigned short image_y){
 	unsigned int i,j;
@@ -343,7 +360,7 @@ void lcd_writeText(char *lcd_string, const unsigned char *font_style, unsigned i
 }
 
 
-void lcd_writeText8x16(char *lcd_string, const unsigned short *font_style, unsigned int origin_x, unsigned int origin_y, unsigned int fcolor){
+void lcd_writeText8x16(char *lcd_string, const unsigned short *font_style, unsigned int origin_x, unsigned int origin_y, unsigned int fcolor) {
 	unsigned short x, y;
 	unsigned int mask, xfont, yfont, font_size;
 	const unsigned short *data;
@@ -381,23 +398,23 @@ void lcd_writeText8x16(char *lcd_string, const unsigned short *font_style, unsig
 }
 	
 
-/*void integer_to_hexascii(unsigned short number, unsigned char *string){
+void integer_to_hexascii(unsigned short number, unsigned char *string){
 	*string = '0';
 	string++;
 	*string = 'x';
 	string++;
-	*string = hex_lookup[(number >> 12) & 0xF];
+	*string = hexLookup[(number >> 12) & 0xF];
 	string++;
-	*string = hex_lookup[(number >>  8) & 0xF];
+	*string = hexLookup[(number >>  8) & 0xF];
 	string++;
-	*string = hex_lookup[(number >>  4) & 0xF];
+	*string = hexLookup[(number >>  4) & 0xF];
 	string++;
-	*string = hex_lookup[(number >>  0) & 0xF];
+	*string = hexLookup[(number >>  0) & 0xF];
 	string++;
 	*string = '\0';
 }
 
-*/
+
 
 
 void lcd_drawFilledRectangle(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2, unsigned short color){
@@ -640,6 +657,14 @@ struct tLCDTopBar lcd_createTopBar(unsigned char *string, unsigned short fcolor,
 	lcd_updateAntenna(&topBar, 0);
 	
 	return topBar;
+}
+
+void lcd_updateTopBarText(unsigned char *string){
+	// Draw bar background
+	lcd_drawFilledRectangle(LCD_MIN_X, LCD_MAX_Y, LCD_MAX_X >> 1, LCD_MAX_Y - LCD_TOPBAR_THICKNESS, topBar.bcolor);
+	
+	// Write in the text
+	lcd_writeText(string, &FONTCONSOLE, LCD_TOPBAR_TEXT_XPADDING, LCD_MAX_Y - LCD_TOPBAR_TEXT_YPADDING, topBar.fcolor);
 }
 
 void lcd_updateAntenna(struct tLCDTopBar *topBar, unsigned char bars){

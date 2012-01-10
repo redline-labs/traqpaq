@@ -53,46 +53,47 @@
 // From module: CPU - INTC - Interrupt Controller
 #include <intc.h>
 
-// From module: CPU - Interrupt management
+// From module: CPU - Interrupt management - UC3 implementation
 #include <interrupt.h>
 
-// From module: CPU - PM - Power Manager
-#include <power_clocks_lib.h>
-#include <sleep.h>
+// From module: CPU - Reset Cause
+#include <avr32_reset_cause.h>
+
+// From module: CPU - SLEEP - Sleep manager - UC3 implementation
+#include <sleepmgr.h>
+#include <uc3/sleepmgr.h>
 
 // From module: GPIO - General-Purpose Input/Output
 #include <gpio.h>
 
+// From module: MEMORY - EBI Static Memory Controller
+#include <smc.h>
+
 // From module: MEMORY - FLASHC - Flash Controller
 #include <flashc.h>
 
-// From module: RTOS - FreeRTOS mini Real-Time Kernel
-#include <FreeRTOS.h>
-#include <StackMacros.h>
-#include <croutine.h>
-#include <list.h>
-#include <mpu_wrappers.h>
-#include <portable.h>
-#include <projdefs.h>
-#include <queue.h>
-#include <semphr.h>
-#include <task.h>
-#include <timers.h>
+// From module: PM - UC3 A0/A1/A3/A4/B0/B1 implementation
+#include <power_clocks_lib.h>
+#include <sleep.h>
 
-// From module: TIMING - TC - Timer/Counter
-#include <tc.h>
+// From module: PWM - UC3 A/B implementation
+#include <pwm.h>
 
-// From module: USART - Univ. Sync/Async Serial Rec/Trans
+// From module: SPI - Serial Peripheral Interface
+#include <spi.h>
+
+// From module: SPI - UC3 implemenation
+#include <spi_master.h>
+#include <spi_master.h>
+
+// From module: TIMING - Clock Control - UC3 A implementation
+#include <sysclk.h>
+
+// From module: TWI - Two-Wire Interface
+#include <twi.h>
+
+// From module: USART - Universal Synchronous/Asynchronous Receiver/Transmitter
 #include <usart.h>
-
-// From module: USB - Universial Serial Bus device enumeration (ver. 1)
-#include <usb_device_task.h>
-
-// From module: USB - Universial Serial Bus enumeration (ver. 1)
-#include <usb_task.h>
-
-// From module: USBB - Universial Serial Bus Interface (ver. 1)
-#include <usb_drv.h>
 
 // From module: UTILITY - Compiler abstraction layer and code utilities
 #include <compiler.h>
@@ -101,20 +102,7 @@
 // From module: UTILITY - Generic board support
 #include <board.h>
 
-#include <delay.h>
-#include <smc.h>
-#include <avr32_reset_cause.h>
-#include <pwm.h>
-#include <twi.h>
+// From module: WDT - UC3 A0/A1/A3/A4/B0/B1 implementation
 #include <wdt.h>
-#include <sleepmgr.h>
-#include <uc3/sleepmgr.h>
-#include <spi.h>
-#include <spi_master.h>
-
-// FreeRTOS includes
-
-#include "FreeRTOS.h"
-#include "task.h"
 
 #endif // ASF_H

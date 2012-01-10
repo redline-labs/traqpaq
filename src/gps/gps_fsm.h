@@ -9,7 +9,7 @@
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
  *
  *
- * Copyright (c) 2011 Redline Electronics LLC.
+ * Copyright (c) 2012 Redline Electronics LLC.
  *
  * This file is part of traq|paq.
  *

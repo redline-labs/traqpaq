@@ -9,7 +9,7 @@
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
  *
  *
- * Copyright (c) 2011 Redline Electronics LLC.
+ * Copyright (c) 2012 Redline Electronics LLC.
  *
  * This file is part of traq|paq.
  *
@@ -35,7 +35,7 @@ void charge_task_init( void ){
 	xTaskCreate(charge_task, configTSK_CHARGE_TASK_NAME, configTSK_CHARGE_TASK_STACK_SIZE, NULL, configTSK_CHARGE_TASK_PRIORITY, NULL);
 }
 
-void charge_task( void ){
+void charge_task( void *pvParameters ){
 	unsigned char chargeState;
 	
 	while( TRUE ){

@@ -30,6 +30,8 @@ void board_init(void){
 	#endif
 	
 	#if(TRAQPAQ_HW_USB_ENABLED)
+	// Need to replace this with 'pm_configure_usb_clock(void)'
+	
 	pm_pll_setup(&AVR32_PM,
 		1,  // pll.
 		5,   // mul.  WAS 7 FOR FOSC0=12MHz

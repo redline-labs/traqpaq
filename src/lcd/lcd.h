@@ -9,7 +9,7 @@
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
  *
  *
- * Copyright (c) 2011 Redline Electronics LLC.
+ * Copyright (c) 2012 Redline Electronics LLC.
  *
  * This file is part of traq|paq.
  *
@@ -31,6 +31,8 @@
 #define LCD_H_
 
 #include <conf_lcd.h>
+
+extern struct tLCDTopBar topBar;
 
 #define LCD_VERSION					"1.00"
 
@@ -230,7 +232,7 @@
 									  ||||||||||||||||			*/
 #define LCD_BASE_IMAGE_DISP_CTRL	0b0000000000000011
 
-unsigned short lcd_readID(void);
+unsigned char lcd_checkID(void);
 void lcd_task_init(void);
 void lcd_gui_task( void *pvParameters );
 void lcd_init( void );
@@ -258,11 +260,9 @@ void lcd_updateLabel(struct tLCDLabel * label, unsigned char *string);
 struct tLCDTopBar lcd_createTopBar(unsigned char *string, unsigned short fcolor, unsigned short bcolor);
 void lcd_updateAntenna(struct tLCDTopBar *topBar, unsigned char bars);
 void lcd_updateBattery(struct tLCDTopBar *topBar, unsigned char percent);
+void lcd_updateTopBarText(unsigned char *string);
 
 void lcd_scrollDisplay(unsigned short numLines);
-
-
-
 
 typedef struct tLCDProgressBar {
 	unsigned short start_x;
@@ -289,17 +289,6 @@ typedef struct tLCDLabel {
 	
 	unsigned short color_text;
 	unsigned short color_background;
-};
-
-typedef struct tLCDMenuItem {
-	// TODO: Add more descriptors as necessary
-	unsigned char text[LCD_MENU_ITEM_LENGTH];
-};
-
-typedef struct tLCDMenu {
-	unsigned char numberOfItems;
-	unsigned char currentIndex;
-	struct tLCDMenuItem item[LCD_MENU_MAX_ITEMS];
 };
 
 typedef struct tLCDBattery {

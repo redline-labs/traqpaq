@@ -9,7 +9,7 @@
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
  *
  *
- * Copyright (c) 2011 Redline Electronics LLC.
+ * Copyright (c) 2012 Redline Electronics LLC.
  *
  * This file is part of traq|paq.
  *
@@ -69,7 +69,7 @@
 
 
 void charge_task_init( void );
-void charge_task( void );
+void charge_task( void *pvParameters );
 
 void charge_setRate(unsigned char rate);
 unsigned char charge_powerGood(void);

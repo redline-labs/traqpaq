@@ -30,6 +30,8 @@
 // GPS
 #include "charge/charge.h"
 
+#include "FreeRTOS.h"
+#include "task.h"
 
 
 #endif /* DRIVERS_H_ */
