@@ -43,6 +43,26 @@ extern struct tLCDTopBar topBar;
 
 #define LCD_DEVICE_ID				0x5420
 
+//-----------------------------------------------
+// Font for GUI
+// ----------------------------------------------
+// 
+// Un-comment only one of these pairs to specify
+// a font to use for the GUI
+//-----------------------------------------------
+
+// Bold Font, 8x16
+#define FONT_INCLUDE				"font/Bold.h"
+#define FONT_POINTER				&FONTBOLD
+
+// Ugly Plain Font, 8x16
+//#define FONT_INCLUDE				"font/Console.h"
+//#define FONT_POINTER				&FONTCONSOLE
+
+
+//-----------------------------------------------
+// Defines
+//-----------------------------------------------
 // Delays for Init
 #define LCD_SETUP_DELAY				2
 

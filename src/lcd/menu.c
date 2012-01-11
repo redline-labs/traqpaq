@@ -29,7 +29,7 @@
 
 #include "menu.h"
 #include "lcd.h"
-#include "font/fontConsole.h"
+#include FONT_INCLUDE
 
 struct tMenu menu_create(unsigned char *title, unsigned char *font){
 	struct tMenu menu;
@@ -55,7 +55,7 @@ void menu_addItem(struct tMenu *menu, unsigned char *itemText, unsigned char act
 								COLOR_REDLINERED);
 								
 		lcd_writeText(menu->item[menu->numItems].text,
-						&FONTCONSOLE,
+						FONT_POINTER,
 						MENU_TEXT_X_PADDING,
 						MENU_Y_START - MENU_ROW_HEIGHT + MENU_TEXT_Y_PADDING,
 						COLOR_WHITE);
@@ -64,7 +64,7 @@ void menu_addItem(struct tMenu *menu, unsigned char *itemText, unsigned char act
 			
 	}else{
 		lcd_writeText(menu->item[menu->numItems].text,
-					&FONTCONSOLE,
+					FONT_POINTER,
 					MENU_TEXT_X_PADDING,
 					MENU_Y_START - ((menu->numItems + 1) * MENU_ROW_HEIGHT) + MENU_TEXT_Y_PADDING,
 					COLOR_BLACK);
@@ -90,7 +90,7 @@ void menu_scrollUp(struct tMenu *menu) {
 							COLOR_WHITE);
 							
 	lcd_writeText(menu->item[menu->selectedIndex].text,
-				&FONTCONSOLE,
+				FONT_POINTER,
 				MENU_TEXT_X_PADDING,
 				MENU_Y_START - ((menu->selectedIndex + 1) * MENU_ROW_HEIGHT) + MENU_TEXT_Y_PADDING,
 				COLOR_BLACK);
@@ -103,7 +103,7 @@ void menu_scrollUp(struct tMenu *menu) {
 							COLOR_REDLINERED);
 							
 	lcd_writeText(menu->item[newIndex].text,
-				&FONTCONSOLE,
+				FONT_POINTER,
 				MENU_TEXT_X_PADDING,
 				MENU_Y_START - ((newIndex + 1) * MENU_ROW_HEIGHT) + MENU_TEXT_Y_PADDING,
 				COLOR_WHITE);
@@ -128,7 +128,7 @@ void menu_scrollDown(struct tMenu *menu) {
 							COLOR_WHITE);
 							
 	lcd_writeText(menu->item[menu->selectedIndex].text,
-				&FONTCONSOLE,
+				FONT_POINTER,
 				MENU_TEXT_X_PADDING,
 				MENU_Y_START - ((menu->selectedIndex + 1) * MENU_ROW_HEIGHT) + MENU_TEXT_Y_PADDING,
 				COLOR_BLACK);
@@ -141,7 +141,7 @@ void menu_scrollDown(struct tMenu *menu) {
 							COLOR_REDLINERED);
 							
 	lcd_writeText(menu->item[newIndex].text,
-				&FONTCONSOLE,
+				FONT_POINTER,
 				MENU_TEXT_X_PADDING,
 				MENU_Y_START - ((newIndex + 1) * MENU_ROW_HEIGHT) + MENU_TEXT_Y_PADDING,
 				COLOR_WHITE);

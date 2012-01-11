@@ -31,7 +31,7 @@
 #include "drivers.h"
 #include "menu.h"
 
-#include <font/fontConsole.h>
+#include FONT_INCLUDE
 
 // Lookup tables
 const unsigned char pwmFadeTable[] = {
@@ -90,19 +90,22 @@ void lcd_gui_task( void *pvParameters ){
 	}
 	
 	lcd_init();
+	lcd_fillRGB(COLOR_WHITE);
+	
+	lcd_fadeBacklightIn();
 	
 	topBar = lcd_createTopBar("traqpaq", COLOR_WHITE, COLOR_BLACK);
 	
-	mainMenu = menu_create("Main Menu", &FONTCONSOLE);
-	menu_addItem(&mainMenu, "Item 1", 1);
-	menu_addItem(&mainMenu, "Item 2", 2);
-	menu_addItem(&mainMenu, "Item 3", 3);
-	menu_addItem(&mainMenu, "Item 4", 4);
-	menu_addItem(&mainMenu, "Item 5", 5);
+	mainMenu = menu_create("Main Menu", FONT_POINTER);
+	menu_addItem(&mainMenu, "ABCDEFGHIJKLMNOPQRS", 1);
+	menu_addItem(&mainMenu, "TUVWXYZ", 2);
+	menu_addItem(&mainMenu, "1234567890", 3);
+	menu_addItem(&mainMenu, "abcdefghijklmnopqrs", 4);
+	menu_addItem(&mainMenu, "tuvwxyz", 5);
 	
 	// Prevent backlight from turning on while screen is being initialize
 	vTaskDelay( (portTickType)TASK_DELAY_MS(50) );
-	lcd_fadeBacklightIn();
+	
 	
 	while(1){
 		vTaskDelay( (portTickType)TASK_DELAY_MS(1000) );
@@ -255,9 +258,6 @@ void lcd_init(void){
 	lcd_writeData(0x0173);								// Page 16 of SPFD5420A Datasheet
 	
 	vTaskDelay( (portTickType)TASK_DELAY_MS(LCD_SETUP_DELAY) );
-	
-	lcd_setCur(LCD_MIN_X, LCD_MAX_Y);
-	lcd_fillRGB(COLOR_WHITE);
 }
 
 unsigned char lcd_checkID(){
@@ -280,7 +280,9 @@ void lcd_setCur(unsigned int x, unsigned int y){
 
 void lcd_fillRGB(unsigned int data){
 	unsigned int i,j;
-
+	
+	lcd_setCur(LCD_MIN_X, LCD_MAX_Y);
+	
 	for(i=0;i<432;i++){
 		for(j=0;j<240;j++){
 			lcd_writeData(data);
@@ -320,8 +322,6 @@ void lcd_displayLargeText(unsigned short *pixmap, unsigned short x_offset, unsig
 
 }
 
-
-
 void lcd_writeText(char *lcd_string, const unsigned char *font_style, unsigned int origin_x, unsigned int origin_y, unsigned int fcolor){
 	unsigned short x, y;
 	unsigned int mask, xfont, yfont, font_size;
@@ -359,7 +359,6 @@ void lcd_writeText(char *lcd_string, const unsigned char *font_style, unsigned i
 	}		
 }
 
-
 void lcd_writeText8x16(char *lcd_string, const unsigned short *font_style, unsigned int origin_x, unsigned int origin_y, unsigned int fcolor) {
 	unsigned short x, y;
 	unsigned int mask, xfont, yfont, font_size;
@@ -396,7 +395,6 @@ void lcd_writeText8x16(char *lcd_string, const unsigned short *font_style, unsig
 		lcd_string++;  // next character in string
 	}		
 }
-	
 
 void integer_to_hexascii(unsigned short number, unsigned char *string){
 	*string = '0';
@@ -418,17 +416,37 @@ void integer_to_hexascii(unsigned short number, unsigned char *string){
 
 
 void lcd_drawFilledRectangle(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2, unsigned short color){
-	unsigned short i, j;
-	unsigned short rectangleHeight = y1 - y2;
-	unsigned short rectangleWidth = x2 - x1;
+	volatile int numPixels;
 	
-	for(j=0; j <= rectangleWidth; j++){
-		lcd_setCur(x1 + j, y1);
-		
-		for(i=0; i <= rectangleHeight; i++){
-			lcd_writeData(color);
-		}
+	numPixels = (x2 - x1 + 1) * (y1 - y2 + 1);		// Rectangle width * height
+	
+	// TRICKY: SPFD5420 definitions of horizontal and vertical are different from used in our application
+	lcd_writeCommand(LCD_CMD_WINDOW_VERT_ADDR_START);
+	lcd_writeData(x1);
+	lcd_writeCommand(LCD_CMD_WINDOW_VERT_ADDR_END);
+	lcd_writeData(x2);
+	lcd_writeCommand(LCD_CMD_WINDOW_HORZ_ADDR_START);
+	lcd_writeData(y2);
+	lcd_writeCommand(LCD_CMD_WINDOW_HORZ_ADDR_END);
+	lcd_writeData(y1);
+	
+	lcd_setCur(x1, y1);
+	
+	while(numPixels >= 0){
+		lcd_writeData(color);
+		numPixels -= 1;
 	}
+	
+	// Reset GRAM drawing window
+	lcd_writeCommand(LCD_CMD_WINDOW_VERT_ADDR_START);
+	lcd_writeData(LCD_MIN_X);
+	lcd_writeCommand(LCD_CMD_WINDOW_VERT_ADDR_END);
+	lcd_writeData(LCD_MAX_X);
+	lcd_writeCommand(LCD_CMD_WINDOW_HORZ_ADDR_START);
+	lcd_writeData(LCD_MIN_Y);
+	lcd_writeCommand(LCD_CMD_WINDOW_HORZ_ADDR_END);
+	lcd_writeData(LCD_MAX_Y);
+	
 }
 
 void lcd_updateBacklightDuty(unsigned char duty){
@@ -619,7 +637,7 @@ struct tLCDTopBar lcd_createTopBar(unsigned char *string, unsigned short fcolor,
 	lcd_drawFilledRectangle(LCD_MIN_X, LCD_MAX_Y, LCD_MAX_X, LCD_MAX_Y - LCD_TOPBAR_THICKNESS, topBar.bcolor);
 	
 	// Write in the text
-	lcd_writeText(string, &FONTCONSOLE, LCD_TOPBAR_TEXT_XPADDING, LCD_MAX_Y - LCD_TOPBAR_TEXT_YPADDING, topBar.fcolor);
+	lcd_writeText(string, FONT_POINTER, LCD_TOPBAR_TEXT_XPADDING, LCD_MAX_Y - LCD_TOPBAR_TEXT_YPADDING, topBar.fcolor);
 	
 	// Draw battery
 	lcd_drawLine(LCD_MAX_X - LCD_BATTERY_X_POS,
@@ -664,7 +682,7 @@ void lcd_updateTopBarText(unsigned char *string){
 	lcd_drawFilledRectangle(LCD_MIN_X, LCD_MAX_Y, LCD_MAX_X >> 1, LCD_MAX_Y - LCD_TOPBAR_THICKNESS, topBar.bcolor);
 	
 	// Write in the text
-	lcd_writeText(string, &FONTCONSOLE, LCD_TOPBAR_TEXT_XPADDING, LCD_MAX_Y - LCD_TOPBAR_TEXT_YPADDING, topBar.fcolor);
+	lcd_writeText(string, FONT_POINTER, LCD_TOPBAR_TEXT_XPADDING, LCD_MAX_Y - LCD_TOPBAR_TEXT_YPADDING, topBar.fcolor);
 }
 
 void lcd_updateAntenna(struct tLCDTopBar *topBar, unsigned char bars){

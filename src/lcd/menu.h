@@ -34,12 +34,12 @@
 #include "string.h"
 
 #define MENU_MAX_ITEM_STRLEN		20										// Max number of characters for menu item text
-#define MENU_MAX_ITEMS				12										// Max number of items per menu
+#define MENU_MAX_ITEMS				7										// Max number of items per menu
 
-#define MENU_ROW_HEIGHT				20										// Height of menu items
+#define MENU_ROW_HEIGHT				30										// Height of menu items
 #define MENU_Y_START				(LCD_MAX_Y-LCD_TOPBAR_THICKNESS-1)		// Y Position to use as top of menu items
-#define MENU_TEXT_X_PADDING			5										// X Padding for menu item text
-#define MENU_TEXT_Y_PADDING			1										// Y Padding for menu item text
+#define MENU_TEXT_X_PADDING			6										// X Padding for menu item text
+#define MENU_TEXT_Y_PADDING			6										// Y Padding for menu item text
 
 struct tMenu menu_create(unsigned char *title, unsigned char *font);
 void menu_addItem(struct tMenu *menu, unsigned char *itemText, unsigned char actionCode);
