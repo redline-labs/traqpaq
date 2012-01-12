@@ -51,13 +51,13 @@ extern struct tLCDTopBar topBar;
 // a font to use for the GUI
 //-----------------------------------------------
 
-// Bold Font, 8x16
-#define FONT_INCLUDE				"font/Bold.h"
-#define FONT_POINTER				&FONTBOLD
+// Simple Font 8x16
+#define FONT_SMALL_INCLUDE				"font/Simple8x16.h"
+#define FONT_SMALL_POINTER				&FONT_SIMPLE8X16
 
-// Ugly Plain Font, 8x16
-//#define FONT_INCLUDE				"font/Console.h"
-//#define FONT_POINTER				&FONTCONSOLE
+// Bold Font, 16x32
+#define FONT_LARGE_INCLUDE				"font/Simple16X32.h"
+#define FONT_LARGE_POINTER				&FONT_SIMPLE16X32
 
 
 //-----------------------------------------------
@@ -262,8 +262,8 @@ void lcd_updateBacklightDuty(unsigned char duty);
 
 void lcd_setCur(unsigned int x, unsigned int y);
 
-void lcd_writeText(char *lcd_string,const unsigned char *font_style, unsigned int origin_x, unsigned int origin_y, unsigned int fcolor);
-void lcd_writeText8x16(char *lcd_string, const unsigned short *font_style, unsigned int origin_x, unsigned int origin_y, unsigned int fcolor);
+void lcd_writeText_8x16(char *lcd_string,const unsigned char *font_style, unsigned int origin_x, unsigned int origin_y, unsigned int fcolor);
+void lcd_writeText_16x32(char *lcd_string,const unsigned char *font_style, unsigned int origin_x, unsigned int origin_y, unsigned int fcolor);
 
 void lcd_fillRGB(unsigned int data);
 void lcd_displayImage(unsigned short *pixmap, unsigned short x_offset, unsigned short y_offset, unsigned short image_x, unsigned short image_y);

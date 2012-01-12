@@ -26,10 +26,6 @@
  * with traq|paq. If not, see http://www.gnu.org/licenses/.
  *
  ******************************************************************************/
-
-// ------------------------------------------------------------
-// Includes
-// ------------------------------------------------------------
 #include "asf.h"
 #include "drivers.h"
 
@@ -63,24 +59,24 @@ int main( void ){
 	#endif
 	
 	#if( TRAQPAQ_HW_USB_ENABLED )
-	//usb_task_init();
-	//device_template_task_init();
+	usb_task_init();
+	device_template_task_init();
 	#endif
 	
 	#if( TRAQPAQ_HW_SPI_ENABLED )
-	//dataflash_task_init();
+	dataflash_task_init();
 	#endif
 	
 	#if( TRAQPAQ_HW_TWI_ENABLED )
-	//fuel_task_init();
+	fuel_task_init();
 	#endif
 	
 	#if( TRAQPAQ_HW_USART_ENABLED )
-	//gps_task_init();
+	gps_task_init();
 	#endif
 	
 	#if( TRAQPAQ_HW_WDT_ENABLED )
-	//wdt_task_init();
+	wdt_task_init();
 	#endif
 	
 	//charge_task_init();

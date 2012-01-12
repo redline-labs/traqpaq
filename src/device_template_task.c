@@ -45,8 +45,6 @@
  *
  */
 
-//_____  I N C L U D E S ___________________________________________________
-
 #include "asf.h"
 #include "drivers.h"
 
@@ -56,65 +54,40 @@
 #include "usb_standard_request.h"
 #include "device_template_task.h"
 
-
-//_____ M A C R O S ________________________________________________________
-
-
-//_____ D E F I N I T I O N S ______________________________________________
+static unsigned char data_length = 0;
 
 
-//_____ D E C L A R A T I O N S ____________________________________________
-static U8   data_length;
-
-
-//!
-//! @brief This function initializes the hardware/software resources required for device applicative task.
-//!
 void device_template_task_init(void){
-  data_length = 0;
-  xTaskCreate(device_template_task, configTSK_USB_DTP_NAME, configTSK_USB_DTP_STACK_SIZE, NULL, configTSK_USB_DTP_PRIORITY, NULL);
+	xTaskCreate(device_template_task, configTSK_USB_DTP_NAME, configTSK_USB_DTP_STACK_SIZE, NULL, configTSK_USB_DTP_PRIORITY, NULL);
 }
 
 
-//!
-//! @brief Entry point of the device applicative task management
-//!
-//! This function links the device application to the USB bus.
-//!
-
 void device_template_task(void *pvParameters){
-  static U8 buf[EP_SIZE_TEMP2];
+	static U8 buf[EP_SIZE_TEMP2];
 
-  portTickType xLastWakeTime;
+	portTickType xLastWakeTime;
 
-  xLastWakeTime = xTaskGetTickCount();
-  while (true)
-  {
-    vTaskDelayUntil(&xLastWakeTime, configTSK_USB_DTP_PERIOD);
+	xLastWakeTime = xTaskGetTickCount();
+	while (true){
+		vTaskDelayUntil(&xLastWakeTime, configTSK_USB_DTP_PERIOD);
 
-    // First, check the device enumeration state
-    if (!Is_device_enumerated()) continue;
+		// First, check the device enumeration state
+		if (!Is_device_enumerated()) continue;
 
-    // HERE STARTS THE USB DEVICE APPLICATIVE CODE
-    // The example below just performs a loopback transmission/reception.
-    // All data received with the OUT endpoint is stored in a RAM buffer and
-    // sent back to the IN endpoint.
+		// If we receive something in the OUT endpoint, just store it in the RAM buffer
+		if (Is_usb_out_received(EP_TEMP_OUT)){
+			Usb_reset_endpoint_fifo_access(EP_TEMP_OUT);
+			data_length = Usb_byte_count(EP_TEMP_OUT);
+			usb_read_ep_rxpacket(EP_TEMP_OUT, buf, data_length, NULL);
+			Usb_ack_out_received_free(EP_TEMP_OUT);
+		}
 
-
-    // If we receive something in the OUT endpoint, just store it in the RAM buffer
-    if (Is_usb_out_received(EP_TEMP_OUT)){
-      Usb_reset_endpoint_fifo_access(EP_TEMP_OUT);
-      data_length = Usb_byte_count(EP_TEMP_OUT);
-      usb_read_ep_rxpacket(EP_TEMP_OUT, buf, data_length, NULL);
-      Usb_ack_out_received_free(EP_TEMP_OUT);
-    }
-
-    // Load the IN endpoint with the contents of the RAM buffer
-    if (data_length && Is_usb_in_ready(EP_TEMP_IN)){
-      Usb_reset_endpoint_fifo_access(EP_TEMP_IN);
-      usb_write_ep_txpacket(EP_TEMP_IN, buf, data_length, NULL);
-      data_length = 0;
-      Usb_ack_in_ready_send(EP_TEMP_IN);
-    }
-  }
+		// Load the IN endpoint with the contents of the RAM buffer
+		if (data_length && Is_usb_in_ready(EP_TEMP_IN)){
+			Usb_reset_endpoint_fifo_access(EP_TEMP_IN);
+			usb_write_ep_txpacket(EP_TEMP_IN, buf, data_length, NULL);
+			data_length = 0;
+			Usb_ack_in_ready_send(EP_TEMP_IN);
+		}
+	}
 }

@@ -31,7 +31,8 @@
 #include "drivers.h"
 #include "menu.h"
 
-#include FONT_INCLUDE
+#include FONT_SMALL_INCLUDE
+#include FONT_LARGE_INCLUDE
 
 // Lookup tables
 const unsigned char pwmFadeTable[] = {
@@ -79,6 +80,7 @@ void lcd_task_init( void ){
 
 // LCD GUI Task
 void lcd_gui_task( void *pvParameters ){
+	
 	unsigned char i = 0;
 	struct tMenu mainMenu;
 	
@@ -90,21 +92,22 @@ void lcd_gui_task( void *pvParameters ){
 	}
 	
 	lcd_init();
-	lcd_fillRGB(COLOR_WHITE);
 	
-	lcd_fadeBacklightIn();
+	lcd_fillRGB(COLOR_WHITE);
 	
 	topBar = lcd_createTopBar("traqpaq", COLOR_WHITE, COLOR_BLACK);
 	
-	mainMenu = menu_create("Main Menu", FONT_POINTER);
-	menu_addItem(&mainMenu, "ABCDEFGHIJKLMNOPQRS", 1);
-	menu_addItem(&mainMenu, "TUVWXYZ", 2);
-	menu_addItem(&mainMenu, "1234567890", 3);
-	menu_addItem(&mainMenu, "abcdefghijklmnopqrs", 4);
-	menu_addItem(&mainMenu, "tuvwxyz", 5);
+	mainMenu = menu_create("Main Menu", FONT_SMALL_POINTER);
+	menu_addItem(&mainMenu, "Standard Session", 1);
+	menu_addItem(&mainMenu, "Timed Moto", 2);
+	menu_addItem(&mainMenu, "Settings", 3);
+	menu_addItem(&mainMenu, "Review", 4);
+	menu_addItem(&mainMenu, "About", 5);
 	
 	// Prevent backlight from turning on while screen is being initialize
 	vTaskDelay( (portTickType)TASK_DELAY_MS(50) );
+	
+	lcd_fadeBacklightIn();
 	
 	
 	while(1){
@@ -322,7 +325,7 @@ void lcd_displayLargeText(unsigned short *pixmap, unsigned short x_offset, unsig
 
 }
 
-void lcd_writeText(char *lcd_string, const unsigned char *font_style, unsigned int origin_x, unsigned int origin_y, unsigned int fcolor){
+void lcd_writeText_8x16(char *lcd_string, const unsigned char *font_style, unsigned int origin_x, unsigned int origin_y, unsigned int fcolor){
 	unsigned short x, y;
 	unsigned int mask, xfont, yfont, font_size;
 	const unsigned char *data;
@@ -359,21 +362,21 @@ void lcd_writeText(char *lcd_string, const unsigned char *font_style, unsigned i
 	}		
 }
 
-void lcd_writeText8x16(char *lcd_string, const unsigned short *font_style, unsigned int origin_x, unsigned int origin_y, unsigned int fcolor) {
+void lcd_writeText_16x32(char *lcd_string, const unsigned char *font_style, unsigned int origin_x, unsigned int origin_y, unsigned int fcolor){
 	unsigned short x, y;
 	unsigned int mask, xfont, yfont, font_size;
 	const unsigned short *data;
 
-	data = font_style;  // point to the start of the font table
-	xfont = *data;  // get font x width
-	data++;
-	yfont = *data;  // get font y length
-	data++;
-	font_size = *data;  // get data bytes per font
+	//data = font_style;  // point to the start of the font table
+	xfont = 16;//*data;  // get font x width
+	//data++;
+	yfont = 32;//*data;  // get font y length
+	//data++;
+	font_size = 64;//*data;  // get data bytes per font
 
 	while(*lcd_string !='\0'){
 		// point to character data in font table
-		data =  (font_style + font_size) +			// header offset
+		data =  (font_style) +			// header offset, (font_style + font_size) +	
 		(font_size * (int)(*lcd_string - 32));		// character select
 
 		for (y = (origin_y + yfont); y > origin_y; y--){
@@ -387,7 +390,7 @@ void lcd_writeText8x16(char *lcd_string, const unsigned short *font_style, unsig
 			}
 		
 			// Next row data
-			data++;
+			data += 1;
 		}
 		
 		// move to next character start pixel
@@ -602,14 +605,14 @@ struct tLCDLabel lcd_createLabel(unsigned char *string, unsigned char *font_styl
 	label.color_background = backcolor;
 	label.font = font_style;
 	
-	lcd_writeText(string, label.font, label.start_x, label.start_y, label.color_text);
+	lcd_writeText_8x16(string, label.font, label.start_x, label.start_y, label.color_text);
 	
 	return label;
 }
 
 void lcd_updateLabel(struct tLCDLabel * label, unsigned char *string) {
 	lcd_drawFilledRectangle(label->start_x, label->start_y + label->height, label->start_x + label->width, label->start_y, label->color_background);
-	lcd_writeText(string, label->font, label->start_x, label->start_y, label->color_text);
+	lcd_writeText_8x16(string, label->font, label->start_x, label->start_y, label->color_text);
 }
 
 void lcd_scrollDisplay(unsigned short numLines){
@@ -637,7 +640,7 @@ struct tLCDTopBar lcd_createTopBar(unsigned char *string, unsigned short fcolor,
 	lcd_drawFilledRectangle(LCD_MIN_X, LCD_MAX_Y, LCD_MAX_X, LCD_MAX_Y - LCD_TOPBAR_THICKNESS, topBar.bcolor);
 	
 	// Write in the text
-	lcd_writeText(string, FONT_POINTER, LCD_TOPBAR_TEXT_XPADDING, LCD_MAX_Y - LCD_TOPBAR_TEXT_YPADDING, topBar.fcolor);
+	lcd_writeText_8x16(string, FONT_SMALL_POINTER, LCD_TOPBAR_TEXT_XPADDING, LCD_MAX_Y - LCD_TOPBAR_TEXT_YPADDING, topBar.fcolor);
 	
 	// Draw battery
 	lcd_drawLine(LCD_MAX_X - LCD_BATTERY_X_POS,
@@ -682,7 +685,7 @@ void lcd_updateTopBarText(unsigned char *string){
 	lcd_drawFilledRectangle(LCD_MIN_X, LCD_MAX_Y, LCD_MAX_X >> 1, LCD_MAX_Y - LCD_TOPBAR_THICKNESS, topBar.bcolor);
 	
 	// Write in the text
-	lcd_writeText(string, FONT_POINTER, LCD_TOPBAR_TEXT_XPADDING, LCD_MAX_Y - LCD_TOPBAR_TEXT_YPADDING, topBar.fcolor);
+	lcd_writeText_8x16(string, FONT_SMALL_POINTER, LCD_TOPBAR_TEXT_XPADDING, LCD_MAX_Y - LCD_TOPBAR_TEXT_YPADDING, topBar.fcolor);
 }
 
 void lcd_updateAntenna(struct tLCDTopBar *topBar, unsigned char bars){

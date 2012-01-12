@@ -29,7 +29,7 @@
 
 #include "menu.h"
 #include "lcd.h"
-#include FONT_INCLUDE
+#include FONT_LARGE_INCLUDE
 
 struct tMenu menu_create(unsigned char *title, unsigned char *font){
 	struct tMenu menu;
@@ -37,7 +37,7 @@ struct tMenu menu_create(unsigned char *title, unsigned char *font){
 	
 	menu.numItems = 0;		// Initialize number of items in menu
 	
-	lcd_updateTopBarText(menu.title);
+	//lcd_updateTopBarText(menu.title);
 	
 	return menu;
 }
@@ -54,23 +54,24 @@ void menu_addItem(struct tMenu *menu, unsigned char *itemText, unsigned char act
 								MENU_Y_START - MENU_ROW_HEIGHT,
 								COLOR_REDLINERED);
 								
-		lcd_writeText(menu->item[menu->numItems].text,
-						FONT_POINTER,
+		lcd_writeText_16x32(menu->item[menu->numItems].text,
+						FONT_LARGE_POINTER,
 						MENU_TEXT_X_PADDING,
 						MENU_Y_START - MENU_ROW_HEIGHT + MENU_TEXT_Y_PADDING,
 						COLOR_WHITE);
 						
 		menu->selectedIndex = 0;
+		menu->numItems += 1;
 			
-	}else{
-		lcd_writeText(menu->item[menu->numItems].text,
-					FONT_POINTER,
+	}else if(menu->numItems < MENU_MAX_ITEMS){
+		lcd_writeText_16x32(menu->item[menu->numItems].text,
+					FONT_LARGE_POINTER,
 					MENU_TEXT_X_PADDING,
 					MENU_Y_START - ((menu->numItems + 1) * MENU_ROW_HEIGHT) + MENU_TEXT_Y_PADDING,
 					COLOR_BLACK);
+					
+		menu->numItems += 1;
 	}
-	
-	menu->numItems += 1;
 }
 
 void menu_scrollUp(struct tMenu *menu) {
@@ -89,8 +90,8 @@ void menu_scrollUp(struct tMenu *menu) {
 							MENU_Y_START - ((menu->selectedIndex + 1) * MENU_ROW_HEIGHT),
 							COLOR_WHITE);
 							
-	lcd_writeText(menu->item[menu->selectedIndex].text,
-				FONT_POINTER,
+	lcd_writeText_16x32(menu->item[menu->selectedIndex].text,
+				FONT_LARGE_POINTER,
 				MENU_TEXT_X_PADDING,
 				MENU_Y_START - ((menu->selectedIndex + 1) * MENU_ROW_HEIGHT) + MENU_TEXT_Y_PADDING,
 				COLOR_BLACK);
@@ -102,8 +103,8 @@ void menu_scrollUp(struct tMenu *menu) {
 							MENU_Y_START - ((newIndex + 1) * MENU_ROW_HEIGHT),
 							COLOR_REDLINERED);
 							
-	lcd_writeText(menu->item[newIndex].text,
-				FONT_POINTER,
+	lcd_writeText_16x32(menu->item[newIndex].text,
+				FONT_LARGE_POINTER,
 				MENU_TEXT_X_PADDING,
 				MENU_Y_START - ((newIndex + 1) * MENU_ROW_HEIGHT) + MENU_TEXT_Y_PADDING,
 				COLOR_WHITE);
@@ -127,8 +128,8 @@ void menu_scrollDown(struct tMenu *menu) {
 							MENU_Y_START - ((menu->selectedIndex + 1) * MENU_ROW_HEIGHT),
 							COLOR_WHITE);
 							
-	lcd_writeText(menu->item[menu->selectedIndex].text,
-				FONT_POINTER,
+	lcd_writeText_16x32(menu->item[menu->selectedIndex].text,
+				FONT_LARGE_POINTER,
 				MENU_TEXT_X_PADDING,
 				MENU_Y_START - ((menu->selectedIndex + 1) * MENU_ROW_HEIGHT) + MENU_TEXT_Y_PADDING,
 				COLOR_BLACK);
@@ -140,8 +141,8 @@ void menu_scrollDown(struct tMenu *menu) {
 							MENU_Y_START - ((newIndex + 1) * MENU_ROW_HEIGHT),
 							COLOR_REDLINERED);
 							
-	lcd_writeText(menu->item[newIndex].text,
-				FONT_POINTER,
+	lcd_writeText_16x32(menu->item[newIndex].text,
+				FONT_LARGE_POINTER,
 				MENU_TEXT_X_PADDING,
 				MENU_Y_START - ((newIndex + 1) * MENU_ROW_HEIGHT) + MENU_TEXT_Y_PADDING,
 				COLOR_WHITE);

@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Bold Font
+ * Simple 8x16 Font
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -27,7 +27,7 @@
  *
  ******************************************************************************/
 
-const unsigned char FONTBOLD[] = {
+const unsigned char FONT_SIMPLE8X16[] = {
 	
 //	  Columns
 //    ^		Rows

@@ -64,11 +64,7 @@
 //_____ D E C L A R A T I O N S ____________________________________________
 
 extern void device_template_task_init(void);
-#ifdef FREERTOS_USED
 extern void device_template_task(void *pvParameters);
-#else
-extern void device_template_task(void);
-#endif
 
 
 #endif  // _DEVICE_TEMPLATE_TASK_H_
