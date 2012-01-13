@@ -266,5 +266,26 @@ void board_init(void){
 	pwm_channel_init(BACKLIGHT_PWM_CHANNEL, &pwm_channel_0);
 	pwm_start_channels( 1 << BACKLIGHT_PWM_CHANNEL );
 	#endif
+	
+	
+	#if( TRAQPAQ_HW_ADC_ENABLED )
+	static const gpio_map_t ADC_GPIO_MAP = {
+		{ADC_VCC_PIN, ADC_VCC_FUNCTION},
+		{ADC_VEE_PIN, ADC_VEE_FUNCTION},
+		{ADC_3V3_PIN, ADC_3V3_FUNCTION},
+	}
+	
+	gpio_enable_module(ADC_GPIO_MAP, sizeof(ADC_GPIO_MAP) / sizeof(ADC_GPIO_MAP[0]));
+	
+	// configure ADC
+	// Lower the ADC clock to match the ADC characteristics (because we configured
+	// the CPU clock to 12MHz, and the ADC clock characteristics are usually lower;
+	// cf. the ADC Characteristic section in the datasheet).
+	//AVR32_ADC.mr |= 0x1 << AVR32_ADC_MR_PRESCAL_OFFSET;
+	
+	adc_enable(ADC, ADC_VCC_CHANNEL);
+	adc_enable(ADC, ADC_VEE_CHANNEL);
+	adc_enable(ADC, ADC_3V3_CHANNEL);
+	#endif
 
 }

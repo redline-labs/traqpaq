@@ -84,7 +84,9 @@ void lcd_gui_task( void *pvParameters ){
 	unsigned char i = 0;
 	struct tMenu mainMenu;
 	
-	if( !lcd_checkID() ){
+	lcd_reset();
+	
+	if( lcd_readID() != LCD_DEVICE_ID){
 		// We broke the display!!
 		while( TRUE ){
 			asm("nop");
@@ -95,7 +97,7 @@ void lcd_gui_task( void *pvParameters ){
 	
 	lcd_fillRGB(COLOR_WHITE);
 	
-	topBar = lcd_createTopBar("traqpaq", COLOR_WHITE, COLOR_BLACK);
+	topBar = lcd_createTopBar("traq|paq", COLOR_WHITE, COLOR_BLACK);
 	
 	mainMenu = menu_create("Main Menu", FONT_SMALL_POINTER);
 	menu_addItem(&mainMenu, "Standard Session", 1);
@@ -117,13 +119,15 @@ void lcd_gui_task( void *pvParameters ){
 }
 
 
-void lcd_init(void){
-	// No longer required to put Reset low first - done during board initialization
-	//gpio_clr_gpio_pin(LCD_RESET);
-	//vTaskDelay( (portTickType)TASK_DELAY_MS(LCD_RESET_TIME) );
+void lcd_reset( void ){
+	gpio_clr_gpio_pin(LCD_RESET);
+	vTaskDelay( (portTickType)TASK_DELAY_MS(LCD_RESET_TIME) );
 	gpio_set_gpio_pin(LCD_RESET);
 	vTaskDelay( (portTickType)TASK_DELAY_MS(LCD_RESET_TIME) );
-	
+}
+
+
+void lcd_init(void){
 	lcd_writeCommand(LCD_CMD_INTERFACE_ENDIAN_CTRL);	// Pin Control (R606h)
 	lcd_writeData(0x0000);								// Page 41 of SPFD5420A Datasheet
 	
@@ -263,14 +267,10 @@ void lcd_init(void){
 	vTaskDelay( (portTickType)TASK_DELAY_MS(LCD_SETUP_DELAY) );
 }
 
-unsigned char lcd_checkID(){
+unsigned short lcd_readID(){
 	lcd_writeCommand(LCD_CMD_ID_READ);
 	
-	if( (*LCD_PARAM_ADDR) == LCD_DEVICE_ID ) {
-		return TRUE;
-	}else{
-		return FALSE;
-	}
+	return (*LCD_PARAM_ADDR);
 }
 
 void lcd_setCur(unsigned int x, unsigned int y){

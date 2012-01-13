@@ -252,9 +252,10 @@ extern struct tLCDTopBar topBar;
 									  ||||||||||||||||			*/
 #define LCD_BASE_IMAGE_DISP_CTRL	0b0000000000000011
 
-unsigned char lcd_checkID(void);
+unsigned short lcd_readID(void);
 void lcd_task_init(void);
 void lcd_gui_task( void *pvParameters );
+void lcd_reset( void );
 void lcd_init( void );
 void lcd_fadeBacklightOut(void);
 void lcd_fadeBacklightIn(void);

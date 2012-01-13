@@ -63,7 +63,8 @@ void device_template_task_init(void){
 
 
 void device_template_task(void *pvParameters){
-	static U8 buf[EP_SIZE_TEMP2];
+	static U8 rxBuf[EP_SIZE_TEMP2];
+	static U8 txBuf[EP_SIZE_TEMP2];
 
 	portTickType xLastWakeTime;
 
@@ -78,16 +79,52 @@ void device_template_task(void *pvParameters){
 		if (Is_usb_out_received(EP_TEMP_OUT)){
 			Usb_reset_endpoint_fifo_access(EP_TEMP_OUT);
 			data_length = Usb_byte_count(EP_TEMP_OUT);
-			usb_read_ep_rxpacket(EP_TEMP_OUT, buf, data_length, NULL);
+			usb_read_ep_rxpacket(EP_TEMP_OUT, rxBuf, data_length, NULL);
 			Usb_ack_out_received_free(EP_TEMP_OUT);
 		}
 
 		// Load the IN endpoint with the contents of the RAM buffer
 		if (data_length && Is_usb_in_ready(EP_TEMP_IN)){
+			
+			switch(rxBuf[0]){
+				case(USB_CMD_REQ_APPL_VER):
+					txBuf[0] = TRAQPAQ_SW_LEVEL;
+					data_length = 1;
+					break;
+					
+				case(USB_CMD_REQ_HARDWARE_VER):
+					txBuf[0] = TRAQPAQ_HW_LEVEL;
+					data_length = 1;
+					break;
+					
+				case(USB_CMD_REQ_SERIAL_NUMBER):
+					txBuf[ 0] = 'T';
+					txBuf[ 1] = 'R';
+					txBuf[ 2] = 'A';
+					txBuf[ 3] = 'Q';
+					txBuf[ 4] = '2';
+					txBuf[ 5] = '3';
+					txBuf[ 6] = '9';
+					txBuf[ 7] = '1';
+					txBuf[ 8] = '1';
+					txBuf[ 9] = '0';
+					txBuf[10] = '0';
+					txBuf[11] = '0';
+					txBuf[12] = '1';
+					data_length = 13;
+					break;
+					
+				default:
+					data_length = 0;
+			}
+			
+			
+			
+			
 			Usb_reset_endpoint_fifo_access(EP_TEMP_IN);
-			usb_write_ep_txpacket(EP_TEMP_IN, buf, data_length, NULL);
+			usb_write_ep_txpacket(EP_TEMP_IN, txBuf, data_length, NULL);
 			data_length = 0;
-			Usb_ack_in_ready_send(EP_TEMP_IN);
+			Usb_ack_in_ready_send(EP_TEMP_IN);		
 		}
 	}
 }

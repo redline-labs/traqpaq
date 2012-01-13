@@ -35,7 +35,7 @@
 #define OSC0_STARTUP    AVR32_PM_OSCCTRL0_STARTUP_2048_RCOSC  //!< Osc0 startup time: RCOsc periods.
 
 #define APPL_CPU_SPEED	24000000
-#define APPL_PBA_SPEED	16000000
+#define APPL_PBA_SPEED	12000000
 
 /* These are documented in services/basic/clock/uc3a0_a1/osc.h */
 #define BOARD_OSC0_HZ           FOSC0
@@ -209,6 +209,22 @@
 #define GPS_RXD_FUNCTION			AVR32_USART0_RXD_0_0_FUNCTION
 #define GPS_USART_BAUD				115200
 #define GPS_USART_IRQ           	AVR32_USART0_IRQ
+
+// Analog Inputs
+#define ADC							(&AVR32_ADC)
+
+#define ADC_VCC_CHANNEL				1
+#define ADC_VCC_PIN					AVR32_ADC_AD_1_PIN
+#define ADC_VCC_FUNCTION			AVR32_ADC_AD_1_FUNCTION
+
+#define ADC_VEE_CHANNEL				2
+#define ADC_VEE_PIN					AVR32_ADC_AD_2_PIN
+#define ADC_VEE_FUNCTION			AVR32_ADC_AD_2_FUNCTION
+
+#define ADC_3V3_CHANNEL				3
+#define ADC_3V3_PIN					AVR32_ADC_AD_3_PIN
+#define ADC_3V3_FUNCTION			AVR32_ADC_AD_3_FUNCTION
+
 
 
 // Function Prototypes

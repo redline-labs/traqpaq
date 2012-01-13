@@ -47,6 +47,9 @@
  * running the ASF driver selector tool. Any changes will be discarded.
  */
 
+// From module: ANALOG - ADC - Analog to Digital Converter
+#include <adc.h>
+
 // From module: CPU - Cycle Counter
 #include <cycle_counter.h>
 
