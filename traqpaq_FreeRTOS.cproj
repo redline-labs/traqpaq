@@ -15,18 +15,18 @@
     <RootNamespace>$(MSBuildProjectName)</RootNamespace>
     <avrtool>com.atmel.avrdbg.tool.jtagicemkii</avrtool>
     <com_atmel_avrdbg_tool_jtagicemkii>
-      <ToolType xmlns="">com.atmel.avrdbg.tool.jtagicemkii</ToolType>
-      <ToolName xmlns="">JTAGICE mkII</ToolName>
-      <ToolNumber xmlns="">070000004791</ToolNumber>
-      <Channel xmlns="">
+      <ToolType>com.atmel.avrdbg.tool.jtagicemkii</ToolType>
+      <ToolName>JTAGICE mkII</ToolName>
+      <ToolNumber>070000004791</ToolNumber>
+      <Channel>
         <host>127.0.0.1</host>
-        <port>49267</port>
+        <port>49842</port>
         <ssl>False</ssl>
       </Channel>
-      <ToolOptions xmlns="">
+      <ToolOptions>
         <InterfaceName>JTAG</InterfaceName>
         <InterfaceProperties>
-          <JtagDbgClock>1000000</JtagDbgClock>
+          <JtagDbgClock>0</JtagDbgClock>
           <JtagProgClock>1000000</JtagProgClock>
           <IspClock>150000</IspClock>
           <JtagInChain>false</JtagInChain>
@@ -44,20 +44,20 @@
     <AsfFrameworkConfig>
       <framework-data>
         <options>
+          <option id="avr32.drivers.cpu" value="Add" config="" content-id="Atmel.ASF" />
           <option id="avr32.drivers.cpu.cycle_counter" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="avr32.drivers.ebi.smc" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="avr32.drivers.gpio" value="Add" config="" content-id="Atmel.ASF" />
           <option id="avr32.drivers.intc" value="Add" config="" content-id="Atmel.ASF" />
           <option id="avr32.drivers.pm" value="Add" config="" content-id="Atmel.ASF" />
-          <option id="avr32.drivers.cpu" value="Add" config="" content-id="Atmel.ASF" />
-          <option id="avr32.drivers.gpio" value="Add" config="" content-id="Atmel.ASF" />
-          <option id="avr32.drivers.ebi.smc" value="Add" config="" content-id="Atmel.ASF" />
           <option id="avr32.drivers.pwm" value="Add" config="" content-id="Atmel.ASF" />
-          <option id="common.services.basic.spi_master" value="Add" config="standard_spi" content-id="Atmel.ASF" />
-          <option id="avr32.drivers.wdt" value="Add" config="" content-id="Atmel.ASF" />
           <option id="avr32.drivers.twi" value="Add" config="" content-id="Atmel.ASF" />
           <option id="avr32.drivers.usart" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="avr32.drivers.wdt" value="Add" config="" content-id="Atmel.ASF" />
           <option id="common.boards" value="Add" config="" content-id="Atmel.ASF" />
           <option id="common.services.basic.sleepmgr" value="Add" config="" content-id="Atmel.ASF" />
-          <option id="avr32.services.basic.delay" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="common.services.basic.spi_master" value="Add" config="standard_spi" content-id="Atmel.ASF" />
+          <option id="avr32.drivers.adc" value="Add" config="" content-id="Atmel.ASF" />
         </options>
         <files>
           <file path="src/enum_example.c" framework="com.atmel.avr32.sf.uc3a" version="2.8.1-23114" source="avr32/drivers/usbb/_asf_v1/examples/enum_example.c" changed="False" content-id="Atmel.ASF" />
@@ -138,8 +138,6 @@
           <file path="src/asf/avr32/drivers/twi/twi.h" framework="" version="" source="avr32\drivers\twi\twi.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/avr32/drivers/usart/usart.c" framework="" version="" source="avr32\drivers\usart\usart.c" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/avr32/drivers/usart/usart.h" framework="" version="" source="avr32\drivers\usart\usart.h" changed="False" content-id="Atmel.ASF" />
-          <file path="src/asf/avr32/services/delay/delay.c" framework="" version="" source="avr32\services\delay\delay.c" changed="False" content-id="Atmel.ASF" />
-          <file path="src/asf/avr32/services/delay/delay.h" framework="" version="" source="avr32\services\delay\delay.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/common/boards/board.h" framework="" version="" source="common\boards\board.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/avr32/drivers/intc/exception.S" framework="" version="" source="avr32\drivers\intc\exception.S" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/avr32/drivers/pm/pm.c" framework="" version="" source="avr32\drivers\pm\pm.c" changed="False" content-id="Atmel.ASF" />
@@ -182,6 +180,8 @@
           <file path="src/config/conf_spi_master.h" framework="" version="" source="common\services\spi\uc3_spi\module_config\conf_spi_master.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/common/utils/interrupt/interrupt_avr32.h" framework="" version="" source="common\utils\interrupt\interrupt_avr32.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/common/utils/interrupt.h" framework="" version="" source="common\utils\interrupt.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/avr32/drivers/adc/adc.c" framework="" version="" source="avr32\drivers\adc\adc.c" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/avr32/drivers/adc/adc.h" framework="" version="" source="avr32\drivers\adc\adc.h" changed="False" content-id="Atmel.ASF" />
         </files>
         <documentation help="http://asf.atmel.com/docs/2.8.1/avr32/drivers/usbb/_asf_v1/examples/enum_example_freertos/at32uc3a0512_evk1100/doxygen/html/" />
       </framework-data>
@@ -224,7 +224,6 @@
             <Value>../src/asf/avr32/drivers/spi</Value>
             <Value>../src/asf/avr32/drivers/twi</Value>
             <Value>../src/asf/avr32/drivers/usart</Value>
-            <Value>../src/asf/avr32/services/delay</Value>
             <Value>../src/asf/common/boards</Value>
             <Value>../src/asf/avr32/drivers/pm</Value>
             <Value>../src/asf/avr32/drivers/pwm</Value>
@@ -237,6 +236,7 @@
             <Value>../src/asf/common/services/spi/uc3_spi</Value>
             <Value>../src/asf/common/services/spi</Value>
             <Value>../src/asf/common/utils</Value>
+            <Value>../src/asf/avr32/drivers/adc</Value>
           </ListValues>
         </avr32gcc.compiler.directories.IncludePaths>
         <avr32gcc.compiler.optimization.level>Optimize for size (-Os)</avr32gcc.compiler.optimization.level>
@@ -276,7 +276,6 @@
             <Value>../src/asf/avr32/drivers/spi</Value>
             <Value>../src/asf/avr32/drivers/twi</Value>
             <Value>../src/asf/avr32/drivers/usart</Value>
-            <Value>../src/asf/avr32/services/delay</Value>
             <Value>../src/asf/common/boards</Value>
             <Value>../src/asf/avr32/drivers/pm</Value>
             <Value>../src/asf/avr32/drivers/pwm</Value>
@@ -289,6 +288,7 @@
             <Value>../src/asf/common/services/spi/uc3_spi</Value>
             <Value>../src/asf/common/services/spi</Value>
             <Value>../src/asf/common/utils</Value>
+            <Value>../src/asf/avr32/drivers/adc</Value>
           </ListValues>
         </avr32gcc.assembler.general.IncludePaths>
         <avr32gcc.preprocessingassembler.general.AssemblerFlags>-mrelax -DFREERTOS_USED -DBOARD=EVK1100</avr32gcc.preprocessingassembler.general.AssemblerFlags>
@@ -319,7 +319,6 @@
             <Value>../src/asf/avr32/drivers/spi</Value>
             <Value>../src/asf/avr32/drivers/twi</Value>
             <Value>../src/asf/avr32/drivers/usart</Value>
-            <Value>../src/asf/avr32/services/delay</Value>
             <Value>../src/asf/common/boards</Value>
             <Value>../src/asf/avr32/drivers/pm</Value>
             <Value>../src/asf/avr32/drivers/pwm</Value>
@@ -332,6 +331,7 @@
             <Value>../src/asf/common/services/spi/uc3_spi</Value>
             <Value>../src/asf/common/services/spi</Value>
             <Value>../src/asf/common/utils</Value>
+            <Value>../src/asf/avr32/drivers/adc</Value>
           </ListValues>
         </avr32gcc.preprocessingassembler.general.IncludePaths>
       </Avr32Gcc>
@@ -342,148 +342,148 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <ToolchainSettings>
       <Avr32Gcc>
-  <avr32gcc.compiler.symbols.DefSymbols>
-    <ListValues>
-      <Value>FREERTOS_USED</Value>
-      <Value>BOARD=TRAQPAQ_REV12</Value>
-    </ListValues>
-  </avr32gcc.compiler.symbols.DefSymbols>
-  <avr32gcc.compiler.directories.IncludePaths>
-    <ListValues>
-      <Value>../src</Value>
-      <Value>../src/asf/avr32/boards</Value>
-      <Value>../src/asf/avr32/drivers/tc</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/device</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/host</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum/device</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum_example_freertos/freertos</Value>
-      <Value>../src/asf/avr32/services/usb/_asf_v1</Value>
-      <Value>../src/asf/thirdparty/freertos/source/include</Value>
-      <Value>../src/asf/thirdparty/freertos/source/portable/gcc/avr32_uc3</Value>
-      <Value>../src/config</Value>
-      <Value>../src/asf/avr32/drivers/cpu</Value>
-      <Value>../src/asf/avr32/drivers/cpu/cycle_counter</Value>
-      <Value>../src/asf/avr32/drivers/ebi/smc</Value>
-      <Value>../src/asf/avr32/drivers/flashc</Value>
-      <Value>../src/asf/avr32/drivers/gpio</Value>
-      <Value>../src/asf/avr32/drivers/intc</Value>
-      <Value>../src/asf/avr32/drivers/spi</Value>
-      <Value>../src/asf/avr32/drivers/twi</Value>
-      <Value>../src/asf/avr32/drivers/usart</Value>
-      <Value>../src/asf/avr32/services/delay</Value>
-      <Value>../src/asf/common/boards</Value>
-      <Value>../src/asf/avr32/drivers/pm</Value>
-      <Value>../src/asf/avr32/drivers/pwm</Value>
-      <Value>../src/asf/avr32/drivers/wdt</Value>
-      <Value>../src/asf/avr32/utils</Value>
-      <Value>../src/asf/avr32/utils/preprocessor</Value>
-      <Value>../src/asf/common/services/clock</Value>
-      <Value>../src/asf/common/services/sleepmgr</Value>
-      <Value>../src/asf/common/services/sleepmgr/uc3</Value>
-      <Value>../src/asf/common/services/spi/uc3_spi</Value>
-      <Value>../src/asf/common/services/spi</Value>
-      <Value>../src/asf/common/utils</Value>
-    </ListValues>
-  </avr32gcc.compiler.directories.IncludePaths>
-  <avr32gcc.compiler.optimization.level>Optimize more (-O2)</avr32gcc.compiler.optimization.level>
-  <avr32gcc.compiler.optimization.OtherFlags>-fdata-sections</avr32gcc.compiler.optimization.OtherFlags>
-  <avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
-  <avr32gcc.compiler.optimization.DebugLevel>Maximum (-g3)</avr32gcc.compiler.optimization.DebugLevel>
-  <avr32gcc.compiler.warnings.AllWarnings>True</avr32gcc.compiler.warnings.AllWarnings>
-  <avr32gcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -Wstrict-prototypes -Wmissing-prototypes -Werror-implicit-function-declaration -Wpointer-arith -mrelax</avr32gcc.compiler.miscellaneous.OtherFlags>
-  <avr32gcc.linker.general.DoNotUseStandardStartFiles>True</avr32gcc.linker.general.DoNotUseStandardStartFiles>
-  <avr32gcc.linker.optimization.GarbageCollectUnusedSections>True</avr32gcc.linker.optimization.GarbageCollectUnusedSections>
-  <avr32gcc.linker.miscellaneous.LinkerFlags>-T../src/asf/avr32/utils/linker_scripts/at32uc3a/0512/gcc/link_uc3a0512.lds -Wl,--relax -Wl,-e,_trampoline</avr32gcc.linker.miscellaneous.LinkerFlags>
-  <avr32gcc.assembler.general.AssemblerFlags>-mrelax</avr32gcc.assembler.general.AssemblerFlags>
-  <avr32gcc.assembler.general.IncludePaths>
-    <ListValues>
-      <Value>../src</Value>
-      <Value>../src/asf/avr32/boards</Value>
-      <Value>../src/asf/avr32/drivers/tc</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/device</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/host</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum/device</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum_example_freertos/freertos</Value>
-      <Value>../src/asf/avr32/services/usb/_asf_v1</Value>
-      <Value>../src/asf/thirdparty/freertos/source/include</Value>
-      <Value>../src/asf/thirdparty/freertos/source/portable/gcc/avr32_uc3</Value>
-      <Value>../src/config</Value>
-      <Value>../src/asf/avr32/drivers/cpu</Value>
-      <Value>../src/asf/avr32/drivers/cpu/cycle_counter</Value>
-      <Value>../src/asf/avr32/drivers/ebi/smc</Value>
-      <Value>../src/asf/avr32/drivers/flashc</Value>
-      <Value>../src/asf/avr32/drivers/gpio</Value>
-      <Value>../src/asf/avr32/drivers/intc</Value>
-      <Value>../src/asf/avr32/drivers/spi</Value>
-      <Value>../src/asf/avr32/drivers/twi</Value>
-      <Value>../src/asf/avr32/drivers/usart</Value>
-      <Value>../src/asf/avr32/services/delay</Value>
-      <Value>../src/asf/common/boards</Value>
-      <Value>../src/asf/avr32/drivers/pm</Value>
-      <Value>../src/asf/avr32/drivers/pwm</Value>
-      <Value>../src/asf/avr32/drivers/wdt</Value>
-      <Value>../src/asf/avr32/utils</Value>
-      <Value>../src/asf/avr32/utils/preprocessor</Value>
-      <Value>../src/asf/common/services/clock</Value>
-      <Value>../src/asf/common/services/sleepmgr</Value>
-      <Value>../src/asf/common/services/sleepmgr/uc3</Value>
-      <Value>../src/asf/common/services/spi/uc3_spi</Value>
-      <Value>../src/asf/common/services/spi</Value>
-      <Value>../src/asf/common/utils</Value>
-    </ListValues>
-  </avr32gcc.assembler.general.IncludePaths>
-  <avr32gcc.preprocessingassembler.general.AssemblerFlags>-mrelax -DFREERTOS_USED -DBOARD=TRAQPAQ_REV12</avr32gcc.preprocessingassembler.general.AssemblerFlags>
-  <avr32gcc.preprocessingassembler.general.IncludePaths>
-    <ListValues>
-      <Value>../src</Value>
-      <Value>../src/asf/avr32/boards</Value>
-      <Value>../src/asf/avr32/boards/evk1100</Value>
-      <Value>../src/asf/avr32/drivers/tc</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/device</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/host</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum/device</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum_example_freertos/freertos</Value>
-      <Value>../src/asf/avr32/services/usb/_asf_v1</Value>
-      <Value>../src/asf/thirdparty/freertos/source/include</Value>
-      <Value>../src/asf/thirdparty/freertos/source/portable/gcc/avr32_uc3</Value>
-      <Value>../src/config</Value>
-      <Value>../src/asf/avr32/drivers/cpu</Value>
-      <Value>../src/asf/avr32/drivers/cpu/cycle_counter</Value>
-      <Value>../src/asf/avr32/drivers/ebi/smc</Value>
-      <Value>../src/asf/avr32/drivers/flashc</Value>
-      <Value>../src/asf/avr32/drivers/gpio</Value>
-      <Value>../src/asf/avr32/drivers/intc</Value>
-      <Value>../src/asf/avr32/drivers/spi</Value>
-      <Value>../src/asf/avr32/drivers/twi</Value>
-      <Value>../src/asf/avr32/drivers/usart</Value>
-      <Value>../src/asf/avr32/services/delay</Value>
-      <Value>../src/asf/common/boards</Value>
-      <Value>../src/asf/avr32/drivers/pm</Value>
-      <Value>../src/asf/avr32/drivers/pwm</Value>
-      <Value>../src/asf/avr32/drivers/wdt</Value>
-      <Value>../src/asf/avr32/utils</Value>
-      <Value>../src/asf/avr32/utils/preprocessor</Value>
-      <Value>../src/asf/common/services/clock</Value>
-      <Value>../src/asf/common/services/sleepmgr</Value>
-      <Value>../src/asf/common/services/sleepmgr/uc3</Value>
-      <Value>../src/asf/common/services/spi/uc3_spi</Value>
-      <Value>../src/asf/common/services/spi</Value>
-      <Value>../src/asf/common/utils</Value>
-    </ListValues>
-  </avr32gcc.preprocessingassembler.general.IncludePaths>
-</Avr32Gcc>
+        <avr32gcc.compiler.symbols.DefSymbols>
+          <ListValues>
+            <Value>FREERTOS_USED</Value>
+            <Value>BOARD=TRAQPAQ_REV12</Value>
+          </ListValues>
+        </avr32gcc.compiler.symbols.DefSymbols>
+        <avr32gcc.compiler.directories.IncludePaths>
+          <ListValues>
+            <Value>../src</Value>
+            <Value>../src/asf/avr32/boards</Value>
+            <Value>../src/asf/avr32/drivers/tc</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/device</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/host</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum/device</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum_example_freertos/freertos</Value>
+            <Value>../src/asf/avr32/services/usb/_asf_v1</Value>
+            <Value>../src/asf/thirdparty/freertos/source/include</Value>
+            <Value>../src/asf/thirdparty/freertos/source/portable/gcc/avr32_uc3</Value>
+            <Value>../src/config</Value>
+            <Value>../src/asf/avr32/drivers/cpu</Value>
+            <Value>../src/asf/avr32/drivers/cpu/cycle_counter</Value>
+            <Value>../src/asf/avr32/drivers/ebi/smc</Value>
+            <Value>../src/asf/avr32/drivers/flashc</Value>
+            <Value>../src/asf/avr32/drivers/gpio</Value>
+            <Value>../src/asf/avr32/drivers/intc</Value>
+            <Value>../src/asf/avr32/drivers/spi</Value>
+            <Value>../src/asf/avr32/drivers/twi</Value>
+            <Value>../src/asf/avr32/drivers/usart</Value>
+            <Value>../src/asf/common/boards</Value>
+            <Value>../src/asf/avr32/drivers/pm</Value>
+            <Value>../src/asf/avr32/drivers/pwm</Value>
+            <Value>../src/asf/avr32/drivers/wdt</Value>
+            <Value>../src/asf/avr32/utils</Value>
+            <Value>../src/asf/avr32/utils/preprocessor</Value>
+            <Value>../src/asf/common/services/clock</Value>
+            <Value>../src/asf/common/services/sleepmgr</Value>
+            <Value>../src/asf/common/services/sleepmgr/uc3</Value>
+            <Value>../src/asf/common/services/spi/uc3_spi</Value>
+            <Value>../src/asf/common/services/spi</Value>
+            <Value>../src/asf/common/utils</Value>
+            <Value>../src/asf/avr32/drivers/adc</Value>
+          </ListValues>
+        </avr32gcc.compiler.directories.IncludePaths>
+        <avr32gcc.compiler.optimization.level>Optimize (-O1)</avr32gcc.compiler.optimization.level>
+        <avr32gcc.compiler.optimization.OtherFlags>-fdata-sections</avr32gcc.compiler.optimization.OtherFlags>
+        <avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
+        <avr32gcc.compiler.optimization.DebugLevel>Maximum (-g3)</avr32gcc.compiler.optimization.DebugLevel>
+        <avr32gcc.compiler.warnings.AllWarnings>True</avr32gcc.compiler.warnings.AllWarnings>
+        <avr32gcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -Wstrict-prototypes -Wmissing-prototypes -Werror-implicit-function-declaration -Wpointer-arith -mrelax</avr32gcc.compiler.miscellaneous.OtherFlags>
+        <avr32gcc.linker.general.DoNotUseStandardStartFiles>True</avr32gcc.linker.general.DoNotUseStandardStartFiles>
+        <avr32gcc.linker.optimization.GarbageCollectUnusedSections>True</avr32gcc.linker.optimization.GarbageCollectUnusedSections>
+        <avr32gcc.linker.miscellaneous.LinkerFlags>-T../src/asf/avr32/utils/linker_scripts/at32uc3a/0512/gcc/link_uc3a0512.lds -Wl,--relax -Wl,-e,_trampoline</avr32gcc.linker.miscellaneous.LinkerFlags>
+        <avr32gcc.assembler.general.AssemblerFlags>-mrelax</avr32gcc.assembler.general.AssemblerFlags>
+        <avr32gcc.assembler.general.IncludePaths>
+          <ListValues>
+            <Value>../src</Value>
+            <Value>../src/asf/avr32/boards</Value>
+            <Value>../src/asf/avr32/drivers/tc</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/device</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/host</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum/device</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum_example_freertos/freertos</Value>
+            <Value>../src/asf/avr32/services/usb/_asf_v1</Value>
+            <Value>../src/asf/thirdparty/freertos/source/include</Value>
+            <Value>../src/asf/thirdparty/freertos/source/portable/gcc/avr32_uc3</Value>
+            <Value>../src/config</Value>
+            <Value>../src/asf/avr32/drivers/cpu</Value>
+            <Value>../src/asf/avr32/drivers/cpu/cycle_counter</Value>
+            <Value>../src/asf/avr32/drivers/ebi/smc</Value>
+            <Value>../src/asf/avr32/drivers/flashc</Value>
+            <Value>../src/asf/avr32/drivers/gpio</Value>
+            <Value>../src/asf/avr32/drivers/intc</Value>
+            <Value>../src/asf/avr32/drivers/spi</Value>
+            <Value>../src/asf/avr32/drivers/twi</Value>
+            <Value>../src/asf/avr32/drivers/usart</Value>
+            <Value>../src/asf/common/boards</Value>
+            <Value>../src/asf/avr32/drivers/pm</Value>
+            <Value>../src/asf/avr32/drivers/pwm</Value>
+            <Value>../src/asf/avr32/drivers/wdt</Value>
+            <Value>../src/asf/avr32/utils</Value>
+            <Value>../src/asf/avr32/utils/preprocessor</Value>
+            <Value>../src/asf/common/services/clock</Value>
+            <Value>../src/asf/common/services/sleepmgr</Value>
+            <Value>../src/asf/common/services/sleepmgr/uc3</Value>
+            <Value>../src/asf/common/services/spi/uc3_spi</Value>
+            <Value>../src/asf/common/services/spi</Value>
+            <Value>../src/asf/common/utils</Value>
+            <Value>../src/asf/avr32/drivers/adc</Value>
+          </ListValues>
+        </avr32gcc.assembler.general.IncludePaths>
+        <avr32gcc.preprocessingassembler.general.AssemblerFlags>-mrelax -DFREERTOS_USED -DBOARD=TRAQPAQ_REV12</avr32gcc.preprocessingassembler.general.AssemblerFlags>
+        <avr32gcc.preprocessingassembler.general.IncludePaths>
+          <ListValues>
+            <Value>../src</Value>
+            <Value>../src/asf/avr32/boards</Value>
+            <Value>../src/asf/avr32/boards/evk1100</Value>
+            <Value>../src/asf/avr32/drivers/tc</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/device</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/host</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum/device</Value>
+            <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum_example_freertos/freertos</Value>
+            <Value>../src/asf/avr32/services/usb/_asf_v1</Value>
+            <Value>../src/asf/thirdparty/freertos/source/include</Value>
+            <Value>../src/asf/thirdparty/freertos/source/portable/gcc/avr32_uc3</Value>
+            <Value>../src/config</Value>
+            <Value>../src/asf/avr32/drivers/cpu</Value>
+            <Value>../src/asf/avr32/drivers/cpu/cycle_counter</Value>
+            <Value>../src/asf/avr32/drivers/ebi/smc</Value>
+            <Value>../src/asf/avr32/drivers/flashc</Value>
+            <Value>../src/asf/avr32/drivers/gpio</Value>
+            <Value>../src/asf/avr32/drivers/intc</Value>
+            <Value>../src/asf/avr32/drivers/spi</Value>
+            <Value>../src/asf/avr32/drivers/twi</Value>
+            <Value>../src/asf/avr32/drivers/usart</Value>
+            <Value>../src/asf/common/boards</Value>
+            <Value>../src/asf/avr32/drivers/pm</Value>
+            <Value>../src/asf/avr32/drivers/pwm</Value>
+            <Value>../src/asf/avr32/drivers/wdt</Value>
+            <Value>../src/asf/avr32/utils</Value>
+            <Value>../src/asf/avr32/utils/preprocessor</Value>
+            <Value>../src/asf/common/services/clock</Value>
+            <Value>../src/asf/common/services/sleepmgr</Value>
+            <Value>../src/asf/common/services/sleepmgr/uc3</Value>
+            <Value>../src/asf/common/services/spi/uc3_spi</Value>
+            <Value>../src/asf/common/services/spi</Value>
+            <Value>../src/asf/common/utils</Value>
+            <Value>../src/asf/avr32/drivers/adc</Value>
+          </ListValues>
+        </avr32gcc.preprocessingassembler.general.IncludePaths>
+      </Avr32Gcc>
     </ToolchainSettings>
     <OutputFileName>traqpaq_FreeRTOS</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
@@ -502,6 +502,12 @@
       <SubType>compile</SubType>
     </None>
     <None Include="src\asf\avr32\drivers\cpu\cycle_counter\cycle_counter.h">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="src\asf\avr32\drivers\adc\adc.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="src\asf\avr32\drivers\adc\adc.h">
       <SubType>compile</SubType>
     </None>
     <Compile Include="src\asf\avr32\drivers\ebi\smc\smc.c">
@@ -577,12 +583,6 @@
       <SubType>compile</SubType>
     </Compile>
     <None Include="src\asf\avr32\drivers\wdt\wdt.h">
-      <SubType>compile</SubType>
-    </None>
-    <Compile Include="src\asf\avr32\services\delay\delay.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <None Include="src\asf\avr32\services\delay\delay.h">
       <SubType>compile</SubType>
     </None>
     <None Include="src\asf\common\boards\board.h">
@@ -696,6 +696,18 @@
     <Compile Include="src\drivers.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\font\Simple16X32.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\font\Simple16X32.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\font\Simple8X16.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\font\Simple8X16.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\gps\gps.c">
       <SubType>compile</SubType>
     </Compile>
@@ -715,6 +727,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\lcd\lcd.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcd\menu.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcd\menu.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\smc_lcd.h">
@@ -861,10 +879,10 @@
     <Compile Include="src\device_template_task.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\font\fontConsole.c">
+    <Compile Include="src\font\Console8X16.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\font\fontConsole.h">
+    <Compile Include="src\font\Console8X16.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\fuel\fuel.c">
@@ -902,6 +920,7 @@
     <Folder Include="src\asf\avr32\boards\" />
     <Folder Include="src\asf\avr32\boards\traqpaq_rev12" />
     <Folder Include="src\asf\avr32\drivers\" />
+    <Folder Include="src\asf\avr32\drivers\adc\" />
     <Folder Include="src\asf\avr32\drivers\cpu\" />
     <Folder Include="src\asf\avr32\drivers\cpu\cycle_counter\" />
     <Folder Include="src\asf\avr32\drivers\ebi\" />
@@ -921,7 +940,6 @@
     <Folder Include="src\asf\avr32\drivers\usbb\_asf_v1\enum\device\" />
     <Folder Include="src\asf\avr32\drivers\wdt\" />
     <Folder Include="src\asf\avr32\services\" />
-    <Folder Include="src\asf\avr32\services\delay\" />
     <Folder Include="src\asf\avr32\services\usb\" />
     <Folder Include="src\asf\avr32\services\usb\_asf_v1\" />
     <Folder Include="src\asf\avr32\utils\" />
