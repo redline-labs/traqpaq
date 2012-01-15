@@ -72,6 +72,7 @@ const unsigned char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', 
 
 // Data Structs
 struct tLCDTopBar topBar;
+struct tMenu mainMenu;
 
 // Create task for FreeRTOS
 void lcd_task_init( void ){
@@ -82,7 +83,6 @@ void lcd_task_init( void ){
 void lcd_gui_task( void *pvParameters ){
 	
 	unsigned char i = 0;
-	struct tMenu mainMenu;
 	
 	lcd_reset();
 	
@@ -97,7 +97,9 @@ void lcd_gui_task( void *pvParameters ){
 	
 	lcd_fillRGB(COLOR_WHITE);
 	
-	topBar = lcd_createTopBar("traq|paq", COLOR_WHITE, COLOR_BLACK);
+	topBar = lcd_createTopBar("Ryan's traq|paq", COLOR_WHITE, COLOR_BLACK);
+	lcd_updateBattery(&topBar, 70);
+	lcd_updateAntenna(&topBar, 3);
 	
 	mainMenu = menu_create("Main Menu", FONT_SMALL_POINTER);
 	menu_addItem(&mainMenu, "Standard Session", 1);
@@ -114,7 +116,7 @@ void lcd_gui_task( void *pvParameters ){
 	
 	while(1){
 		vTaskDelay( (portTickType)TASK_DELAY_MS(1000) );
-		menu_scrollDown(&mainMenu);
+		//menu_scrollDown(&mainMenu);
 	}
 }
 

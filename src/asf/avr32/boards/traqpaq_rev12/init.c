@@ -111,53 +111,49 @@ void board_init(void){
 	// ------------------------------------------------------------
 	#if(TRAQPAQ_HW_EXINT_ENABLED)
 	
-	eic_options_t eic_options[5];
+	eic_options_t eic_options[4];
 	
-	eic_options[0].eic_mode =	AVR32_EIC_EDGE_IRQ; 
-	eic_options[0].eic_edge =	AVR32_EIC_RISING_EDGE; 
-	eic_options[0].eic_filter =	AVR32_EIC_FILTER_OFF; 
-	eic_options[0].eic_async =	AVR32_EIC_SYNC; 
-	eic_options[0].eic_line =	EXTINT_BUTTON0;
+	eic_options[0].eic_mode   = EIC_MODE_EDGE_TRIGGERED;	// Enable edge-triggered interrupt.
+	eic_options[0].eic_edge   = EIC_EDGE_RISING_EDGE;		// Interrupt will trigger on rising edge.
+	eic_options[0].eic_async  = EIC_ASYNCH_MODE;			// Initialize in asynchronous mode
+	eic_options[0].eic_filter = EIC_FILTER_ENABLED;			// Enable the glitch filter
+	eic_options[0].eic_line   = EXTINT_BUTTON0;			// Set the interrupt line number.
 	
-	eic_options[1].eic_mode =	AVR32_EIC_EDGE_IRQ; 
-	eic_options[1].eic_edge =	AVR32_EIC_RISING_EDGE; 
-	eic_options[1].eic_filter =	AVR32_EIC_FILTER_OFF; 
-	eic_options[1].eic_async =	AVR32_EIC_SYNC; 
-	eic_options[1].eic_line =	EXTINT_BUTTON1;
+	eic_options[1].eic_mode   = EIC_MODE_EDGE_TRIGGERED;	// Enable edge-triggered interrupt.
+	eic_options[1].eic_edge   = EIC_EDGE_RISING_EDGE;		// Interrupt will trigger on rising edge.
+	eic_options[1].eic_async  = EIC_ASYNCH_MODE;			// Initialize in asynchronous mode
+	eic_options[1].eic_filter = EIC_FILTER_ENABLED;			// Enable the glitch filter
+	eic_options[1].eic_line   = EXTINT_BUTTON1;			// Set the interrupt line number.
 	
-	eic_options[2].eic_mode =	AVR32_EIC_EDGE_IRQ; 
-	eic_options[2].eic_edge =	AVR32_EIC_RISING_EDGE; 
-	eic_options[2].eic_filter =	AVR32_EIC_FILTER_OFF; 
-	eic_options[2].eic_async =	AVR32_EIC_SYNC; 
-	eic_options[2].eic_line =	EXTINT_BUTTON2;
+	eic_options[2].eic_mode	  = EIC_MODE_EDGE_TRIGGERED;	// Enable edge-triggered interrupt.
+	eic_options[2].eic_edge   = EIC_EDGE_RISING_EDGE;		// Interrupt will trigger on rising edge.
+	eic_options[2].eic_async  = EIC_ASYNCH_MODE;			// Initialize in asynchronous mode
+	eic_options[2].eic_filter = EIC_FILTER_ENABLED;			// Enable the glitch filter
+	eic_options[2].eic_line   = EXTINT_BUTTON2;			// Set the interrupt line number.
 	
-	eic_options[3].eic_mode =	AVR32_EIC_EDGE_IRQ; 
-	eic_options[3].eic_edge =	AVR32_EIC_RISING_EDGE; 
-	eic_options[3].eic_filter =	AVR32_EIC_FILTER_OFF; 
-	eic_options[3].eic_async =	AVR32_EIC_SYNC; 
-	eic_options[3].eic_line =	EXTINT_BUTTON3;
-
+	eic_options[3].eic_mode   = EIC_MODE_EDGE_TRIGGERED;	// Enable edge-triggered interrupt.
+	eic_options[3].eic_edge   = EIC_EDGE_RISING_EDGE;		// Interrupt will trigger on rising edge.
+	eic_options[3].eic_async  = EIC_ASYNCH_MODE;			// Initialize in asynchronous mode
+	eic_options[3].eic_filter = EIC_FILTER_ENABLED;			// Enable the glitch filter
+	eic_options[3].eic_line   = EXTINT_BUTTON3;			// Set the interrupt line number.
 	
-	static const gpio_map_t EXT_INT_GPIO_MAP = {
-		{EXTINT_BUTTON0_PIN, EXTINT_BUTTON0_FUNCTION},		// Button 0
-		{EXTINT_BUTTON1_PIN, EXTINT_BUTTON1_FUNCTION},		// Button 1
-		{EXTINT_BUTTON2_PIN, EXTINT_BUTTON2_FUNCTION},		// Button 2
-		{EXTINT_BUTTON3_PIN, EXTINT_BUTTON3_FUNCTION},		// Button 3
-	}; 
-	
-	gpio_enable_module(EXT_INT_GPIO_MAP, sizeof(EXT_INT_GPIO_MAP)/sizeof(EXT_INT_GPIO_MAP[0]) );
+	gpio_enable_module_pin(EXTINT_BUTTON0_PIN, EXTINT_BUTTON0_FUNCTION);
+	gpio_enable_module_pin(EXTINT_BUTTON1_PIN, EXTINT_BUTTON1_FUNCTION);
+	gpio_enable_module_pin(EXTINT_BUTTON2_PIN, EXTINT_BUTTON2_FUNCTION);
+	gpio_enable_module_pin(EXTINT_BUTTON3_PIN, EXTINT_BUTTON3_FUNCTION);
 	
 	eic_init(&AVR32_EIC, &eic_options, EXTINT_NUMBER_LINES);
+	
+	eic_enable_line(&AVR32_EIC, eic_options[0].eic_line);
+	eic_enable_line(&AVR32_EIC, eic_options[1].eic_line);
+	eic_enable_line(&AVR32_EIC, eic_options[2].eic_line);
+	eic_enable_line(&AVR32_EIC, eic_options[3].eic_line);
 
-	eic_enable_lines(&AVR32_EIC, (1<<eic_options[3].eic_line) |
-								 (1<<eic_options[2].eic_line) |
-								 (1<<eic_options[1].eic_line) |
-								 (1<<eic_options[0].eic_line));
-								 
-	eic_enable_interrupt_lines(&AVR32_EIC, (1<<eic_options[3].eic_line) |
-										   (1<<eic_options[2].eic_line) |
-										   (1<<eic_options[1].eic_line) |
-										   (1<<eic_options[0].eic_line));
+	eic_enable_interrupt_line(&AVR32_EIC, eic_options[0].eic_line);
+	eic_enable_interrupt_line(&AVR32_EIC, eic_options[1].eic_line);
+	eic_enable_interrupt_line(&AVR32_EIC, eic_options[2].eic_line);
+	eic_enable_interrupt_line(&AVR32_EIC, eic_options[3].eic_line);
+	
 	
 	#endif
 	

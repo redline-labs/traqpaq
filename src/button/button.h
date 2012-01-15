@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Board Configuration File
+ * Button Interface
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -27,27 +27,14 @@
  *
  ******************************************************************************/
 
-#ifndef CONF_BOARD_H
-#define CONF_BOARD_H
+#ifndef BUTTON_H_
+#define BUTTON_H_
 
-// Configure/Deconfigure hardware on the module
-#define TRAQPAQ_HW_PWM_ENABLED			TRUE
-#define TRAQPAQ_HW_EBI_ENABLED			TRUE
-#define TRAQPAQ_HW_USART_ENABLED		FALSE
-#define TRAQPAQ_HW_SPI_ENABLED			FALSE
-#define TRAQPAQ_HW_TWI_ENABLED			FALSE
-#define TRAQPAQ_HW_EXINT_ENABLED		TRUE
-#define TRAQPAQ_HW_USB_ENABLED			TRUE
-#define TRAQPAQ_HW_DEBUG_ENABLED		FALSE	// FreeRTOS Trace
-#define TRAQPAQ_HW_PLL_ENABLED			TRUE
-#define TRAQPAQ_HW_WDT_ENABLED			TRUE
-#define TRAQPAQ_HW_ADC_ENABLED			FALSE
+#define BUTTON_DEBOUNCE_TIME		150			// Button debounce time in milliseconds
 
-#define TRAQPAQ_HW_USB_FASTCHG_ENABLED	FALSE
+void buttons_task_init( void );
+void buttons_task( void *pvParameters );
 
-#define TRAQPAQ_PDCA_SPI_ENABLED		FALSE
-#define TRAQPAQ_PCDA_USART0_ENABLED		FALSE
-#define TRAQPAQ_PCDA_USART1_ENABLED		FALSE
-#define TRAQPAQ_PCDA_TWI_ENABLED		FALSE
 
-#endif // CONF_BOARD_H
+
+#endif /* BUTTON_H_ */

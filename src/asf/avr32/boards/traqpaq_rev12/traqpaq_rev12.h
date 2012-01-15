@@ -35,7 +35,7 @@
 #define OSC0_STARTUP    AVR32_PM_OSCCTRL0_STARTUP_2048_RCOSC  //!< Osc0 startup time: RCOsc periods.
 
 #define APPL_CPU_SPEED	24000000
-#define APPL_PBA_SPEED	12000000
+#define APPL_PBA_SPEED	16000000
 
 /* These are documented in services/basic/clock/uc3a0_a1/osc.h */
 #define BOARD_OSC0_HZ           FOSC0
@@ -94,11 +94,16 @@
 //! @{
 #define EXTINT_NUMBER_LINES			4
 
-#define EXTINT_BUTTON0				AVR32_EIC_INT0
-#define EXTINT_BUTTON1				AVR32_EIC_INT1
-#define EXTINT_BUTTON2				AVR32_EIC_INT2
-#define EXTINT_BUTTON3				AVR32_EIC_INT3
-#define EXTINT_GPSPPS				AVR32_EIC_INT4	// TODO: Need to move this with a jumper
+#define EXTINT_BUTTON0				EXT_INT0
+#define EXTINT_BUTTON1				EXT_INT1
+#define EXTINT_BUTTON2				EXT_INT2
+#define EXTINT_BUTTON3				EXT_INT3
+#define EXTINT_GPSPPS				EXT_INT4	// TODO: Need to move this with a jumper
+
+#define EXTINT_BUTTON0_IRQ			AVR32_EIC_IRQ_0
+#define EXTINT_BUTTON1_IRQ			AVR32_EIC_IRQ_1
+#define EXTINT_BUTTON2_IRQ			AVR32_EIC_IRQ_2
+#define EXTINT_BUTTON3_IRQ			AVR32_EIC_IRQ_3
 
 #define EXTINT_BUTTON0_PIN			AVR32_EIC_EXTINT_0_PIN
 #define EXTINT_BUTTON1_PIN			AVR32_EIC_EXTINT_1_PIN

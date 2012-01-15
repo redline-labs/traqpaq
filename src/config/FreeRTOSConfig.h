@@ -189,8 +189,6 @@ to exclude the API function. */
 #define configTSK_USB_DTP_PRIORITY    (tskIDLE_PRIORITY + 1)
 #define configTSK_USB_DTP_PERIOD      20
 
-
-
 /* GUI Task */
 #define configTSK_GUI_TASK_NAME        ((const signed portCHAR *)"GUI")
 #define configTSK_GUI_TASK_STACK_SIZE  512
@@ -232,6 +230,12 @@ to exclude the API function. */
 #define configTSK_CHARGE_TASK_STACK_SIZE  256
 #define configTSK_CHARGE_TASK_PRIORITY    (tskIDLE_PRIORITY + 1)
 #define configTSK_CHARGE_TASK_PERIOD      20
+
+/* Buttons Task */
+#define configTSK_BUTTONS_TASK_NAME        ((const signed portCHAR *)"Buttons")
+#define configTSK_BUTTONS_TASK_STACK_SIZE  256
+#define configTSK_BUTTONS_TASK_PRIORITY    (tskIDLE_PRIORITY + 1)
+#define configTSK_BUTTONS_TASK_PERIOD      20
 
 
 #endif /* FREERTOS_CONFIG_H */

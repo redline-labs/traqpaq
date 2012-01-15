@@ -79,12 +79,16 @@ int main( void ){
 	wdt_task_init();
 	#endif
 	
-	//charge_task_init();
+	#if( TRAQPAQ_HW_EXINT_ENABLED )
+	buttons_task_init();
+	#endif
+	
+	Enable_global_interrupt();
 
 	// Start the scheduler! ---------------------------------------
 	vTaskStartScheduler();
-
-	asm("nop");
 	
-	while (true);		// Should never reach this!
+	while (true){
+		asm("nop");
+	};		// Should never reach this!
 }

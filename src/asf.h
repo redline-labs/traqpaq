@@ -72,6 +72,9 @@
 // From module: MEMORY - EBI Static Memory Controller
 #include <smc.h>
 
+// From module: MEMORY - EIC - External Interrupt Controller
+#include <eic.h>
+
 // From module: MEMORY - FLASHC - Flash Controller
 #include <flashc.h>
 
