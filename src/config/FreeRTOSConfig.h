@@ -159,7 +159,7 @@ to exclude the API function. */
 #define configDBG_USART_TX_PIN        AVR32_USART2_TXD_0_1_PIN
 #define configDBG_USART_TX_FUNCTION   AVR32_USART2_TXD_0_1_FUNCTION
 #define configDBG_USART_BAUDRATE      57600
-#elif BOARD == TRAQPAQ_REV12
+#elif BOARD == TRAQPAQ
 #define configDBG                     TRAQPAQ_HW_DEBUG_ENABLED
 #define configDBG_USART               GPS_USART
 #define configDBG_USART_RX_PIN        GPS_RXD
@@ -173,33 +173,33 @@ to exclude the API function. */
 
 
 /* USB task definitions. */
-#define configTSK_USB_NAME            ((const signed portCHAR *)"USB")
-#define configTSK_USB_STACK_SIZE      256
-#define configTSK_USB_PRIORITY        (tskIDLE_PRIORITY + 3)
+#define configTSK_USB_NAME					((const signed portCHAR *)"USB")
+#define configTSK_USB_STACK_SIZE			256
+#define configTSK_USB_PRIORITY				(tskIDLE_PRIORITY + 3)
 
 /* USB device task definitions. */
-#define configTSK_USB_DEV_NAME        ((const signed portCHAR *)"USB Device")
-#define configTSK_USB_DEV_STACK_SIZE  256
-#define configTSK_USB_DEV_PRIORITY    (tskIDLE_PRIORITY + 2)
-#define configTSK_USB_DEV_PERIOD      20
+#define configTSK_USB_DEV_NAME				((const signed portCHAR *)"USB Device")
+#define configTSK_USB_DEV_STACK_SIZE		256
+#define configTSK_USB_DEV_PRIORITY			(tskIDLE_PRIORITY + 2)
+#define configTSK_USB_DEV_PERIOD			20
 
 /* USB device template task definitions. */
-#define configTSK_USB_DTP_NAME        ((const signed portCHAR *)"USB Device Template")
-#define configTSK_USB_DTP_STACK_SIZE  256
-#define configTSK_USB_DTP_PRIORITY    (tskIDLE_PRIORITY + 1)
-#define configTSK_USB_DTP_PERIOD      20
+#define configTSK_USB_DTP_NAME				((const signed portCHAR *)"USB Device Template")
+#define configTSK_USB_DTP_STACK_SIZE		256
+#define configTSK_USB_DTP_PRIORITY			(tskIDLE_PRIORITY + 1)
+#define configTSK_USB_DTP_PERIOD			20
 
 /* GUI Task */
-#define configTSK_GUI_TASK_NAME        ((const signed portCHAR *)"GUI")
-#define configTSK_GUI_TASK_STACK_SIZE  512
-#define configTSK_GUI_TASK_PRIORITY    (tskIDLE_PRIORITY + 1)
-#define configTSK_GUI_TASK_PERIOD      20
+#define configTSK_GUI_TASK_NAME				((const signed portCHAR *)"GUI")
+#define configTSK_GUI_TASK_STACK_SIZE		512
+#define configTSK_GUI_TASK_PRIORITY			(tskIDLE_PRIORITY + 1)
+#define configTSK_GUI_TASK_PERIOD			20
 
 /* Memory Task */
-#define configTSK_MEMORY_TASK_NAME        ((const signed portCHAR *)"Memory")
-#define configTSK_MEMORY_TASK_STACK_SIZE  256
-#define configTSK_MEMORY_TASK_PRIORITY    (tskIDLE_PRIORITY + 1)
-#define configTSK_MEMORY_TASK_PERIOD      20
+#define configTSK_MEMORY_TASK_NAME			((const signed portCHAR *)"Memory")
+#define configTSK_MEMORY_TASK_STACK_SIZE	256
+#define configTSK_MEMORY_TASK_PRIORITY		(tskIDLE_PRIORITY + 1)
+#define configTSK_MEMORY_TASK_PERIOD		20
 
 /* Watchdog Task */
 #define configTSK_WATCHDOG_TASK_NAME        ((const signed portCHAR *)"Watchdog")
@@ -208,34 +208,34 @@ to exclude the API function. */
 #define configTSK_WATCHDOG_TASK_PERIOD      20
 
 /* Dataflash Task */
-#define configTSK_DATAFLASH_TASK_NAME        ((const signed portCHAR *)"Dataflash")
-#define configTSK_DATAFLASH_TASK_STACK_SIZE  256
-#define configTSK_DATAFLASH_TASK_PRIORITY    (tskIDLE_PRIORITY + 1)
-#define configTSK_DATAFLASH_TASK_PERIOD      20
+#define configTSK_DATAFLASH_TASK_NAME		((const signed portCHAR *)"Dataflash")
+#define configTSK_DATAFLASH_TASK_STACK_SIZE	256
+#define configTSK_DATAFLASH_TASK_PRIORITY	(tskIDLE_PRIORITY + 1)
+#define configTSK_DATAFLASH_TASK_PERIOD		20
 
 /* Fuel Task */
-#define configTSK_FUEL_TASK_NAME        ((const signed portCHAR *)"Fuel")
-#define configTSK_FUEL_TASK_STACK_SIZE  256
-#define configTSK_FUEL_TASK_PRIORITY    (tskIDLE_PRIORITY + 1)
-#define configTSK_FUEL_TASK_PERIOD      20
+#define configTSK_FUEL_TASK_NAME			((const signed portCHAR *)"Fuel")
+#define configTSK_FUEL_TASK_STACK_SIZE		256
+#define configTSK_FUEL_TASK_PRIORITY		(tskIDLE_PRIORITY + 1)
+#define configTSK_FUEL_TASK_PERIOD			20
 
 /* GPS Task */
-#define configTSK_GPS_TASK_NAME        ((const signed portCHAR *)"GPS")
-#define configTSK_GPS_TASK_STACK_SIZE  256
-#define configTSK_GPS_TASK_PRIORITY    (tskIDLE_PRIORITY + 1)
-#define configTSK_GPS_TASK_PERIOD      20
+#define configTSK_GPS_TASK_NAME				((const signed portCHAR *)"GPS")
+#define configTSK_GPS_TASK_STACK_SIZE		256
+#define configTSK_GPS_TASK_PRIORITY			(tskIDLE_PRIORITY + 1)
+#define configTSK_GPS_TASK_PERIOD			20
 
 /* Charge Task */
-#define configTSK_CHARGE_TASK_NAME        ((const signed portCHAR *)"Charge")
-#define configTSK_CHARGE_TASK_STACK_SIZE  256
-#define configTSK_CHARGE_TASK_PRIORITY    (tskIDLE_PRIORITY + 1)
-#define configTSK_CHARGE_TASK_PERIOD      20
+#define configTSK_CHARGE_TASK_NAME			((const signed portCHAR *)"Charge")
+#define configTSK_CHARGE_TASK_STACK_SIZE	256
+#define configTSK_CHARGE_TASK_PRIORITY		(tskIDLE_PRIORITY + 1)
+#define configTSK_CHARGE_TASK_PERIOD		20
 
 /* Buttons Task */
-#define configTSK_BUTTONS_TASK_NAME        ((const signed portCHAR *)"Buttons")
-#define configTSK_BUTTONS_TASK_STACK_SIZE  256
-#define configTSK_BUTTONS_TASK_PRIORITY    (tskIDLE_PRIORITY + 1)
-#define configTSK_BUTTONS_TASK_PERIOD      20
+#define configTSK_BUTTONS_TASK_NAME			((const signed portCHAR *)"Buttons")
+#define configTSK_BUTTONS_TASK_STACK_SIZE	256
+#define configTSK_BUTTONS_TASK_PRIORITY		(tskIDLE_PRIORITY + 1)
+#define configTSK_BUTTONS_TASK_PERIOD		20
 
 
 #endif /* FREERTOS_CONFIG_H */

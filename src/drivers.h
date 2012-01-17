@@ -33,7 +33,10 @@
 // Buttons
 #include "button/button.h"
 
+// Debug
+#include "debug/debug.h"
 
+// FreeRTOS
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"

@@ -46,11 +46,11 @@ int main( void ){
 	
 	wdt_disable();
 	board_init();
+	INTC_init_interrupts();
 	
 	// Check to see if we got reset from a watchdog timeout
 	if( wdt_triggered() ){
-		// Dang! we did!
-		asm("nop");
+		debug_log("WARNING [WDT]: Recovering from watchdog reset!");
 	}
 	
 	// Schedule Tasks ---------------------------------------------
@@ -71,7 +71,7 @@ int main( void ){
 	fuel_task_init();
 	#endif
 	
-	#if( TRAQPAQ_HW_USART_ENABLED )
+	#if( TRAQPAQ_HW_GPS_ENABLED )
 	gps_task_init();
 	#endif
 	
@@ -87,6 +87,8 @@ int main( void ){
 
 	// Start the scheduler! ---------------------------------------
 	vTaskStartScheduler();
+	
+	debug_log("CRITICAL [RTOS]: Scheduler has ended");
 	
 	while (true){
 		asm("nop");

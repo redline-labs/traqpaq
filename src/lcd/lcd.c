@@ -88,9 +88,7 @@ void lcd_gui_task( void *pvParameters ){
 	
 	if( lcd_readID() != LCD_DEVICE_ID){
 		// We broke the display!!
-		while( TRUE ){
-			asm("nop");
-		}
+		debug_log("WARNING [LCD]: Incorrect device ID");
 	}
 	
 	lcd_init();

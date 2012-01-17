@@ -62,7 +62,7 @@ extern "C" {
  */
 //! @{
 #define EVK1100               1   //!< AT32UC3A EVK1100 board.
-#define TRAQPAQ_REV12         2   //!< traq|paq HW rev 1.2
+#define TRAQPAQ				  2   //!< traq|paq board
 #define USER_BOARD            99  //!< User-reserved board (if any).
 #define DUMMY_BOARD          100  //!< Dummy board to support board-independent applications (e.g. bootloader)
 //! @}
@@ -74,9 +74,9 @@ extern "C" {
 
 #if BOARD == EVK1100
   #include "evk1100/evk1100.h"
-#elif BOARD == TRAQPAQ_REV12
+#elif BOARD == TRAQPAQ
   // User-reserved area: #include the header file of your board here (if any).
-  #include "traqpaq_rev12/traqpaq_rev12.h"
+  #include "traqpaq/traqpaq.h"
 #elif BOARD == DUMMY_BOARD
   #include "dummy/dummy_board.h"
 #else

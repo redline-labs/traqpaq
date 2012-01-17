@@ -62,7 +62,6 @@ __attribute__((__interrupt__)) static void ISR_button3(void) {
 void buttons_task_init( void ){
 	buttonPress = xQueueCreate(1, sizeof(unsigned char));
 	
-	INTC_init_interrupts();
 	INTC_register_interrupt(&ISR_button0, EXTINT_BUTTON0_IRQ, EXTINT_BUTTON0); 
 	INTC_register_interrupt(&ISR_button1, EXTINT_BUTTON1_IRQ, EXTINT_BUTTON1); 
 	INTC_register_interrupt(&ISR_button2, EXTINT_BUTTON2_IRQ, EXTINT_BUTTON2); 

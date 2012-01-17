@@ -33,22 +33,36 @@
 #include "asf.h"
 #include "drivers.h"
 
+
+__attribute__((__interrupt__)) static void ISR_gps_rxd(void){
+	int c;
+	
+	usart_read_char(GPS_USART, &c);
+ 
+	usart_write_char(GPS_USART, c);
+}
+
 void gps_task_init( void ){
+	INTC_register_interrupt(&ISR_gps_rxd, AVR32_USART0_IRQ, AVR32_INTC_INT0);
+	GPS_USART->ier = AVR32_USART_IER_RXRDY_MASK;
+	
 	xTaskCreate(gps_task, configTSK_GPS_TASK_NAME, configTSK_GPS_TASK_STACK_SIZE, NULL, configTSK_GPS_TASK_PRIORITY, NULL);
 }
 
 
 void gps_task( void *pvParameters ){
+	gps_reset();
 	
 	while(TRUE){
-		usart_write_char(GPS_USART, 'H');
 		vTaskDelay( (portTickType)TASK_DELAY_MS(1000) );
 	}
 }
 
-void gps_irq_task( void ){
-	
-	
+void gps_reset( void ){
+	gpio_clr_gpio_pin(GPS_RESET);
+	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_RESET_TIME) );
+	gpio_set_gpio_pin(GPS_RESET);
+	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_RESET_TIME) );
 }
 
 /*

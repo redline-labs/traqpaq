@@ -32,11 +32,13 @@
 
 #define GPS_VERSION					"1.00"
 
+#define GPS_RESET_TIME				100		// Time in milliseconds
+
 #define GPS_MSG_START_CHAR			'$'		
 #define GPS_MSG_END_CHAR			0x0A	// ASCII for LF
 #define GPS_MSG_CR					0x0D
-#define GPS_MSG_MAX_STRLEN			90		// Each message is limited to 82 characters max, including '$', CR, and LF
-#define GPS_MSG_DELIMITER_CHAR		','
+#define GPS_MSG_MAX_STRLEN			82		// Each message is limited to 82 characters max, including '$', CR, and LF
+#define GPS_DELIMITER_CHAR			','
 #define GPS_CHECKSUM_CHAR			'*'
 #define GPS_PERIOD					'.'
 
@@ -119,15 +121,11 @@ typedef struct tGPSRXDBuffer{
   unsigned char raw[GPS_MSG_MAX_STRLEN];
 };
 
-
-
-
-
 // Prototypes
 //void gps_processMsg(struct tGPSRXDBuffer *GPSRXDBuffer, unsigned char index, struct tGPSMsgGGA *GPSMsgGGA, struct tGPSMsgGSV *GPSMsgGSV);
 
 void gps_task_init( void );
 void gps_task( void *pvParameters );
-void gps_irq( void );
+void gps_reset( void );
 
 #endif /* GPS_H_ */

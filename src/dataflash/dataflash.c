@@ -40,8 +40,7 @@ void dataflash_task( void *pvParameters ){
 	unsigned char checkID;
 	
 	if( !dataflash_checkID() ){
-		// Dang!  We broke it!
-		while(1);
+		debug_log("WARNING [DATAFLASH]: Incorrect device ID");
 	}
 	
 	dataflash_WriteEnable();
