@@ -221,7 +221,7 @@ to exclude the API function. */
 
 /* GPS Task */
 #define configTSK_GPS_TASK_NAME				((const signed portCHAR *)"GPS")
-#define configTSK_GPS_TASK_STACK_SIZE		256
+#define configTSK_GPS_TASK_STACK_SIZE		512
 #define configTSK_GPS_TASK_PRIORITY			(tskIDLE_PRIORITY + 1)
 #define configTSK_GPS_TASK_PERIOD			20
 

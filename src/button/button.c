@@ -78,7 +78,7 @@ void buttons_task( void *pvParameters ){
 		asm volatile ("nop");
 		//vTaskDelay( (portTickType)TASK_DELAY_MS(1000) );
 
-		if( xQueueReceive(buttonPress, &button, 0) == pdTRUE){
+		if( xQueueReceive(buttonPress, &button, portMAX_DELAY) == pdTRUE){
 			switch(button){
 				case(0):
 					menu_scrollUp(&mainMenu);

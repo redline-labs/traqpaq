@@ -33,6 +33,7 @@
 #define GPS_VERSION					"1.00"
 
 #define GPS_RESET_TIME				100		// Time in milliseconds
+#define GPS_QUEUE_SIZE				5
 
 #define GPS_MSG_START_CHAR			'$'		
 #define GPS_MSG_END_CHAR			0x0A	// ASCII for LF
@@ -41,12 +42,6 @@
 #define GPS_DELIMITER_CHAR			','
 #define GPS_CHECKSUM_CHAR			'*'
 #define GPS_PERIOD					'.'
-
-#define GPS_MSG_ID_POS				4		// Look at the 5th character to identify NMEA message
-#define GPS_MSG_ID_PMTK				'K'
-#define GPS_MSG_ID_GGA				'G'
-#define GPS_MSG_ID_GSV				'S'
-#define GPS_MSG_ID_RMC				'M'
 
 #define GPS_PACKET_START			7
 
@@ -57,6 +52,51 @@
 #define GPS_BUFFER_SIZE				(GPS_MSGS_PER_INTERRUPT * GPS_MSG_MAX_STRLEN)
 
 #define GPS_SIGNAL_MAX_LEN			12
+
+
+// Indices for pointing areas of each message
+#define MAX_SIGNALS_SENTENCE		20
+
+#define TOKEN_MESSAGE_ID			0
+
+#define MESSAGE_OFFSET_ID0			2
+#define MESSAGE_OFFSET_ID1			3
+#define MESSAGE_OFFSET_ID2			4
+
+#define ID_GGA_ID0					'G'
+#define ID_GGA_ID1					'G'
+#define ID_GGA_ID2					'A'
+
+#define ID_RMC_ID0					'R'
+#define ID_RMC_ID1					'M'
+#define ID_RMC_ID2					'C'
+
+#define TOKEN_GGA_UTC				1
+#define TOKEN_GGA_LATITUDE			2
+#define TOKEN_GGA_NORS				3
+#define TOKEN_GGA_LONGITUDE			4
+#define TOKEN_GGA_EORW				5
+#define TOKEN_GGA_QUALITY			6
+#define TOKEN_GGA_NUM_SATELLITES	7
+#define TOKEN_GGA_HDOP				8
+#define TOKEN_GGA_ALTITUDE			9
+#define TOKEN_GGA_ALTITUDE_UNITS	10
+#define TOKEN_GGA_GEO_SEP			11
+#define TOKEN_GGA_GEO_SEP_UNITS		12
+#define TOKEN_GGA_DIGREF_DATA_AGE	13
+#define TOKEN_GGA_DIGREF_STATION_ID	14
+
+#define TOKEN_RMC_UTC				1
+#define TOKEN_RMC_STATUS			2
+#define TOKEN_RMC_LATITUDE			3
+#define TOKEN_RMC_NORS				4
+#define TOKEN_RMC_LONGITUDE			5
+#define TOKEN_RMC_EORW				6
+#define TOKEN_RMC_SPEED				7
+#define TOKEN_RMC_TRACK				8
+#define TOKEN_RMC_DATE				9
+#define TOKEN_RMC_MAG_VAR			10
+#define TOKEN_RMC_MAG_VAR_EORW		11
 
 
 typedef struct tGPSMsgGGA {		// Raw ASCII NMEA messages
@@ -127,5 +167,8 @@ typedef struct tGPSRXDBuffer{
 void gps_task_init( void );
 void gps_task( void *pvParameters );
 void gps_reset( void );
+
+void gps_buffer_tokenize( void );
+unsigned char gps_verify_checksum( void );
 
 #endif /* GPS_H_ */

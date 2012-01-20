@@ -113,8 +113,8 @@ void lcd_gui_task( void *pvParameters ){
 	
 	
 	while(1){
-		vTaskDelay( (portTickType)TASK_DELAY_MS(1000) );
-		//menu_scrollDown(&mainMenu);
+		//vTaskDelay( (portTickType)TASK_DELAY_MS(1000) );
+		vTaskSuspend(NULL);
 	}
 }
 

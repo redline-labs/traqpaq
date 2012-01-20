@@ -30,19 +30,27 @@
 // Green = RXD on FT232
 // Blue = TXD on FT232
 
+
 #include "asf.h"
 #include "drivers.h"
 
 
+static xQueueHandle queueGPSrxd;
+unsigned char rxBuffer[GPS_MSG_MAX_STRLEN];
+unsigned char gpsTokens[MAX_SIGNALS_SENTENCE];
+
+
 __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
-	int c;
+	int rxd;
 	
-	usart_read_char(GPS_USART, &c);
- 
-	usart_write_char(GPS_USART, c);
+	usart_read_char(GPS_USART, &rxd);
+	xQueueSendFromISR(queueGPSrxd, &rxd, pdFALSE);
 }
 
+
 void gps_task_init( void ){
+	queueGPSrxd = xQueueCreate(GPS_QUEUE_SIZE, sizeof(int));
+
 	INTC_register_interrupt(&ISR_gps_rxd, AVR32_USART0_IRQ, AVR32_INTC_INT0);
 	GPS_USART->ier = AVR32_USART_IER_RXRDY_MASK;
 	
@@ -51,12 +59,69 @@ void gps_task_init( void ){
 
 
 void gps_task( void *pvParameters ){
+	int rxdChar;
+	unsigned char rxdIndex = 0;
+	unsigned char i;
+	
 	gps_reset();
 	
 	while(TRUE){
-		vTaskDelay( (portTickType)TASK_DELAY_MS(1000) );
+		// Wait until we received a character
+		if( xQueueReceive(queueGPSrxd, &rxdChar, portMAX_DELAY) == pdTRUE ){
+			if(rxdChar == GPS_MSG_END_CHAR){
+				//gps_verify_checksum();	// Does work!
+				gps_buffer_tokenize();
+				
+				//--------------------------
+				// GGA Message Received
+				//--------------------------
+				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_GGA_ID0) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_GGA_ID1) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_GGA_ID2) ){
+					
+					asm("nop");
+					
+					
+					
+					
+					
+				}else
+				
+				//--------------------------
+				// RMC Message Received
+				//--------------------------
+				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_RMC_ID0) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_RMC_ID1) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_RMC_ID2) ){
+						
+						
+					asm("nop");
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+				}else{
+					// Unrecognized Message!
+					asm("nop");
+					
+				}
+				
+				rxdIndex = 0;
+				
+			}else{
+				// Store the data in the buffer
+				rxBuffer[rxdIndex++] = (rxdChar & 0xFF);
+			}
+		}
 	}
 }
+
 
 void gps_reset( void ){
 	gpio_clr_gpio_pin(GPS_RESET);
@@ -65,150 +130,72 @@ void gps_reset( void ){
 	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_RESET_TIME) );
 }
 
-/*
-void gps_processMsg(struct tGPSRXDBuffer *GPSRXDBuffer, unsigned char index, struct tGPSMsgGGA *GPSMsgGGA, struct tGPSMsgGSV *GPSMsgGSV){
-	unsigned char i, j;
-	
-	if( (GPSRXDBuffer[index].raw[3] == 'G') && (GPSRXDBuffer[index].raw[4] == 'G') && (GPSRXDBuffer[index].raw[5] == 'A')){
-		j = GPS_PACKET_START;
-		// --- UTC -------------------------------------------------------
-		i = 0;
-		while( (i < sizeof(GPSMsgGGA->utc)) && (GPSRXDBuffer[index].raw[j] != ',') ){
-			if(GPSRXDBuffer[index].raw[j] != '.'){
-				GPSMsgGGA->utc[i++] = GPSRXDBuffer[index].raw[j];
-			}
-			j++;
-		}
-		GPSMsgGGA->utc[i] = 0x00;
-			
-			
-		// --- Latitude -------------------------------------------------------
-		i = 0;
-		while( (i < sizeof(GPSMsgGGA.latitude)) && (GPSRXDBuffer[index].raw[++j] != ',') ){
-			if(GPSRXDBuffer[index].raw[j] != '.'){
-				GPSMsgGGA.latitude[i++] = GPSRXDBuffer[index].raw[j];
-			}
-		}
-		GPSMsgGGA.latitude[i] = 0x00;
-			
-			
-		// --- North Or South -------------------------------------------------------
-		i = 0;
-		while( (i < sizeof(GPSMsgGGA.latitudeNorS)) && (GPSRXDBuffer[index].raw[++j] != ',') ){
-			if(GPSRXDBuffer[index].raw[j] != '.'){
-				GPSMsgGGA.latitudeNorS[i++] = GPSRXDBuffer[index].raw[j];
-			}
-		}
-		GPSMsgGGA.latitudeNorS[i] = 0x00;
-			
-			
-		// --- Longitude -------------------------------------------------------
-		i = 0;
-		while( (i < sizeof(GPSMsgGGA.longitude)) && (GPSRXDBuffer[index].raw[++j] != ',') ){
-			if(GPSRXDBuffer[index].raw[j] != '.'){
-				GPSMsgGGA.longitude[i++] = GPSRXDBuffer[index].raw[j];
-			}
-		}
-		GPSMsgGGA.longitude[i] = 0x00;
-			
-			
-		// --- East Or West -------------------------------------------------------
-		i = 0;
-		while( (i < sizeof(GPSMsgGGA.longitudeEorW)) && (GPSRXDBuffer[index].raw[++j] != ',') ){
-			if(GPSRXDBuffer[index].raw[j] != '.'){
-				GPSMsgGGA.longitudeEorW[i++] = GPSRXDBuffer[index].raw[j];
-			}
-		}
-		GPSMsgGGA.longitudeEorW[i] = 0x00;
-			
-			
-		// --- Quality -------------------------------------------------------
-		i = 0;
-		while( (i < sizeof(GPSMsgGGA.quality)) && (GPSRXDBuffer[index].raw[++j] != ',') ){
-			if(GPSRXDBuffer[index].raw[j] != '.'){
-				GPSMsgGGA.quality[i++] = GPSRXDBuffer[index].raw[j];
-			}
-		}
-		GPSMsgGGA.quality[i] = 0x00;
-			
-			
-		// --- Satelites In View -------------------------------------------------------
-		i = 0;
-		while( (i < sizeof(GPSMsgGGA.satelites)) && (GPSRXDBuffer[index].raw[++j] != ',') ){
-			if(GPSRXDBuffer[index].raw[j] != '.'){
-				GPSMsgGGA.satelites[i++] = GPSRXDBuffer[index].raw[j];
-			}
-		}
-		GPSMsgGGA.satelites[i] = 0x00;
-			
-			
-		// --- HDOP -------------------------------------------------------
-		i = 0;
-		while( (i < sizeof(GPSMsgGGA.hdop)) && (GPSRXDBuffer[index].raw[++j] != ',') ){
-			if(GPSRXDBuffer[index].raw[j] != '.'){
-				GPSMsgGGA.hdop[i++] = GPSRXDBuffer[index].raw[j];
-			}
-		}
-		GPSMsgGGA.hdop[i] = 0x00;
-			
-			
-		// --- Altitude -------------------------------------------------------
-		i = 0;
-		while( (i < sizeof(GPSMsgGGA.altitude)) && (GPSRXDBuffer[index].raw[++j] != ',') ){
-			if(GPSRXDBuffer[index].raw[j] != '.'){
-				GPSMsgGGA.altitude[i++] = GPSRXDBuffer[index].raw[j];
-			}
-		}
-		GPSMsgGGA.altitude[i] = 0x00;
-			
-	}
-		
-	if( (GPSRXDBuffer[index].raw[3] == 'R') && (GPSRXDBuffer[index].raw[4] == 'M') && (GPSRXDBuffer[index].raw[5] == 'C')){
-		j = GPS_PACKET_START;
-			
-		// --- UTC -------------------------------------------------------
-		while( GPSRXDBuffer[index].raw[j++] != ',' );
-			
-			
-		// --- Status -------------------------------------------------------
-		//while( GPSRXDBuffer[GPSBufferTemp].raw[j++] != ',' );
-			
-			
-		// --- Latitude -------------------------------------------------------
-		while( GPSRXDBuffer[index].raw[j++] != ',' );
-			
-			
-		// --- Latitude North or South -------------------------------------------------------
-		while( GPSRXDBuffer[index].raw[j++] != ',' );
-			
-			
-		// --- Longitude -------------------------------------------------------
-		while( GPSRXDBuffer[index].raw[j++] != ',' );
-			
-			
-		// --- Longitude East or West -------------------------------------------------------
-		while( GPSRXDBuffer[index].raw[j++] != ',' );
-		j--;	//Use to realign
-			
-		// --- Speed -------------------------------------------------------
-		i = 0;
-		while( (i < sizeof(GPSMsgRMC.speed)) && (GPSRXDBuffer[index].raw[++j] != ',') ){
-			if(GPSRXDBuffer[index].raw[j] != '.'){
-				GPSMsgRMC.speed[i++] = GPSRXDBuffer[index].raw[j];
-			}
-		}
-		GPSMsgRMC.speed[i] = 0x00;
-			
-			
-		// --- Track -------------------------------------------------------
-		i = 0;
-		while( (i < sizeof(GPSMsgRMC.track)) && (GPSRXDBuffer[index].raw[++j] != ',') ){
-			if(GPSRXDBuffer[index].raw[j] != '.'){
-				GPSMsgRMC.track[i++] = GPSRXDBuffer[index].raw[j];
-			}
-		}
-		GPSMsgRMC.track[i] = 0x00;
-			
-	}			
-}*/
 
+void gps_buffer_tokenize( void ){
+	unsigned char index;
+	unsigned char signalPosIndex = 0;
+
+	// Find the start of the NMEA sentence
+	for(index = 0; index <= GPS_MSG_MAX_STRLEN; index++){
+		if(rxBuffer[index++] == GPS_MSG_START_CHAR) break;
+	}
+	gpsTokens[signalPosIndex++] = index;
+				
+				
+	// Replace commas with null!
+	while(index <= GPS_MSG_MAX_STRLEN){
+		if(rxBuffer[index] == GPS_DELIMITER_CHAR){
+			rxBuffer[index] = GPS_NULL;
+			gpsTokens[signalPosIndex++] = index + 1;
+		}
+		index++;
+	}
+	
+}
+
+
+unsigned char gps_verify_checksum( void ){
+	unsigned char crcCalculated;
+	unsigned char crcReceived;
+	unsigned char index;
+	
+	// Find the start of the NMEA sentence
+	for(index = 0; index <= GPS_MSG_MAX_STRLEN; index++){
+		if(rxBuffer[index++] == GPS_MSG_START_CHAR) break;
+	}
+	
+	crcCalculated = 0;
+	
+	while( index <= GPS_MSG_MAX_STRLEN ){
+		if(rxBuffer[index] == GPS_CHECKSUM_CHAR){
+			break;
+		}else{
+			crcCalculated ^= rxBuffer[index++];
+		}			
+	}
+				
+	// Skip the Checksum character, '*'
+	index++;
+				
+	// Convert the received checksum from ASCII
+	if(rxBuffer[index] > 'A'){
+		rxBuffer[index] -= 'A' + 10;
+	}else{
+		rxBuffer[index] -= '0';
+	}
+				
+	if(rxBuffer[index+1] > 'A'){
+		rxBuffer[index+1] -= 'A' + 10;
+	}else{
+		rxBuffer[index+1] -= '0';
+	}
+				
+	crcReceived = (rxBuffer[index] << 4) + (rxBuffer[index+1]);
+				
+	// Compare!
+	if( crcReceived != crcCalculated ){
+		return FALSE;
+	}
+	
+	return TRUE;
+}

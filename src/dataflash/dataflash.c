@@ -31,13 +31,16 @@
 #include "drivers.h"
 #include "dataflash_layout.h"
 
+struct tRecordsEntryPage dataflashRecordTable;
+struct tRecordDataPage dataflashData;
 
 void dataflash_task_init( void ){
 	xTaskCreate(dataflash_task, configTSK_DATAFLASH_TASK_NAME, configTSK_DATAFLASH_TASK_STACK_SIZE, NULL, configTSK_DATAFLASH_TASK_PRIORITY, NULL);
 }
 
-void dataflash_task( void *pvParameters ){
-	unsigned char checkID;
+void dataflash_task( void *pvParameters ){	
+	current
+	
 	
 	if( !dataflash_checkID() ){
 		debug_log("WARNING [DATAFLASH]: Incorrect device ID");
@@ -51,6 +54,11 @@ void dataflash_task( void *pvParameters ){
 		vTaskDelay( (portTickType)TASK_DELAY_MS(1000) );
 	}
 }
+
+
+
+
+
 
 unsigned char dataflash_checkID(void){
 	unsigned char spiResponse[] = {DATAFLASH_CMD_READ_DEVICE_ID, 0, 0};
