@@ -135,7 +135,7 @@
 #define DATAFLASH_SPI_NPCS0_FUNCTION	AVR32_SPI0_NPCS_0_1_FUNCTION
 
 #define DATAFLASH_SPI_NPCS				0
-#define SPI_BAUDRATE					1000000
+#define SPI_BAUDRATE					8000000
 #define SPI_SCBR						(APPL_CPU_SPEED / SPI_BAUDRATE)
 
 // Check to make sure our divisor is valid
@@ -146,7 +146,7 @@
 #define SPI_BITS_PER_XFER			8			// 8 Bits per transfer
 #define SPI_SCLK_DELAY				0			// Delay from CS to first CLK
 #define SPI_XFER_DELAY				0			// Delay between transfers
-#define SPI_STAY_ACTIVE				0			// Keep CS active between transfers (manually control CS)
+#define SPI_STAY_ACTIVE				1			// Keep CS active between transfers (manually control CS)
 #define SPI_MODE					0			// SPI Mode of Device
 #define SPI_FAULT_DETECT			1			// Hardware Fault Detection
 

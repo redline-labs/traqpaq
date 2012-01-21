@@ -40,13 +40,16 @@ void fuel_task_init( void ){
 
 
 void fuel_task( void *pvParameters ){
-	unsigned short current;
+	unsigned short percent;
 	
 	while(1){
-		current = ( fuel_read_current( FUEL_CURRENT_ACCUMULATED ) - 0x8000 ) >> 3;
-		lcd_updateBattery(&topBar, current);
+		percent = ( fuel_read_current( FUEL_CURRENT_ACCUMULATED ) - 0x8000 ) >> 3;
+		if(percent > 100){
+			percent = 100;
+		}
+		lcd_updateBattery(&topBar, percent);
 
-		vTaskDelay( (portTickType)TASK_DELAY_MS(500) );
+		vTaskDelay( (portTickType)TASK_DELAY_MS(5000) );
 	}
 }
 

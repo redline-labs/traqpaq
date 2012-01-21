@@ -42,13 +42,13 @@ typedef struct tRecordsEntry {
 	unsigned gps_overrun		:1;	
 	unsigned crc_error			:1;
 	unsigned mem_full			:1;							
-	unsigned reserved			:3;
+	unsigned reserved0			:3;
 
 	unsigned long datestamp;
 	unsigned long startAddress;
 	unsigned long endAddress;
 	unsigned char trackID;
-	unsigned char reserved[2];
+	unsigned char reserved1[2];
 };	// tRecordsEntry - 16 Bytes
 
 #define RECORD_ENTRY_SIZE		sizeof(tRecordsEntry)

@@ -74,6 +74,10 @@ void device_template_task(void *pvParameters){
 	unsigned char i;
 	static U8 rxBuf[EP_SIZE_TEMP2];
 	static U8 txBuf[EP_SIZE_TEMP2];
+	
+	unsigned char responseU8;
+	unsigned short responseU16;
+	unsigned int responseU32;
 
 	portTickType xLastWakeTime;
 
@@ -123,16 +127,24 @@ void device_template_task(void *pvParameters){
 					break;
 					
 				case(USB_CMD_REQ_BATTINFO):
-					txBuf[data_length++] = 0xAA;	// Battery voltage
-					txBuf[data_length++] = 0x55;
-					txBuf[data_length++] = 0x44;	// Temperature
-					txBuf[data_length++] = 0x66;
-					txBuf[data_length++] = 0x33;	// Instaneous Current
-					txBuf[data_length++] = 0x77;
-					txBuf[data_length++] = 0x22;	// Accumulated Current
-					txBuf[data_length++] = 0x88;
+					responseU16 = fuel_read_voltage();
+					txBuf[data_length++] = (responseU16 >> 8) & 0xFF;	// Battery voltage
+					txBuf[data_length++] = (responseU16 >> 0) & 0xFF ;
+					
+					responseU16 = fuel_read_temperature();
+					txBuf[data_length++] = (responseU16 >> 8) & 0xFF;	// Temperature
+					txBuf[data_length++] = (responseU16 >> 0) & 0xFF;
+					
+					responseU16 = fuel_read_current(FUEL_CURRENT_INSTANTANEOUS);
+					txBuf[data_length++] = (responseU16 >> 8) & 0xFF;	// Instantaneous Current
+					txBuf[data_length++] = (responseU16 >> 0) & 0xFF;
+					
+					responseU16 = fuel_read_current(FUEL_CURRENT_ACCUMULATED);
+					txBuf[data_length++] = (responseU16 >> 8) & 0xFF;	// Accumulated Current
+					txBuf[data_length++] = (responseU16 >> 0) & 0xFF;
 					break;
 					
+	
 				case(USB_CMD_READ_OTP):
 					if(rxBuf[1] == 0){
 						for(i = 0; i <= 63; i++){
@@ -145,7 +157,10 @@ void device_template_task(void *pvParameters){
 							txBuf[i] = i+63;
 						}
 						data_length = 64;
-					}					
+					}
+					
+				case(USB_CMD_WRITE_OTP):
+					
 					
 					
 				default:

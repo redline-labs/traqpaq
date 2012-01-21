@@ -45,8 +45,9 @@ int main( void ){
 	Disable_global_exception();
 	
 	wdt_disable();
-	board_init();
 	INTC_init_interrupts();
+	board_init();
+	
 	
 	// Check to see if we got reset from a watchdog timeout
 	if( wdt_triggered() ){

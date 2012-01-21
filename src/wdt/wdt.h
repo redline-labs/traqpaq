@@ -32,7 +32,7 @@
 #define WDT_H_
 
 #define WATCHDOG_TIMEOUT_US			100000	// 100ms Watchdog Timeout
-#define WATCHDOG_UPDATE_INTERVAL_MS	90		// 90ms Watchdog clear interval
+#define WATCHDOG_UPDATE_INTERVAL_MS	80		// 90ms Watchdog clear interval
 
 void wdt_task_init(void);
 void wdt_task( void *pvParameters );

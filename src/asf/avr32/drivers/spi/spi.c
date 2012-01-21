@@ -197,7 +197,7 @@ spi_status_t spi_selectionMode(volatile avr32_spi_t *spi,
 spi_status_t spi_selectChip(volatile avr32_spi_t *spi, unsigned char chip)
 {
 #ifdef FREERTOS_USED
-  //while (pdFALSE == xSemaphoreTake(xSPIMutex, 20));
+  while (pdFALSE == xSemaphoreTake(xSPIMutex, 20));
 #endif
 
   // Assert all lines; no peripheral is selected.
@@ -239,7 +239,7 @@ spi_status_t spi_unselectChip(volatile avr32_spi_t *spi, unsigned char chip)
   spi->cr = AVR32_SPI_CR_LASTXFER_MASK;
 
 #ifdef FREERTOS_USED
-  //xSemaphoreGive(xSPIMutex);
+  xSemaphoreGive(xSPIMutex);
 #endif
 
   return SPI_OK;
@@ -292,15 +292,15 @@ spi_status_t spi_setupChipReg(volatile avr32_spi_t *spi,
   }
 
 #ifdef FREERTOS_USED
-  //if (!xSPIMutex)
-  //{
+  if (!xSPIMutex)
+  {
     // Create the SPI mutex.
-    //vSemaphoreCreateBinary(xSPIMutex);
-    //if (!xSPIMutex)
-    //{
-      //while(1);
-    //}
-  //}
+    vSemaphoreCreateBinary(xSPIMutex);
+    if (!xSPIMutex)
+    {
+      while(1);
+    }
+  }
 #endif
 
   return SPI_OK;

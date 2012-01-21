@@ -88,10 +88,6 @@
 // From module: SPI - Serial Peripheral Interface
 #include <spi.h>
 
-// From module: SPI - UC3 implemenation
-#include <spi_master.h>
-#include <spi_master.h>
-
 // From module: TIMING - Clock Control - UC3 A implementation
 #include <sysclk.h>
 

@@ -82,7 +82,6 @@ void board_init(void){
 		pm_gc_enable(&AVR32_PM, AVR32_PM_GCLK_USBB);
 	#endif
 
-
 	// ------------------------------------------------------------
 	// Display Initialization (EBI)
 	// ------------------------------------------------------------
@@ -215,13 +214,30 @@ void board_init(void){
 
 		gpio_enable_module(SPI_GPIO_MAP, sizeof(SPI_GPIO_MAP) / sizeof(SPI_GPIO_MAP[0])); // Assign I/Os to SPI.
 
-		struct spi_device DATAFLASH_CS1 = {
-			.id = DATAFLASH_SPI_NPCS
+		//struct spi_device DATAFLASH_CS1 = {
+		//	.id = DATAFLASH_SPI_NPCS
+		//};
+		
+		spi_options_t dataflashOptions = {
+			.reg		 = DATAFLASH_SPI_NPCS,
+			.baudrate	 = SPI_BAUDRATE,
+			.bits		 = SPI_BITS_PER_XFER,
+			.spck_delay  = SPI_SCLK_DELAY,
+			.trans_delay = SPI_XFER_DELAY,
+			.stay_act    = SPI_STAY_ACTIVE,
+			.spi_mode	 = SPI_MODE,
+			.modfdis	 = SPI_FAULT_DETECT, 
 		};
 
-		spi_master_init(DATAFLASH_SPI);
-		spi_master_setup_device(DATAFLASH_SPI, &DATAFLASH_CS1, SPI_MODE_0, SPI_BAUDRATE, 0);
+		//spi_master_init(DATAFLASH_SPI);
+		//spi_master_setup_device(DATAFLASH_SPI, &DATAFLASH_CS1, SPI_MODE_0, SPI_BAUDRATE, 0);
+		
+		spi_initMaster(DATAFLASH_SPI, &dataflashOptions);
+		spi_selectionMode(DATAFLASH_SPI, SPI_VARIABLE_PS, SPI_PCS_DECODE, SPI_SCLK_DELAY);
 		spi_enable(DATAFLASH_SPI);
+		spi_setupChipReg(DATAFLASH_SPI, &dataflashOptions, APPL_PBA_SPEED);		
+		
+		
 	#endif
 
 

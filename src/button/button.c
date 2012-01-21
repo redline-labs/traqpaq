@@ -75,9 +75,6 @@ void buttons_task( void *pvParameters ){
 	unsigned char button;
 	
 	while(1){
-		asm volatile ("nop");
-		//vTaskDelay( (portTickType)TASK_DELAY_MS(1000) );
-
 		if( xQueueReceive(buttonPress, &button, portMAX_DELAY) == pdTRUE){
 			switch(button){
 				case(0):
