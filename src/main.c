@@ -41,12 +41,14 @@ int main( void ){
 	unsigned short temp = 0;
 	
 	// Initialization ---------------------------------------------
-	Disable_global_interrupt();
 	Disable_global_exception();
+	Disable_global_interrupt();
 	
 	wdt_disable();
-	INTC_init_interrupts();
+	INTC_init_interrupts();	// Do this before Board Init!
 	board_init();
+	
+	
 	
 	
 	// Check to see if we got reset from a watchdog timeout

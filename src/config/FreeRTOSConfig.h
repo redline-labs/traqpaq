@@ -195,12 +195,6 @@ to exclude the API function. */
 #define configTSK_GUI_TASK_PRIORITY			(tskIDLE_PRIORITY + 1)
 #define configTSK_GUI_TASK_PERIOD			20
 
-/* Memory Task */
-#define configTSK_MEMORY_TASK_NAME			((const signed portCHAR *)"Memory")
-#define configTSK_MEMORY_TASK_STACK_SIZE	256
-#define configTSK_MEMORY_TASK_PRIORITY		(tskIDLE_PRIORITY + 1)
-#define configTSK_MEMORY_TASK_PERIOD		20
-
 /* Watchdog Task */
 #define configTSK_WATCHDOG_TASK_NAME        ((const signed portCHAR *)"Watchdog")
 #define configTSK_WATCHDOG_TASK_STACK_SIZE  256
@@ -209,7 +203,7 @@ to exclude the API function. */
 
 /* Dataflash Task */
 #define configTSK_DATAFLASH_TASK_NAME		((const signed portCHAR *)"Dataflash")
-#define configTSK_DATAFLASH_TASK_STACK_SIZE	256
+#define configTSK_DATAFLASH_TASK_STACK_SIZE	512
 #define configTSK_DATAFLASH_TASK_PRIORITY	(tskIDLE_PRIORITY + 1)
 #define configTSK_DATAFLASH_TASK_PERIOD		20
 
@@ -221,7 +215,7 @@ to exclude the API function. */
 
 /* GPS Task */
 #define configTSK_GPS_TASK_NAME				((const signed portCHAR *)"GPS")
-#define configTSK_GPS_TASK_STACK_SIZE		512
+#define configTSK_GPS_TASK_STACK_SIZE		256
 #define configTSK_GPS_TASK_PRIORITY			(tskIDLE_PRIORITY + 1)
 #define configTSK_GPS_TASK_PERIOD			20
 

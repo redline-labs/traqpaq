@@ -30,36 +30,41 @@
 #include <asf.h>
 #include "drivers.h"
 #include "dataflash_layout.h"
-
-struct tRecordsEntryPage dataflashRecordTable;
-struct tRecordDataPage dataflashData;
+#include "crc/crc.h"
 
 void dataflash_task_init( void ){
 	xTaskCreate(dataflash_task, configTSK_DATAFLASH_TASK_NAME, configTSK_DATAFLASH_TASK_STACK_SIZE, NULL, configTSK_DATAFLASH_TASK_PRIORITY, NULL);
 }
 
-void dataflash_task( void *pvParameters ){	
+void dataflash_task( void *pvParameters ){
+	unsigned char i;	
+	unsigned char buffer[32];
+	unsigned short crc = 0;
+	
+	union tDataflashStatus status;
 	
 	if( !dataflash_checkID() ){
 		debug_log("WARNING [DATAFLASH]: Incorrect device ID");
 	}
 	
-	dataflash_WriteEnable();
 	dataflash_GlobalUnprotect();
+	dataflash_WriteEnable();
+	
+	status = dataflash_readStatus();
+	if(status.registers.BSY0){
+		debug_log("WARNING [DATAFLASH]: Busy response received");
+	}
 	
 	while(TRUE){
 		asm("nop");
-		vTaskDelay( (portTickType)TASK_DELAY_MS(1000) );
+		vTaskSuspend(NULL);
+		
 	}
 }
 
 
-
-
-
-
 unsigned char dataflash_checkID(void){
-	unsigned short spiResponse[] = {0, 0, 0};
+	unsigned short spiResponse[3];
 		
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_READ_DEVICE_ID);
@@ -83,9 +88,8 @@ unsigned char dataflash_checkID(void){
 }
 
 
-
 union tDataflashStatus dataflash_readStatus(void){
-	unsigned short spiResponse[] = {0, 0};
+	unsigned short spiResponse[2];
 	union tDataflashStatus result;
 
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
@@ -107,6 +111,8 @@ union tDataflashStatus dataflash_readStatus(void){
 
 
 unsigned char dataflash_GlobalUnprotect(void){
+	dataflash_WriteEnable();
+	
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_WRITE_STATUS1);
 	spi_write(DATAFLASH_SPI, DATAFLASH_STATUS_GLOBAL_UNPROTECT);
@@ -114,6 +120,7 @@ unsigned char dataflash_GlobalUnprotect(void){
 	
 	return DATAFLASH_RESPONSE_OK;
 }
+
 
 unsigned char dataflash_WriteEnable(void){
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
@@ -123,6 +130,7 @@ unsigned char dataflash_WriteEnable(void){
 	return DATAFLASH_RESPONSE_OK;
 }
 
+
 unsigned char dataflash_WriteDisable(void){
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_WRITE_DISABLE);
@@ -131,58 +139,104 @@ unsigned char dataflash_WriteDisable(void){
 	return DATAFLASH_RESPONSE_OK;
 }
 
-unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned int length, unsigned char *bufferPointer){
+
+unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned char length, unsigned char *bufferPointer){
+	unsigned char i;
+	unsigned short temp;
+	
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	
 	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_READ_ARRAY);
 	spi_write(DATAFLASH_SPI, (startAddress >> 16) & 0xFF);
 	spi_write(DATAFLASH_SPI, (startAddress >>  8) & 0xFF);
 	spi_write(DATAFLASH_SPI, (startAddress >>  0) & 0xFF);
-	//spi_read_packet(DATAFLASH_SPI, bufferPointer, length);
+	
+	for(i = 0; i < length; i++){
+		spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DUMMY);
+		spi_read(DATAFLASH_SPI, &temp);
+		bufferPointer[i] = temp & 0xFF;
+	}
+	
 	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	
 	return DATAFLASH_RESPONSE_OK;
 }
 
-unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned int length, unsigned char *bufferPointer){
-	unsigned char spiResponse[] = {DATAFLASH_CMD_PAGE_PROGRAM, (startAddress >> 16) & 0xFF, (startAddress >> 8) & 0xFF, startAddress & 0xFF};
+unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned char length, unsigned char *bufferPointer){
+	unsigned char i;
+	
+	dataflash_WriteEnable();
 	
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-	//spi_write_packet(DATAFLASH_SPI, spiResponse, sizeof(spiResponse));
-	//spi_write_packet(DATAFLASH_SPI, bufferPointer, length);
+	
+	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_PAGE_PROGRAM);
+	spi_write(DATAFLASH_SPI, (startAddress >> 16) & 0xFF);
+	spi_write(DATAFLASH_SPI, (startAddress >>  8) & 0xFF);
+	spi_write(DATAFLASH_SPI, (startAddress >>  0) & 0xFF);
+	
+	for(i = 0; i < length; i++){
+		spi_write(DATAFLASH_SPI, bufferPointer[i]);
+	}
+	
 	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	
 	return DATAFLASH_RESPONSE_OK;
 }
 
 unsigned char dataflash_ReadOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer){
-	unsigned char spiResponse[] = {DATAFLASH_CMD_READ_OTP, 0x00, 0x00, startAddress, DATAFLASH_CMD_DUMMY, DATAFLASH_CMD_DUMMY};
+	unsigned char i;
+	unsigned short temp;
 	
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-	//spi_write_packet(DATAFLASH_SPI, spiResponse, sizeof(spiResponse));
-	//spi_read_packet(DATAFLASH_SPI, bufferPointer, length);
+	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_READ_OTP);
+	spi_write(DATAFLASH_SPI, 0x00);
+	spi_write(DATAFLASH_SPI, 0x00);
+	spi_write(DATAFLASH_SPI, startAddress);
+	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DUMMY);
+	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DUMMY);
+	
+	for(i = 0; i < length; i++){
+		spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DUMMY);
+		spi_read(DATAFLASH_SPI, &temp);
+		bufferPointer[i] = temp & 0xFF;
+	}
+	
 	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	
 	return DATAFLASH_RESPONSE_OK;
 }
 
 unsigned char dataflash_WriteOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer){
-	unsigned char spiResponse[] = {DATAFLASH_CMD_PROGRAM_OTP, 0x00, 0x00, startAddress};
+	unsigned char i;
 	
+	dataflash_WriteEnable();
+
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-	//spi_write_packet(DATAFLASH_SPI, spiResponse, sizeof(spiResponse));
-	//spi_write_packet(DATAFLASH_SPI, bufferPointer, length);
+	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_PROGRAM_OTP);
+	spi_write(DATAFLASH_SPI, 0x00);
+	spi_write(DATAFLASH_SPI, 0x00);
+	spi_write(DATAFLASH_SPI, startAddress);
+	
+	for(i = 0; i < length; i++){
+		spi_write(DATAFLASH_SPI, bufferPointer[i]);
+	}
+	
 	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	
 	return DATAFLASH_RESPONSE_OK;
 }
 
 unsigned char dataflash_eraseBlock(unsigned char blockSize, unsigned long startAddress){
-	/*if( (blockSize == DATAFLASH_CMD_BLOCK_ERASE_4KB) | (blockSize == DATAFLASH_CMD_BLOCK_ERASE_32KB) | (blockSize == DATAFLASH_CMD_BLOCK_ERASE_64KB) ){
-		unsigned char spiResponse[] = {blockSize, (startAddress >> 16) & 0xFF, (startAddress >> 8) & 0xFF, startAddress & 0xFF};
-	
+	if( (blockSize == DATAFLASH_CMD_BLOCK_ERASE_4KB) | (blockSize == DATAFLASH_CMD_BLOCK_ERASE_32KB) | (blockSize == DATAFLASH_CMD_BLOCK_ERASE_64KB) ){
+		dataflash_WriteEnable();
+		
 		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-		spi_write_packet(DATAFLASH_SPI, spiResponse, sizeof(spiResponse));
+		
+		spi_write(DATAFLASH_SPI, blockSize);
+		spi_write(DATAFLASH_SPI, (startAddress >> 16) & 0xFF);
+		spi_write(DATAFLASH_SPI, (startAddress >>  8) & 0xFF);
+		spi_write(DATAFLASH_SPI, (startAddress >>  0) & 0xFF);
+		
 		spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 		
 		return DATAFLASH_RESPONSE_OK;
@@ -190,35 +244,33 @@ unsigned char dataflash_eraseBlock(unsigned char blockSize, unsigned long startA
 	}else{
 		return DATAFLASH_RESPONSE_FAILURE;
 		
-	}*/
+	}
 }
 
 unsigned char dataflash_chipErase(void){
-		/*unsigned char spiResponse[] = {DATAFLASH_CMD_CHIP_ERASE};
+		dataflash_WriteEnable();
 	
 		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-		spi_write_packet(DATAFLASH_SPI, spiResponse, sizeof(spiResponse));
+		spi_write(DATAFLASH_SPI, DATAFLASH_CMD_CHIP_ERASE);
 		spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 		
-		return DATAFLASH_RESPONSE_OK;*/
+		return DATAFLASH_RESPONSE_OK;
 }
 
 unsigned char dataflash_powerDown(void){
-		/*unsigned char spiResponse[] = {DATAFLASH_CMD_DEEP_POWER_DOWN};
-	
+		
 		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-		spi_write_packet(DATAFLASH_SPI, spiResponse, sizeof(spiResponse));
+		spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DEEP_POWER_DOWN);
 		spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 		
-		return DATAFLASH_RESPONSE_OK;*/
+		return DATAFLASH_RESPONSE_OK;
 }
 
 unsigned char dataflash_wakeUp(void){
-		/*unsigned char spiResponse[] = {DATAFLASH_CMD_WAKEUP};
-	
+		
 		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-		spi_write_packet(DATAFLASH_SPI, spiResponse, sizeof(spiResponse));
+		spi_write(DATAFLASH_SPI, DATAFLASH_CMD_WAKEUP);
 		spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 		
-		return DATAFLASH_RESPONSE_OK;*/
+		return DATAFLASH_RESPONSE_OK;
 }

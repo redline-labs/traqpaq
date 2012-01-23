@@ -145,7 +145,7 @@
 #define DATAFLASH_RESPONSE_OK				1
 #define DATAFLASH_RESPONSE_FAILURE			0
 
-#define DATAFLASH_STATUS_GLOBAL_UNPROTECT	0x10
+#define DATAFLASH_STATUS_GLOBAL_UNPROTECT	0x00
 
 
 typedef struct tDataflashStatusRegisters{
@@ -177,8 +177,8 @@ union tDataflashStatus dataflash_readStatus(void);
 unsigned char dataflash_GlobalUnprotect(void);
 unsigned char dataflash_WriteEnable(void);
 unsigned char dataflash_WriteDisable(void);
-unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned int length, unsigned char *bufferPointer);
-unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned int length, unsigned char *bufferPointer);
+unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned char length, unsigned char *bufferPointer);
+unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned char length, unsigned char *bufferPointer);
 unsigned char dataflash_ReadOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer);
 unsigned char dataflash_WriteOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer);
 unsigned char dataflash_eraseBlock(unsigned char blockSize, unsigned long startAddress);

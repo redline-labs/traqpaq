@@ -135,7 +135,7 @@
 #define DATAFLASH_SPI_NPCS0_FUNCTION	AVR32_SPI0_NPCS_0_1_FUNCTION
 
 #define DATAFLASH_SPI_NPCS				0
-#define SPI_BAUDRATE					8000000
+#define SPI_BAUDRATE					1000000
 #define SPI_SCBR						(APPL_CPU_SPEED / SPI_BAUDRATE)
 
 // Check to make sure our divisor is valid
