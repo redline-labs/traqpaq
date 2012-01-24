@@ -30,7 +30,17 @@
 #ifndef BUTTON_H_
 #define BUTTON_H_
 
-#define BUTTON_DEBOUNCE_TIME		150			// Button debounce time in milliseconds
+#define BUTTON_TIMER_INCREMENT		40			// Interval to check button status in milliseconds
+#define BUTTON_LONG_PRESS_TIME		1000		// Threshold for qualifying a long-press in milliseconds
+
+#define BUTTON_LONG_PRESS_TIMER_VALUE	BUTTON_LONG_PRESS_TIME/BUTTON_TIMER_INCREMENT
+
+#define BUTTON_UP					0
+#define BUTTON_DOWN					1
+#define BUTTON_SELECT				2
+#define BUTTON_BACK					3
+
+
 
 void buttons_task_init( void );
 void buttons_task( void *pvParameters );

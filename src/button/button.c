@@ -32,33 +32,40 @@
 #include "lcd/menu.h"
 
 extern struct tMenu mainMenu;
-
 static xQueueHandle buttonPress;
 
+
+//------------------------------
+// ISR's
+//------------------------------
 __attribute__((__interrupt__)) static void ISR_button0(void) {
-	unsigned char button = 0;
-	eic_clear_interrupt_line(&AVR32_EIC, EXTINT_BUTTON0);
+	unsigned char button = BUTTON_UP;
 	xQueueSendFromISR(buttonPress, &button, pdFALSE);
+	eic_clear_interrupt_line(&AVR32_EIC, EXTINT_BUTTON0);
 }  
 
 __attribute__((__interrupt__)) static void ISR_button1(void) {
-	unsigned char button = 1;
-	eic_clear_interrupt_line(&AVR32_EIC, EXTINT_BUTTON1);
+	unsigned char button = BUTTON_DOWN;
 	xQueueSendFromISR(buttonPress, &button, pdFALSE);
+	eic_clear_interrupt_line(&AVR32_EIC, EXTINT_BUTTON1);
 }  
 
 __attribute__((__interrupt__)) static void ISR_button2(void) {
-	unsigned char button = 2;
-	eic_clear_interrupt_line(&AVR32_EIC, EXTINT_BUTTON2);
+	unsigned char button = BUTTON_BACK;
 	xQueueSendFromISR(buttonPress, &button, pdFALSE);
+	eic_clear_interrupt_line(&AVR32_EIC, EXTINT_BUTTON2);
 }  
 
 __attribute__((__interrupt__)) static void ISR_button3(void) {
-	unsigned char button = 3; 
-	eic_clear_interrupt_line(&AVR32_EIC, EXTINT_BUTTON3);
+	unsigned char button = BUTTON_SELECT; 
 	xQueueSendFromISR(buttonPress, &button, pdFALSE);
+	eic_clear_interrupt_line(&AVR32_EIC, EXTINT_BUTTON3);
 }  
 
+
+//------------------------------
+// Functions
+//------------------------------
 void buttons_task_init( void ){
 	buttonPress = xQueueCreate(1, sizeof(unsigned char));
 	
@@ -70,30 +77,67 @@ void buttons_task_init( void ){
 	xTaskCreate(buttons_task, configTSK_BUTTONS_TASK_NAME, configTSK_BUTTONS_TASK_STACK_SIZE, NULL, configTSK_BUTTONS_TASK_PRIORITY, NULL);
 }
 
-// LCD GUI Task
+
 void buttons_task( void *pvParameters ){
-	unsigned char button;
+	unsigned char button;			// Storage for queue - Holds the ID of the button pressed
+	unsigned short timer;			// Timer for how long a button was pressed
+	unsigned char buttonStatus;		// Storage for status of the buttons
 	
 	while(1){
-		if( xQueueReceive(buttonPress, &button, portMAX_DELAY) == pdTRUE){
+		timer = 0;
+		buttonStatus = 1;
+		
+		// Wait for button press - suspends task
+		xQueueReceive(buttonPress, &button, portMAX_DELAY);
+		
+		// Disable EXTINT interrupts until we are ready to process them again
+		eic_disable_interrupt_lines(&AVR32_EIC, (1<<EXTINT_BUTTON0) | (1<<EXTINT_BUTTON1) | (1<<EXTINT_BUTTON2) | (1<<EXTINT_BUTTON3));
+
+		// See how long the button is being pressed
+		while( buttonStatus ){
+			vTaskDelay( (portTickType)TASK_DELAY_MS(BUTTON_TIMER_INCREMENT) );
+			buttonStatus = gpio_get_pin_value(GPIO_BUTTON0) | gpio_get_pin_value(GPIO_BUTTON1) | gpio_get_pin_value(GPIO_BUTTON3);	// TODO: Add GPIO_BUTTON2
+			timer++;
+		}
+			
+		if(timer >= BUTTON_LONG_PRESS_TIMER_VALUE){
+			// Qualified a long button press
 			switch(button){
-				case(0):
+				case(BUTTON_UP):
+					asm("nop");
+					break;
+				case(BUTTON_DOWN):
+					asm("nop");
+					break;
+				case(BUTTON_BACK):
+					asm("nop");
+					break;
+				case(BUTTON_SELECT):
+					asm("nop");
+					break;
+			}
+			
+		}else{
+			// Normal short button press
+			switch(button){
+				case(BUTTON_UP):
 					menu_scrollUp(&mainMenu);
 					break;
-				case(1):
+				case(BUTTON_DOWN):
 					menu_scrollDown(&mainMenu);
 					break;
-				case(2):
+				case(BUTTON_BACK):
 					asm("nop");
 					break;
-				case(3):
+				case(BUTTON_SELECT):
 					asm("nop");
 					break;
-
 			}
-			vTaskDelay( (portTickType)TASK_DELAY_MS(BUTTON_DEBOUNCE_TIME) );
-			xQueueReceive(buttonPress, &button, 0);		// Flush queue
-		}			
+		}						
 			
-	}
+		// Clear any pending EXTINT interrupts and re-enable them
+		eic_clear_interrupt_lines(&AVR32_EIC, (1<<EXTINT_BUTTON0) | (1<<EXTINT_BUTTON1) | (1<<EXTINT_BUTTON2) | (1<<EXTINT_BUTTON3));
+		eic_enable_interrupt_lines(&AVR32_EIC, (1<<EXTINT_BUTTON0) | (1<<EXTINT_BUTTON1) | (1<<EXTINT_BUTTON2) | (1<<EXTINT_BUTTON3));
+	}			
+			
 }

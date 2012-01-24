@@ -48,9 +48,6 @@ int main( void ){
 	INTC_init_interrupts();	// Do this before Board Init!
 	board_init();
 	
-	
-	
-	
 	// Check to see if we got reset from a watchdog timeout
 	if( wdt_triggered() ){
 		debug_log("WARNING [WDT]: Recovering from watchdog reset!");
@@ -86,6 +83,11 @@ int main( void ){
 	buttons_task_init();
 	#endif
 	
+	#if( TRAQPAQ_HW_CHARGE_ENABLED )
+	charge_task_init();
+	#endif
+	
+	
 	Enable_global_interrupt();
 
 	// Start the scheduler! ---------------------------------------
@@ -95,5 +97,6 @@ int main( void ){
 	
 	while (true){
 		asm("nop");
-	};		// Should never reach this!
+	};
+			// Should never reach this!
 }

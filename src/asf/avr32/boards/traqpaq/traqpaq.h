@@ -95,6 +95,11 @@
 // ------------------------------------------------------------
 // Button Definitions (EXTINT)
 // ------------------------------------------------------------
+#define GPIO_BUTTON0				AVR32_PIN_PA21
+#define GPIO_BUTTON1				AVR32_PIN_PA22
+#define GPIO_BUTTON2				AVR32_PIN_PA23
+#define GPIO_BUTTON3				AVR32_PIN_PA24
+
 #define EXTINT_NUMBER_LINES			4
 
 #define EXTINT_BUTTON0				EXT_INT0

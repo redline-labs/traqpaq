@@ -93,7 +93,7 @@ void board_init(void){
 	// ------------------------------------------------------------
 	// GPIO Initialization
 	// ------------------------------------------------------------
-	gpio_clr_gpio_pin(CHARGE_RATE);
+	//gpio_clr_gpio_pin(CHARGE_RATE);
 	gpio_clr_gpio_pin(GPS_RESET);
 	gpio_clr_gpio_pin(GPS_POWER_ON);
 	gpio_clr_gpio_pin(PM_SHDN1);

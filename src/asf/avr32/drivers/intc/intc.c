@@ -3,37 +3,39 @@
  *
  * \brief INTC software driver for AVR UC3 devices.
  *
- * Copyright (C) 2009 - 2011 Atmel Corporation. All rights reserved.
+ * Copyright (c) 2009-2011 Atmel Corporation. All rights reserved.
  *
- * \page License
+ * \asf_license_start
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
  * 3. The name of Atmel may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ *    from this software without specific prior written permission.
  *
- * 4. This software may only be redistributed and used in connection with an
- * Atmel AVR product.
+ * 4. This software may only be redistributed and used in connection with an Atmel
+ *    AVR product.
  *
  * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
  * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
- * DAMAGE.
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
  */
 
 #include <avr32/io.h>
@@ -55,7 +57,7 @@ extern void _int0, _int1, _int2, _int3;
 
 /**
  * \internal
- * \brief Values to store in the interrupt priority registers for the various 
+ * \brief Values to store in the interrupt priority registers for the various
  *  interrupt priority levels.
  */
 #define IPR_INT0   ((AVR32_INTC_INT0 << AVR32_INTC_IPR_INTLEVEL_OFFSET) \
@@ -69,8 +71,8 @@ extern void _int0, _int1, _int2, _int3;
 
 /**
  * \internal
- * \brief Table of interrupt line handlers per interrupt group in order to 
- * optimize RAM space. Each line handler table contains a set of pointers to 
+ * \brief Table of interrupt line handlers per interrupt group in order to
+ * optimize RAM space. Each line handler table contains a set of pointers to
  * interrupt handlers.
  */
 #if (defined __GNUC__)
@@ -87,7 +89,7 @@ MREPEAT(AVR32_INTC_NUM_INT_GRPS, DECL_INT_LINE_HANDLER_TABLE, ~);
 
 /**
  * \internal
- * \brief Table containing for each interrupt group the number of interrupt 
+ * \brief Table containing for each interrupt group the number of interrupt
  *  request lines and a pointer to the table of interrupt line handlers.
  */
 static const struct
@@ -119,7 +121,7 @@ static void _unhandled_interrupt(void)
 }
 
 
-/** 
+/**
  * \brief Gets the interrupt handler of the current event at the \a int_level
  *        interrupt priority level (called from exception.S).
  *
@@ -138,18 +140,18 @@ __int_handler _get_interrupt_handler(uint32_t int_level)
 
 	/* As an interrupt may disappear while it is being fetched by the CPU
 	(spurious interrupt caused by a delayed response from an MCU peripheral
-	to an interrupt flag clear or interrupt disable instruction), check if 
+	to an interrupt flag clear or interrupt disable instruction), check if
 	there are remaining interrupt lines to process.
 	If a spurious interrupt occurs, the status register (SR) contains an
 	execution mode and interrupt level masks corresponding to a level 0
 	interrupt, whatever the interrupt priority level causing the spurious
 	event. This behavior has been chosen because a spurious interrupt has
-	not to be a priority one and because it may not cause any trouble to 
+	not to be a priority one and because it may not cause any trouble to
 	other interrupts.
 	However, these spurious interrupts place the hardware in an unstable
-	state and could give problems in other/future versions of the CPU, so 
-	the software has to be written so that they never occur. The only safe 
-	way of achieving this is to always clear or disable peripheral 
+	state and could give problems in other/future versions of the CPU, so
+	the software has to be written so that they never occur. The only safe
+	way of achieving this is to always clear or disable peripheral
 	interrupts with the following sequence:
 	1: Mask the interrupt in the CPU by setting GM (or IxM) in SR.
 	2: Perform the bus access to the peripheral register that clears or
@@ -171,19 +173,19 @@ __int_handler _get_interrupt_handler(uint32_t int_level)
 	with the highest number is selected. This is to be coherent with the
 	prioritization of interrupt groups performed by the hardware interrupt
 	controller.
-	
+
 	If no handler has been registered for the pending interrupt,
 	_unhandled_interrupt will be selected thanks to the initialization of
 	_int_line_handler_table_x by INTC_init_interrupts.
-	
-	exception.S will provide the interrupt handler with a clean interrupt 
-	stack frame, with nothing more pushed onto the stack. The interrupt 
+
+	exception.S will provide the interrupt handler with a clean interrupt
+	stack frame, with nothing more pushed onto the stack. The interrupt
 	handler must manage the `rete' instruction, which can be done using
-	pure assembly, inline assembly or the `__attribute__((__interrupt__))' 
+	pure assembly, inline assembly or the `__attribute__((__interrupt__))'
 	C function attribute.*/
-	return (int_req) 
-		? _int_handler_table[int_grp]._int_line_handler_table[32 
-			- clz(int_req) - 1] 
+	return (int_req)
+		? _int_handler_table[int_grp]._int_line_handler_table[32
+			- clz(int_req) - 1]
 		: NULL;
 }
 
@@ -213,20 +215,20 @@ void INTC_init_interrupts(void)
 	for (int_grp = 0; int_grp < AVR32_INTC_NUM_INT_GRPS; int_grp++)
 	{
 		// For all interrupt request lines of each group,
-		for (int_req = 0; 
-			int_req < _int_handler_table[int_grp].num_irqs; 
+		for (int_req = 0;
+			int_req < _int_handler_table[int_grp].num_irqs;
 			int_req++)
 		{
 			/* Assign _unhandled_interrupt as the default interrupt
 			handler. */
 			_int_handler_table[int_grp]
-				._int_line_handler_table[int_req] 
+				._int_line_handler_table[int_req]
 					= &_unhandled_interrupt;
 		}
 
-		/* Set the interrupt group priority register to its default 
+		/* Set the interrupt group priority register to its default
 		value.
-		By default, all interrupt groups are linked to the interrupt 
+		By default, all interrupt groups are linked to the interrupt
 		priority level 0 and to the interrupt vector _int0. */
 		AVR32_INTC.ipr[int_grp] = IPR_INT0;
 	}
@@ -249,23 +251,23 @@ void INTC_init_interrupts(void)
  *          be effective.
  *
  */
-void INTC_register_interrupt(__int_handler handler, uint32_t irq, 
+void INTC_register_interrupt(__int_handler handler, uint32_t irq,
 	uint32_t int_level)
 {
 	// Determine the group of the IRQ.
 	uint32_t int_grp = irq / AVR32_INTC_MAX_NUM_IRQS_PER_GRP;
 
-	/* Store in _int_line_handler_table_x the pointer to the interrupt 
-	handler, so that _get_interrupt_handler can retrieve it when the 
+	/* Store in _int_line_handler_table_x the pointer to the interrupt
+	handler, so that _get_interrupt_handler can retrieve it when the
 	interrupt is vectored. */
 	_int_handler_table[int_grp]
-		._int_line_handler_table[irq % AVR32_INTC_MAX_NUM_IRQS_PER_GRP] 
+		._int_line_handler_table[irq % AVR32_INTC_MAX_NUM_IRQS_PER_GRP]
 			= handler;
 
 	/* Program the corresponding IPRX register to set the interrupt priority
-	level and the interrupt vector offset that will be fetched by the core 
+	level and the interrupt vector offset that will be fetched by the core
 	interrupt system.
-	NOTE: The _intx functions are intermediate assembly functions between 
+	NOTE: The _intx functions are intermediate assembly functions between
 	the core interrupt system and the user interrupt handler. */
 	if (int_level == AVR32_INTC_INT0) {
 		AVR32_INTC.ipr[int_grp] = IPR_INT0;

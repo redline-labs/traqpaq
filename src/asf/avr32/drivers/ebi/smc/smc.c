@@ -1,33 +1,28 @@
-/*! \file *********************************************************************
+/*****************************************************************************
+ *
+ * \file
  *
  * \brief SMC on EBI driver for AVR32 UC3.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a SMC module can be used.
- * - AppNote:
+ * Copyright (c) 2009 - 2011 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
- *
- ******************************************************************************/
-
-/* Copyright (c) 2009 Atmel Corporation. All rights reserved.
+ * \asf_license_start
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
- * list of conditions and the following disclaimer.
+ *    list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
  * 3. The name of Atmel may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ *    from this software without specific prior written permission.
  *
  * 4. This software may only be redistributed and used in connection with an Atmel
- * AVR product.
+ *    AVR product.
  *
  * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
@@ -38,9 +33,12 @@
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- */
+ * \asf_license_stop
+ *
+ ******************************************************************************/
+
 
 #include "compiler.h"
 #include "preprocessor.h"
@@ -228,9 +226,13 @@ void smc_init(unsigned long hsb_hz)
   #include SMC_COMPONENT_CS1
 
   // Enable SM mode for CS1 if necessary.
+#if UC3C
+  AVR32_HMATRIXB.sfr[AVR32_EBI_HMATRIX_NR] &= ~(1 << AVR32_EBI_SDRAM_CS);
+  AVR32_HMATRIXB.sfr[AVR32_EBI_HMATRIX_NR];
+#else
   AVR32_HMATRIX.sfr[AVR32_EBI_HMATRIX_NR] &= ~(1 << AVR32_EBI_SDRAM_CS);
   AVR32_HMATRIX.sfr[AVR32_EBI_HMATRIX_NR];
-
+#endif
   // Setup SMC for NCS1
   SMC_CS_SETUP(1)
 

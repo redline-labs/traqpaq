@@ -1,33 +1,28 @@
-/*! \file *********************************************************************
+/*****************************************************************************
+ *
+ * \file
  *
  * \brief GPIO software driver interface for AVR UC3.
  *
- * - Compiler:           GCC and IAR for AVR
- * - Supported devices:  All AVR UC3 devices with a GPIO module can be used.
- * - AppNote:
+ * Copyright (c) 2010-2011 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
- *
- *****************************************************************************/
-
-/* Copyright (c) 2010 - 2011 Atmel Corporation. All rights reserved.
+ * \asf_license_start
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
- * list of conditions and the following disclaimer.
+ *    list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
  * 3. The name of Atmel may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ *    from this software without specific prior written permission.
  *
  * 4. This software may only be redistributed and used in connection with an Atmel
- * AVR product.
+ *    AVR product.
  *
  * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
@@ -38,9 +33,12 @@
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- */
+ * \asf_license_stop
+ *
+ *****************************************************************************/
+
 
 #include "gpio.h"
 
@@ -113,19 +111,19 @@ int gpio_enable_module_pin(uint32_t pin, uint32_t function)
     gpio_port->pmr1c = 1 << (pin & 0x1F);
     gpio_port->pmr2s = 1 << (pin & 0x1F);
     break;
-    
+
   case 5: // F function.
     gpio_port->pmr0s = 1 << (pin & 0x1F);
     gpio_port->pmr1c = 1 << (pin & 0x1F);
     gpio_port->pmr2s = 1 << (pin & 0x1F);
     break;
-    
+
   case 6: // G function.
     gpio_port->pmr0c = 1 << (pin & 0x1F);
     gpio_port->pmr1s = 1 << (pin & 0x1F);
     gpio_port->pmr2s = 1 << (pin & 0x1F);
     break;
-    
+
   case 7: // H function.
     gpio_port->pmr0s = 1 << (pin & 0x1F);
     gpio_port->pmr1s = 1 << (pin & 0x1F);
@@ -256,8 +254,8 @@ void gpio_disable_pin_buskeeper(uint32_t pin)
 #endif
 
 void gpio_configure_pin(uint32_t pin, uint32_t flags)
-{  
-  volatile avr32_gpio_port_t *gpio_port = &GPIO.port[pin >> 5];  
+{
+  volatile avr32_gpio_port_t *gpio_port = &GPIO.port[pin >> 5];
 
   /* Both pull-up and pull-down set means buskeeper */
 #if defined(AVR32_GPIO_200_H_INCLUDED) || defined(AVR32_GPIO_210_H_INCLUDED) || defined(AVR32_GPIO_212_H_INCLUDED)
@@ -265,7 +263,7 @@ void gpio_configure_pin(uint32_t pin, uint32_t flags)
             gpio_port->pders = 1 << (pin & 0x1F);
     else
             gpio_port->pderc = 1 << (pin & 0x1F);
-#endif    
+#endif
     if (flags & GPIO_PULL_UP)
             gpio_port->puers = 1 << (pin & 0x1F);
     else
@@ -276,15 +274,15 @@ void gpio_configure_pin(uint32_t pin, uint32_t flags)
             if (flags & GPIO_OPEN_DRAIN)
                     gpio_port->odmers = 1 << (pin & 0x1F);
             else
-                    gpio_port->odmerc = 1 << (pin & 0x1F);            
+                    gpio_port->odmerc = 1 << (pin & 0x1F);
 
             if (flags & GPIO_OPEN_DRAIN)
                     gpio_port->pders = 1 << (pin & 0x1F);
             else
                     gpio_port->pderc = 1 << (pin & 0x1F);
-#endif 
-            
-#if defined(AVR32_GPIO_200_H_INCLUDED) || defined(AVR32_GPIO_210_H_INCLUDED) || defined(AVR32_GPIO_212_H_INCLUDED) 
+#endif
+
+#if defined(AVR32_GPIO_200_H_INCLUDED) || defined(AVR32_GPIO_210_H_INCLUDED) || defined(AVR32_GPIO_212_H_INCLUDED)
             /* Select drive strength */
             if (flags & GPIO_DRIVE_LOW)
                     gpio_port->odcr0s = 1 << (pin & 0x1F);
@@ -331,35 +329,35 @@ void gpio_configure_pin(uint32_t pin, uint32_t flags)
 }
 
 void gpio_configure_group(uint32_t port, uint32_t mask, uint32_t flags)
-{  
-  volatile avr32_gpio_port_t *gpio_port = &GPIO.port[port];  
+{
+  volatile avr32_gpio_port_t *gpio_port = &GPIO.port[port];
 
   /* Both pull-up and pull-down set means buskeeper */
-#if defined(AVR32_GPIO_200_H_INCLUDED) || defined(AVR32_GPIO_210_H_INCLUDED) || defined(AVR32_GPIO_212_H_INCLUDED)  
+#if defined(AVR32_GPIO_200_H_INCLUDED) || defined(AVR32_GPIO_210_H_INCLUDED) || defined(AVR32_GPIO_212_H_INCLUDED)
     if (flags & GPIO_PULL_DOWN)
             gpio_port->pders = mask;
     else
             gpio_port->pderc = mask;
-#endif    
+#endif
     if (flags & GPIO_PULL_UP)
             gpio_port->puers = mask;
     else
             gpio_port->puerc = mask;
 
     /* Enable open-drain mode if requested */
-#if defined(AVR32_GPIO_200_H_INCLUDED) || defined(AVR32_GPIO_210_H_INCLUDED) || defined(AVR32_GPIO_212_H_INCLUDED)  
+#if defined(AVR32_GPIO_200_H_INCLUDED) || defined(AVR32_GPIO_210_H_INCLUDED) || defined(AVR32_GPIO_212_H_INCLUDED)
             if (flags & GPIO_OPEN_DRAIN)
                     gpio_port->odmers = mask;
             else
-                    gpio_port->odmerc = mask;            
+                    gpio_port->odmerc = mask;
 
             if (flags & GPIO_OPEN_DRAIN)
                     gpio_port->pders = mask;
             else
                     gpio_port->pderc = mask;
-#endif 
-            
-#if defined(AVR32_GPIO_200_H_INCLUDED) || defined(AVR32_GPIO_210_H_INCLUDED) || defined(AVR32_GPIO_212_H_INCLUDED) 
+#endif
+
+#if defined(AVR32_GPIO_200_H_INCLUDED) || defined(AVR32_GPIO_210_H_INCLUDED) || defined(AVR32_GPIO_212_H_INCLUDED)
             /* Select drive strength */
             if (flags & GPIO_DRIVE_LOW)
                     gpio_port->odcr0s = mask;
@@ -400,7 +398,7 @@ void gpio_configure_group(uint32_t port, uint32_t mask, uint32_t flags)
     } else {
             gpio_port->oderc = mask;
     }
-    
+
     /* Enable GPIO */
     gpio_port->gpers = mask;
 }
@@ -458,7 +456,7 @@ void gpio_clr_gpio_pin(uint32_t pin)
   volatile avr32_gpio_port_t *gpio_port = &GPIO.port[pin >> 5];
   gpio_port->ovrc  = 1 << (pin & 0x1F); // Value to be driven on the I/O line: 0.
   gpio_port->oders = 1 << (pin & 0x1F); // The GPIO output driver is enabled for that pin.
-  gpio_port->gpers = 1 << (pin & 0x1F); // The GPIO module controls that pin.  
+  gpio_port->gpers = 1 << (pin & 0x1F); // The GPIO module controls that pin.
 }
 
 void gpio_set_group_low(uint32_t port, uint32_t mask)
@@ -540,7 +538,7 @@ void gpio_disable_pin_glitch_filter(uint32_t pin)
 static int gpio_configure_edge_detector(uint32_t pin, uint32_t mode)
 {
   volatile avr32_gpio_port_t *gpio_port = &GPIO.port[pin >> 5];
-  
+
   // Configure the edge detector.
   switch (mode)
   {
@@ -602,14 +600,14 @@ int gpio_get_pin_interrupt_flag(uint32_t pin)
 void gpio_clear_pin_interrupt_flag(uint32_t pin)
 {
   volatile avr32_gpio_port_t *gpio_port = &GPIO.port[pin >> 5];
-  
+
 #if (AVR32_GPIO_H_VERSION == 211)
   //GPIO erratum - Writing a one to the GPIO.IFRC register
   //to clear an interrupt will be ignored if interrupt is enabled for the
-  //corresponding port. 
+  //corresponding port.
   //Work around for the erratum - Disable the interrupt, clear it by writing
   //a one to GPIO.IFRC, then enable the interrupt.
-  
+
   // Save interrupt enable register.
   uint32_t const gpio_ier = gpio_port->ier;
 

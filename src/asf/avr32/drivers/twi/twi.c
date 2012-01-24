@@ -1,35 +1,30 @@
-/*! \file *********************************************************************
+/*****************************************************************************
+ *
+ * \file
  *
  * \brief TWI driver for AVR32 UC3.
  *
  * This file defines a useful set of functions for TWI on AVR32 devices.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices with a TWI module can be used.
- * - AppNote:
+ * Copyright (c) 2009-2011 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
- *
- ******************************************************************************/
-
-/* Copyright (C) 2009 - 2011 Atmel Corporation. All rights reserved.
+ * \asf_license_start
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
- * list of conditions and the following disclaimer.
+ *    list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
  * 3. The name of Atmel may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ *    from this software without specific prior written permission.
  *
  * 4. This software may only be redistributed and used in connection with an Atmel
- * AVR product.
+ *    AVR product.
  *
  * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
@@ -42,7 +37,10 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- */
+ * \asf_license_stop
+ *
+ ******************************************************************************/
+
 
 #include <avr32/io.h>
 #include "compiler.h"
@@ -53,7 +51,6 @@
 #include "FreeRTOS.h"
 #include "semphr.h"
 #endif
-
 
 //! Pointer to the instance of the TWI registers for IT.
 static volatile avr32_twi_t *twi_inst;
@@ -84,15 +81,9 @@ static volatile unsigned long twi_it_mask;
 static twi_slave_fct_t twi_slave_fct;
 
 #endif
-
-
 #ifdef FREERTOS_USED
-
-//! The SPI mutex.
 static xSemaphoreHandle xTWIMutex;
-
 #endif
-
 
 
 /*! \brief TWI interrupt handler.
@@ -289,7 +280,6 @@ int twi_master_init(volatile avr32_twi_t *twi, const twi_options_t *opt)
 	#ifdef FREERTOS_USED
 	vSemaphoreCreateBinary(xTWIMutex);
 	#endif
-
   // Set pointer to TWIM instance for IT
   twi_inst = twi;
 
@@ -353,8 +343,8 @@ int twi_slave_init(volatile avr32_twi_t *twi, const twi_options_t *opt, const tw
   INTC_register_interrupt( &twi_slave_interrupt_handler, AVR32_TWI_IRQ, AVR32_INTC_INT1);
 
   // Enable all interrupts
-  Enable_global_interrupt();  
-  
+  Enable_global_interrupt();
+
   // Set slave address
   twi->smr = (opt->chip << AVR32_TWI_SMR_SADR_OFFSET);
 
@@ -420,7 +410,6 @@ int twi_master_read(volatile avr32_twi_t *twi, const twi_package_t *package)
   while( twi_is_busy() ) {
     cpu_relax();
   };
-  
   #ifdef FREERTOS_USED
 	while (pdFALSE == xSemaphoreTake(xTWIMutex, 20));
 	#endif
@@ -475,7 +464,6 @@ int twi_master_read(volatile avr32_twi_t *twi, const twi_package_t *package)
 	#ifdef FREERTOS_USED
 	xSemaphoreGive(xTWIMutex);
 	#endif
-
   if( twi_nack )
     return TWI_RECEIVE_NACK;
 
@@ -490,11 +478,10 @@ int twi_master_write(volatile avr32_twi_t *twi, const twi_package_t *package)
   {
     return TWI_INVALID_ARGUMENT;
   }
-	
+
   while( twi_is_busy() ) {
     cpu_relax();
   };
-  
 	#ifdef FREERTOS_USED
 	while (pdFALSE == xSemaphoreTake(xTWIMutex, 20));
 	#endif
@@ -542,7 +529,6 @@ int twi_master_write(volatile avr32_twi_t *twi, const twi_package_t *package)
 
   // Disable master transfer
   twi->cr =  AVR32_TWI_CR_MSDIS_MASK;
-
 	#ifdef FREERTOS_USED
 	xSemaphoreGive(xTWIMutex);
 	#endif

@@ -1,35 +1,30 @@
-/*! \file *********************************************************************
+/*****************************************************************************
+ *
+ * \file
  *
  * \brief Arch file for AVR32.
  *
  * This file defines common AVR32 UC3 series.
  *
- * - Compiler:           IAR EWAVR32 and GNU GCC for AVR32
- * - Supported devices:  All AVR32 devices can be used.
- * - AppNote:
+ * Copyright (c) 2009 Atmel Corporation. All rights reserved.
  *
- * \author               Atmel Corporation: http://www.atmel.com \n
- *                       Support and FAQ: http://support.atmel.no/
- *
- ******************************************************************************/
-
-/* Copyright (c) 2009 Atmel Corporation. All rights reserved.
+ * \asf_license_start
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
  * 1. Redistributions of source code must retain the above copyright notice, this
- * list of conditions and the following disclaimer.
+ *    list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
  * 3. The name of Atmel may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ *    from this software without specific prior written permission.
  *
  * 4. This software may only be redistributed and used in connection with an Atmel
- * AVR product.
+ *    AVR product.
  *
  * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
@@ -40,9 +35,12 @@
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- */
+ * \asf_license_stop
+ *
+ ******************************************************************************/
+
 
 #ifndef _ARCH_H_
 #define _ARCH_H_
@@ -160,6 +158,23 @@
 
 #define UC3C (UC3C0 || UC3C1 || UC3C2 )
 
+// UC3 D Device series
+#define UC3D3 (( defined (__GNUC__) && \
+                  ( defined (__AVR32_UC128D3__)     || \
+                    defined (__AVR32_UC64D3__)))      \
+           ||((defined(__ICCAVR32__) || defined(__AAVR32__)) && \
+                  ( defined (__AT32UC128D3__)     || \
+                    defined (__AT32UC64D3__) )))
+
+#define UC3D4 (( defined (__GNUC__) && \
+                  ( defined (__AVR32_UC128D4__)     || \
+                    defined (__AVR32_UC64D4__)))      \
+           ||((defined(__ICCAVR32__) || defined(__AAVR32__)) && \
+                  ( defined (__AT32UC128D4__)     || \
+                    defined (__AT32UC64D4__) )))
+
+#define UC3D (UC3D3 || UC3D4)
+
 // UC3 L Device series
 #define UC3L0 (( defined (__GNUC__) && \
                   ( defined (__AVR32_UC3L016__)     || \
@@ -201,26 +216,16 @@
 
 #define UC3L ( UC3L0 || UC3L0128 || UC3L0256 || UC3L3_L4)
 
-// UC3 D Device series
-#define UC3D3 (( defined (__GNUC__) && \
-                  ( defined (__AVR32_UC128D3__)     || \
-                    defined (__AVR32_UC64D3__)))      \
-           ||((defined(__ICCAVR32__) || defined(__AAVR32__)) && \
-                  ( defined (__ATUC128D3__)     || \
-                    defined (__ATUC64D3__) )))
-
-#define UC3D (UC3D3)
-
-#if (UC3D)
-#include "header_files/uc3d_defines_fix.h"
-#endif
-
 #define UC3  (UC3A || UC3B || UC3C || UC3D || UC3L)
 
 #if ((defined __GNUC__) && (defined __AVR32__)) || (defined __ICCAVR32__ || defined __AAVR32__)
 #  if (UC3)
 #    include <avr32/io.h>
 #  endif
+#endif
+
+#if (UC3D)
+#include "header_files/uc3d_defines_fix.h"
 #endif
 
 #endif  // _ARCH_H_

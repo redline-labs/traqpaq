@@ -3,37 +3,39 @@
  *
  * \brief Exception and interrupt vectors mapping for the INTC Software Driver.
  *
- * Copyright (C) 2009 - 2011 Atmel Corporation. All rights reserved.
+ * Copyright (c) 2009-2011 Atmel Corporation. All rights reserved.
  *
- * \page License
+ * \asf_license_start
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
  *
  * 3. The name of Atmel may not be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ *    from this software without specific prior written permission.
  *
- * 4. This software may only be redistributed and used in connection with an
- * Atmel AVR product.
+ * 4. This software may only be redistributed and used in connection with an Atmel
+ *    AVR product.
  *
  * THIS SOFTWARE IS PROVIDED BY ATMEL "AS IS" AND ANY EXPRESS OR IMPLIED
  * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT ARE
  * EXPRESSLY AND SPECIFICALLY DISCLAIMED. IN NO EVENT SHALL ATMEL BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
- * DAMAGE.
+ * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * \asf_license_stop
+ *
  */
 
 #if !__AVR32_UC__ && !__AVR32_AP__
@@ -54,7 +56,7 @@
 // Start of Exception Vector Table.
 
 /*
- * EVBA must be aligned with a power of two strictly greater than the 
+ * EVBA must be aligned with a power of two strictly greater than the
  * EVBA-relative offset of the last vector.
  */
 .balign 0x200
@@ -193,12 +195,12 @@ _int\priority:
 #if __AVR32_UC__
 	/*
 	 * R8-R12, LR, PC and SR are automatically pushed onto the system stack
-	 * by the CPU upon interrupt entry. No other register is saved by 
+	 * by the CPU upon interrupt entry. No other register is saved by
 	 * hardware.
 	 */
 #elif __AVR32_AP__
 	/*
-	 * PC and SR are automatically saved in respectively RAR_INTx and 
+	 * PC and SR are automatically saved in respectively RAR_INTx and
 	 * RSR_INTx by the CPU upon interrupt entry. No other register is saved
 	 * by hardware.
 	 */
@@ -210,15 +212,15 @@ _int\priority:
 	// Get the pointer to the interrupt handler returned by the function.
 	cp.w    r12, 0
 #if __AVR32_UC__
-	/* 
-	 * If this was not a spurious interrupt (R12 != NULL), jump to the 
+	/*
+	 * If this was not a spurious interrupt (R12 != NULL), jump to the
 	 * handler.
 	 */
 	movne   pc, r12
 #elif __AVR32_AP__
 	// If this was a spurious interrupt (R12 == NULL), branch.
 	breq    spint\priority
-	/* 
+	/*
 	 * Push the pointer to the interrupt handler onto the system stack since
 	 * no register may be altered.
 	 */
@@ -228,7 +230,7 @@ spint\priority:
 	popm    r8-r12, lr
 #endif
 	/*
-	 * If this was a spurious interrupt (R12 == NULL), return from event 
+	 * If this was a spurious interrupt (R12 == NULL), return from event
 	 * handler.
 	 */
 	rete
