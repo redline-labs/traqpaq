@@ -69,7 +69,6 @@ const unsigned char pwmFadeTable[] = {
 
 const unsigned char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
-
 // Data Structs
 struct tLCDTopBar topBar;
 struct tMenu mainMenu;
@@ -268,6 +267,7 @@ void lcd_init(void){
 }
 
 unsigned short lcd_readID(){
+
 	lcd_writeCommand(LCD_CMD_ID_READ);
 	
 	return (*LCD_PARAM_ADDR);
@@ -305,12 +305,12 @@ void lcd_displayImage(unsigned short *pixmap, unsigned short x_offset, unsigned 
 		}
 		lcd_setCur(x_offset + j, y_offset);
 	}
-
 }
 
 void lcd_displayLargeText(unsigned short *pixmap, unsigned short x_offset, unsigned short y_offset, unsigned short image_x, unsigned short image_y){
 	unsigned int i,j;
 	unsigned short match;
+	
 	for(j=0; j < image_x; j++){
 		for(i=0; i < image_y; i++){
 			if(*pixmap != COLOR_WHITE){
@@ -329,7 +329,7 @@ void lcd_writeText_8x16(char *lcd_string, const unsigned char *font_style, unsig
 	unsigned short x, y;
 	unsigned int mask, xfont, yfont, font_size;
 	const unsigned char *data;
-
+	
 	data = font_style;  // point to the start of the font table
 	xfont = *data;  // get font x width
 	data++;
@@ -359,7 +359,7 @@ void lcd_writeText_8x16(char *lcd_string, const unsigned char *font_style, unsig
 		// move to next character start pixel
 		origin_x += xfont;
 		lcd_string++;  // next character in string
-	}		
+	}
 }
 
 void lcd_writeText_16x32(char *lcd_string, const unsigned char *font_style, unsigned int origin_x, unsigned int origin_y, unsigned int fcolor){
@@ -396,7 +396,8 @@ void lcd_writeText_16x32(char *lcd_string, const unsigned char *font_style, unsi
 		// move to next character start pixel
 		origin_x += xfont;
 		lcd_string++;  // next character in string
-	}		
+	}
+
 }
 
 void integer_to_hexascii(unsigned short number, unsigned char *string){
@@ -498,7 +499,7 @@ void lcd_fadeBacklightOut(){
 
 
 void lcd_drawLine(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2, unsigned short color){
-	// Barrowed code
+	// Borrowed code
 	
 	// Compute deltas, ie. "width" and "height" of line, then
 	// compute x and y direction, and make deltas positive for later use.
@@ -521,36 +522,37 @@ void lcd_drawLine(unsigned short x1, unsigned short y1, unsigned short x2, unsig
 	uint16_t i;
 	// A "flat" line (dx>dy) is handled differently from a "steep" line (dx<dy).
 	if (dx > dy) {
-	// Walk along X, draw pixel, and step Y when required.
-	int16_t e = dx >> 1;
-	for ( i = 0; i <= dx; ++i) {
-		lcd_setCur(x, y);
-		lcd_writeData(color);
-		// Sub-pixel "error" overflowed, so we step Y and reset the "error".
-		if (e <= 0){
-		e += dx;
-		y += yinc;
+		// Walk along X, draw pixel, and step Y when required.
+		int16_t e = dx >> 1;
+		for ( i = 0; i <= dx; ++i) {
+			lcd_setCur(x, y);
+			lcd_writeData(color);
+			// Sub-pixel "error" overflowed, so we step Y and reset the "error".
+			if (e <= 0){
+			e += dx;
+			y += yinc;
+			}
+			// Walk one step along X.
+			e -= dy;
+			x += xinc;
 		}
-		// Walk one step along X.
-		e -= dy;
-		x += xinc;
-	}
 	} else {
-	// Walk along Y, draw pixel, and step X when required.
-	int16_t e = dy >> 1;
-	for (i = 0; i <= dy; ++i) {
-		lcd_setCur(x, y);
-		lcd_writeData(color);
-		// Sub-pixel "error" overflowed, so we step X and reset the "error".
-		if (e <= 0){
-		e += dy;
-		x += xinc;
+		// Walk along Y, draw pixel, and step X when required.
+		int16_t e = dy >> 1;
+		for (i = 0; i <= dy; ++i) {
+			lcd_setCur(x, y);
+			lcd_writeData(color);
+			// Sub-pixel "error" overflowed, so we step X and reset the "error".
+			if (e <= 0){
+			e += dy;
+			x += xinc;
+			}
+			// Walk one step along Y.
+			e -= dx;
+			y += yinc;
 		}
-		// Walk one step along Y.
-		e -= dx;
-		y += yinc;
 	}
-	}
+
 }
 
 

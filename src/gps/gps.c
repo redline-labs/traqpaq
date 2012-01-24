@@ -39,7 +39,6 @@ static xQueueHandle queueGPSrxd;
 unsigned char rxBuffer[GPS_MSG_MAX_STRLEN];
 unsigned char gpsTokens[MAX_SIGNALS_SENTENCE];
 
-
 __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
 	int rxd;
 	
@@ -60,7 +59,7 @@ void gps_task_init( void ){
 
 void gps_task( void *pvParameters ){
 	int rxdChar;
-	unsigned char rxdIndex = 0;
+	unsigned char rxIndex = 0;
 	unsigned char i;
 	
 	gps_reset();
@@ -68,8 +67,7 @@ void gps_task( void *pvParameters ){
 	while(TRUE){
 		// Wait until we received a character
 		if( xQueueReceive(queueGPSrxd, &rxdChar, portMAX_DELAY) == pdTRUE ){
-			if(rxdChar == GPS_MSG_END_CHAR){
-				//gps_verify_checksum();	// Does work!
+			if( (rxdChar == GPS_MSG_END_CHAR) && gps_verify_checksum() ){
 				gps_buffer_tokenize();
 				
 				//--------------------------
@@ -86,14 +84,12 @@ void gps_task( void *pvParameters ){
 					
 					
 				}else
-				
 				//--------------------------
 				// RMC Message Received
 				//--------------------------
 				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_RMC_ID0) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_RMC_ID1) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_RMC_ID2) ){
-						
 						
 					asm("nop");
 					
@@ -112,11 +108,12 @@ void gps_task( void *pvParameters ){
 					
 				}
 				
-				rxdIndex = 0;
+				rxIndex = 0;
 				
 			}else{
 				// Store the data in the buffer
-				rxBuffer[rxdIndex++] = (rxdChar & 0xFF);
+				if(rxBuffer < GPS_MSG_MAX_STRLEN)
+				rxBuffer[rxIndex++] = (rxdChar & 0xFF);
 			}
 		}
 	}
@@ -136,9 +133,9 @@ void gps_buffer_tokenize( void ){
 	unsigned char signalPosIndex = 0;
 
 	// Find the start of the NMEA sentence
-	for(index = 0; index <= GPS_MSG_MAX_STRLEN; index++){
-		if(rxBuffer[index++] == GPS_MSG_START_CHAR) break;
-	}
+	while( (index < GPS_MSG_MAX_STRLEN) && (rxBuffer[index++] != GPS_MSG_START_CHAR) );
+	
+	// Store the location!
 	gpsTokens[signalPosIndex++] = index;
 				
 				
@@ -155,47 +152,40 @@ void gps_buffer_tokenize( void ){
 
 
 unsigned char gps_verify_checksum( void ){
-	unsigned char crcCalculated;
+	unsigned char index = 0;
+	unsigned char crcCalculated = 0;	// Seed the CRC with zero
 	unsigned char crcReceived;
-	unsigned char index;
 	
 	// Find the start of the NMEA sentence
-	for(index = 0; index <= GPS_MSG_MAX_STRLEN; index++){
-		if(rxBuffer[index++] == GPS_MSG_START_CHAR) break;
-	}
+	while( (index < GPS_MSG_MAX_STRLEN) && (rxBuffer[index++] != GPS_MSG_START_CHAR) );
 	
-	crcCalculated = 0;
-	
-	while( index <= GPS_MSG_MAX_STRLEN ){
-		if(rxBuffer[index] == GPS_CHECKSUM_CHAR){
-			break;
-		}else{
+	// Start calculating the checksum
+	while( (index < GPS_MSG_MAX_STRLEN) && (rxBuffer[index] != GPS_CHECKSUM_CHAR) ){
 			crcCalculated ^= rxBuffer[index++];
-		}			
 	}
-				
-	// Skip the Checksum character, '*'
+	
+	// Skip the GPS_CHECKSUM_CHAR
 	index++;
 				
-	// Convert the received checksum from ASCII
-	if(rxBuffer[index] > 'A'){
-		rxBuffer[index] -= 'A' + 10;
+	// Convert the received checksum
+	if(rxBuffer[index] >= 'A'){
+		rxBuffer[index] += 10 - 'A';
 	}else{
 		rxBuffer[index] -= '0';
 	}
 				
-	if(rxBuffer[index+1] > 'A'){
-		rxBuffer[index+1] -= 'A' + 10;
+	if(rxBuffer[index+1] >= 'A'){
+		rxBuffer[index+1] += 10 - 'A';
 	}else{
 		rxBuffer[index+1] -= '0';
 	}
 				
-	crcReceived = (rxBuffer[index] << 4) + (rxBuffer[index+1]);
+	crcReceived = ((rxBuffer[index] & 0xF) << 4) + (rxBuffer[index+1] & 0xF);
 				
 	// Compare!
-	if( crcReceived != crcCalculated ){
-		return FALSE;
+	if( crcReceived == crcCalculated ){
+		return TRUE;
 	}
 	
-	return TRUE;
+	return FALSE;
 }

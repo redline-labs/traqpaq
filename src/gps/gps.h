@@ -33,7 +33,7 @@
 #define GPS_VERSION					"1.00"
 
 #define GPS_RESET_TIME				100		// Time in milliseconds
-#define GPS_QUEUE_SIZE				5
+#define GPS_QUEUE_SIZE				GPS_SIGNAL_MAX_LEN
 
 #define GPS_MSG_START_CHAR			'$'		
 #define GPS_MSG_END_CHAR			0x0A	// ASCII for LF
@@ -46,10 +46,6 @@
 #define GPS_PACKET_START			7
 
 #define GPS_NULL					0
-
-#define GPS_MSGS_PER_INTERRUPT		15		// 3 Messages at 5Hz
-
-#define GPS_BUFFER_SIZE				(GPS_MSGS_PER_INTERRUPT * GPS_MSG_MAX_STRLEN)
 
 #define GPS_SIGNAL_MAX_LEN			12
 
