@@ -33,7 +33,7 @@ if(lcd_redraw_required()){
 	menu_addItem(&mainMenu, "Timed Moto",			LCDFSM_TIMED_MOTO);
 	menu_addItem(&mainMenu, "Review Session",		LCDFSM_REVIEW_SESSION);
 	menu_addItem(&mainMenu, "Settings",				LCDFSM_OPTIONS);
-	menu_addItem(&mainMenu, "About",				LCDFSM_HELP);
+	menu_addItem(&mainMenu, "Help",					LCDFSM_HELP);
 	
 	lcd_redraw_complete();
 }

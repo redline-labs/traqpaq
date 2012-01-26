@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Options
+ * Options -> Display
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -29,10 +29,8 @@
 
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
-	menu_addItem(&mainMenu, "Create New Track",			LCDFSM_OPTIONS_CREATE_NEW_TRACK);
-	menu_addItem(&mainMenu, "Modify Existing Track",	LCDFSM_MODIFY_EXISTING_TRACK);
-	menu_addItem(&mainMenu, "Display",					LCDFSM_DISPLAY);
-	menu_addItem(&mainMenu, "Date and Time",			LCDFSM_DATE_AND_TIME);
+	menu_addItem(&mainMenu, "Brightness",		LCDFSM_OPTIONS_BRIGHTNESS);
+	menu_addItem(&mainMenu, "Screen Timeout",	LCDFSM_OPTIONS_SCREEN_TIMEOUT);
 	
 	lcd_redraw_complete();
 }
@@ -57,7 +55,8 @@ if( xQueueReceive(queueLCDmenu, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_BACK):
-			asm("nop");
+			lcd_force_redraw();
+			lcd_change_screens( LCDFSM_OPTIONS );
 			break;
 			
 			
@@ -73,8 +72,7 @@ if( xQueueReceive(queueLCDmenu, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_LONG_SELECT):
-			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_MAINMENU );
+			asm("nop");
 			break;
 			
 		case(BUTTON_LONG_BACK):

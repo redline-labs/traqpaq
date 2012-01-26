@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Options
+ * Options -> Create New Track -> Modify Existing Track
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -29,10 +29,8 @@
 
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
-	menu_addItem(&mainMenu, "Create New Track",			LCDFSM_OPTIONS_CREATE_NEW_TRACK);
-	menu_addItem(&mainMenu, "Modify Existing Track",	LCDFSM_MODIFY_EXISTING_TRACK);
-	menu_addItem(&mainMenu, "Display",					LCDFSM_DISPLAY);
-	menu_addItem(&mainMenu, "Date and Time",			LCDFSM_DATE_AND_TIME);
+	lcd_writeText_16x32("Modify Existing Track", FONT_LARGE_POINTER, 5, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 64, COLOR_BLACK);
+	lcd_writeText_16x32("Not Implemented Yet", FONT_LARGE_POINTER, 5, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 96, COLOR_BLACK);
 	
 	lcd_redraw_complete();
 }
@@ -44,20 +42,23 @@ if( xQueueReceive(queueLCDmenu, &button, 0) == pdTRUE ){
 		// Short duration button presses
 		// ---------------------------------
 		case(BUTTON_UP):
-			menu_scrollUp(&mainMenu);
+			lcd_force_redraw();
+			lcd_change_screens( LCDFSM_OPTIONS );
 			break;
 			
 		case(BUTTON_DOWN):
-			menu_scrollDown(&mainMenu);
+			lcd_force_redraw();
+			lcd_change_screens( LCDFSM_OPTIONS );
 			break;
 			
 		case(BUTTON_SELECT):
 			lcd_force_redraw();
-			lcd_change_screens( menu_readCallback(&mainMenu) );
+			lcd_change_screens( LCDFSM_OPTIONS );
 			break;
 			
 		case(BUTTON_BACK):
-			asm("nop");
+			lcd_force_redraw();
+			lcd_change_screens( LCDFSM_OPTIONS );
 			break;
 			
 			
@@ -73,8 +74,7 @@ if( xQueueReceive(queueLCDmenu, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_LONG_SELECT):
-			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_MAINMENU );
+			asm("nop");
 			break;
 			
 		case(BUTTON_LONG_BACK):

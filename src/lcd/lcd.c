@@ -90,7 +90,7 @@ void lcd_gui_task( void *pvParameters ){
 	struct tMenu mainMenu;
 	
 	unsigned char button;
-	volatile unsigned short lcd_fsm = LCDFSM_MAINMENU;
+	volatile unsigned short lcd_fsm = LCDFSM_MAINMENU;		// Useful for testing new screens!
 	unsigned char redraw = TRUE;
 	
 	queueLCDwidgets = xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(request));
@@ -132,6 +132,9 @@ void lcd_gui_task( void *pvParameters ){
 		
 		// See if screen needs to be updated
 		switch(lcd_fsm){
+			// ---------------------------------
+			// Main Menu
+			// ---------------------------------
 			case(LCDFSM_MAINMENU):
 				#include "screens/main_menu.h"
 				break;
@@ -156,9 +159,96 @@ void lcd_gui_task( void *pvParameters ){
 				#include "screens/help.h"
 				break;
 				
+				
+				
+				
+			// ---------------------------------
+			// Main Menu -> Options
+			// ---------------------------------
+			case(LCDFSM_OPTIONS_CREATE_NEW_TRACK):
+				#include "screens/options/create_new_track.h"
+				break;
+				
+			case(LCDFSM_OPTIONS_NEW_TRACK_CREATED):
+				#include "screens/options/new_track_created.h"
+				break;
+			
+			case(LCDFSM_MODIFY_EXISTING_TRACK):
+				#include "screens/options/modify_existing_track.h"
+				break;
+				
+			case(LCDFSM_DISPLAY):
+				#include "screens/options/display.h"
+				break;
+				
+			case(LCDFSM_DATE_AND_TIME):
+				#include "screens/options/date_and_time.h"
+				break;
+				
+				
+			// ---------------------------------
+			// Main Menu -> Options -> Display
+			// ---------------------------------
+			case(LCDFSM_OPTIONS_BRIGHTNESS):
+				#include "screens/options/screen_brightness.h"
+				break;
+				
+			case(LCDFSM_OPTIONS_SCREEN_TIMEOUT):
+				#include "screens/options/screen_timeout.h"
+				break;
+
+			
+			// ---------------------------------
+			// Main Menu -> Record New Session
+			// ---------------------------------
+			case(LCDFSM_SELECT_EXISTING_TRACK):
+				#include "screens/recording/select_existing_track.h"
+				break;
+				
+			case(LCDFSM_CREATE_NEW_TRACK):
+				#include "screens/recording/create_new_track.h"
+				break;
+				
+			
+			// ---------------------------------
+			// Main Menu -> Timed Moto
+			// ---------------------------------
+			case(LCDFSM_LAP_BASED):
+				#include "screens/recording/timed_moto_laps.h"
+				break;
+				
+			case(LCDFSM_TIME_BASED):
+				#include "screens/recording/timed_moto_time.h"
+				break;
+			
+			
+			// ---------------------------------
+			// Main Menu -> Timed Moto / Record New Session -> Start Record
+			// ---------------------------------
+			case(LCDFSM_START_RECORD):
+				#include "screens/recording/start_recording.h"
+				break;
+				
+				
+			// ---------------------------------
+			// Main Menu -> Help
+			// ---------------------------------
+			case(LCDFSM_TECHNICAL_INFO):
+				#include "screens/help/technical_info.h"
+				break;
+				
+			case(LCDFSM_MODULE_INFO):
+				#include "screens/help/module_info.h"
+				break;
+			
+			
+			// ---------------------------------
+			// Error screen - should never reach
+			// ---------------------------------
 			default:
 				#include "screens/unknown_menu.h"
 				break;
+			
 			
 		}
 		

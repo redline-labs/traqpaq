@@ -34,6 +34,8 @@
 
 extern struct tLCDTopBar topBar;
 
+#define lcd_flagToASCII(flag)		(flag == TRUE ? "TRUE" : "FALSE")
+
 #define LCD_VERSION					"1.00"
 
 #define LCD_MIN_Y					0
