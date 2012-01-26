@@ -191,7 +191,7 @@ to exclude the API function. */
 
 /* GUI Task */
 #define configTSK_GUI_TASK_NAME				((const signed portCHAR *)"GUI")
-#define configTSK_GUI_TASK_STACK_SIZE		512
+#define configTSK_GUI_TASK_STACK_SIZE		1024
 #define configTSK_GUI_TASK_PRIORITY			(tskIDLE_PRIORITY + 1)
 #define configTSK_GUI_TASK_PERIOD			20
 

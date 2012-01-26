@@ -252,6 +252,15 @@ extern struct tLCDTopBar topBar;
 									  ||||||||||||||||			*/
 #define LCD_BASE_IMAGE_DISP_CTRL	0b0000000000000011
 
+
+#define lcd_force_redraw()			redraw = TRUE
+#define lcd_redraw_required()		(redraw == TRUE)
+#define lcd_redraw_complete()		redraw = FALSE
+
+#define lcd_change_screens(screen)	lcd_fsm = screen
+
+#define LCD_TASK_SLEEP_TIME			20
+
 unsigned short lcd_readID(void);
 void lcd_task_init(void);
 void lcd_gui_task( void *pvParameters );
@@ -325,7 +334,7 @@ typedef struct tLCDAntenna {
 	unsigned char bars;		// Current number of bars shown
 };
 
-typedef struct tLCDTopBar{
+typedef struct tLCDTopBar {
 	unsigned short bcolor;	// Background Color
 	unsigned short fcolor;	// Foreground Color
 	
@@ -335,6 +344,18 @@ typedef struct tLCDTopBar{
 	struct tLCDAntenna antenna;
 };
 
+#define LCD_WIDGET_QUEUE_SIZE			5
+
+#define LCD_REQUEST_UPDATE_BATTERY		0
+#define LCD_REQUEST_UPDATE_CHARGE		1
+#define LCD_REQUEST_UPDATE_USB			2
+#define LCD_REQUEST_UPDATE_ANTENNA		3
+
+
+typedef struct tLCDRequest {
+	unsigned char action;
+	unsigned char data;
+};
 
 
 

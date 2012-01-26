@@ -217,12 +217,12 @@
 #define GPS_TXD_FUNCTION			AVR32_USART0_TXD_0_0_FUNCTION
 #define GPS_RXD						AVR32_USART0_RXD_0_0_PIN
 #define GPS_RXD_FUNCTION			AVR32_USART0_RXD_0_0_FUNCTION
-#define GPS_USART_BAUD				57600
+#define GPS_USART_BAUD				115200
 #define GPS_USART_IRQ           	AVR32_USART0_IRQ
 
 
 // ------------------------------------------------------------
-// GPS Definitions (USART2)
+// Debug Definitions (USART2)
 // ------------------------------------------------------------
 #define DEBUG_USART               	(&AVR32_USART2)
 #define DEBUG_TXD					AVR32_USART2_TXD_0_0_PIN

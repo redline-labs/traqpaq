@@ -33,22 +33,26 @@
 
 #include "string.h"
 
-#define MENU_MAX_ITEM_STRLEN		20										// Max number of characters for menu item text
-#define MENU_MAX_ITEMS				5										// Max number of items per menu
+#define MENU_MAX_ITEM_STRLEN		24										// Max number of characters for menu item text
+#define MENU_MAX_ITEMS				15										// Max number of items per menu
+#define MENU_ITEMS_PER_SCREEN		5										// Number of items that can fit on the screen
 
-#define MENU_ROW_HEIGHT				40										// Height of menu items
+#define MENU_ROW_HEIGHT				43										// Height of menu items
 #define MENU_Y_START				(LCD_MAX_Y-LCD_TOPBAR_THICKNESS-1)		// Y Position to use as top of menu items
 #define MENU_TEXT_X_PADDING			6										// X Padding for menu item text
-#define MENU_TEXT_Y_PADDING			5										// Y Padding for menu item text
+#define MENU_TEXT_Y_PADDING			6										// Y Padding for menu item text
 
-struct tMenu menu_create(unsigned char *title, unsigned char *font);
-void menu_addItem(struct tMenu *menu, unsigned char *itemText, unsigned char actionCode);
+struct tMenu menu_init();
+void menu_addItem(struct tMenu *menu, unsigned char *itemText, unsigned short actionCode);
 void menu_scrollUp(struct tMenu *menu);
 void menu_scrollDown(struct tMenu *menu);
+unsigned short menu_readCallback(struct tMenu *menu);
+void menu_clear(struct tMenu *menu);
 
 typedef struct tMenuItem {
 	unsigned char text[MENU_MAX_ITEM_STRLEN];
-	unsigned char callback; //TO DO: Implement call backs
+	unsigned char visible;
+	unsigned short callback; //TO DO: Implement call backs
 };
 
 typedef struct tMenu {
@@ -57,6 +61,8 @@ typedef struct tMenu {
 	unsigned char title[MENU_MAX_ITEM_STRLEN];
 	struct tMenuItem item[MENU_MAX_ITEMS];
 };
+
+
 
 
 #endif /* MENU_H_ */

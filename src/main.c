@@ -40,11 +40,12 @@
 int main( void ){
 	unsigned short temp = 0;
 	
+	wdt_disable();
+	
 	// Initialization ---------------------------------------------
 	Disable_global_exception();
 	Disable_global_interrupt();
 	
-	wdt_disable();
 	INTC_init_interrupts();	// Do this before Board Init!
 	board_init();
 	
@@ -75,10 +76,6 @@ int main( void ){
 	gps_task_init();
 	#endif
 	
-	#if( TRAQPAQ_HW_WDT_ENABLED )
-	wdt_task_init();
-	#endif
-	
 	#if( TRAQPAQ_HW_EXINT_ENABLED )
 	buttons_task_init();
 	#endif
@@ -87,6 +84,9 @@ int main( void ){
 	charge_task_init();
 	#endif
 	
+	#if( TRAQPAQ_HW_WDT_ENABLED )
+	wdt_task_init();
+	#endif
 	
 	Enable_global_interrupt();
 

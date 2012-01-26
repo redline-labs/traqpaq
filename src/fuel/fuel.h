@@ -114,6 +114,8 @@
 #define FUEL_LIMIT_VOLTAGE_LOWER				0x0265	// 2.99 Volts
 #define FUEL_LIMIT_VOLTAGE_UPPER				0x035F	// 4.21 Volts
 
+#define FUEL_UPDATE_RATE						3000	// Time (milliseconds) to update run the fuel task
+
 
 typedef struct tFuelStatus{ 
 	// Protection Register - 8 bits

@@ -31,8 +31,9 @@
 #include "asf.h"
 #include "drivers.h"
 
-// Add reference to the application top bar
-extern struct tLCDTopBar topBar;
+
+// Allow access to the LCD Queue
+extern xQueueHandle queueLCDwidgets;
 
 void fuel_task_init( void ){
 	xTaskCreate(fuel_task, configTSK_FUEL_TASK_NAME, configTSK_FUEL_TASK_STACK_SIZE, NULL, configTSK_FUEL_TASK_PRIORITY, NULL);
@@ -41,15 +42,18 @@ void fuel_task_init( void ){
 
 void fuel_task( void *pvParameters ){
 	unsigned short percent;
+	struct tLCDRequest request;
+	
+	request.action = LCD_REQUEST_UPDATE_BATTERY;
 	
 	while(1){
-		percent = ( fuel_read_current( FUEL_CURRENT_ACCUMULATED ) - 0x8000 ) >> 3;
-		if(percent > 100){
-			percent = 100;
+		request.data = ( fuel_read_current( FUEL_CURRENT_ACCUMULATED ) - 0x8000 ) >> 3;
+		if(request.data > 100){
+			request.data = 100;
 		}
-		lcd_updateBattery(&topBar, percent);
-
-		vTaskDelay( (portTickType)TASK_DELAY_MS(5000) );
+		
+		xQueueSend(queueLCDwidgets, &request, portMAX_DELAY);
+		vTaskDelay( (portTickType)TASK_DELAY_MS(FUEL_UPDATE_RATE) );
 	}
 }
 

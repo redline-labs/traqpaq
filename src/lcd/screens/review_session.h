@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Button Interface
+ * Review Session
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -27,31 +27,54 @@
  *
  ******************************************************************************/
 
-#ifndef BUTTON_H_
-#define BUTTON_H_
+if(lcd_redraw_required()){
+	menu_clear(&mainMenu);
+	menu_addItem(&mainMenu, "Back",	LCDFSM_MAINMENU);
+	
+	lcd_redraw_complete();
+}
 
-#define BUTTON_TIMER_INCREMENT		50			// Interval to check button status in milliseconds
-#define BUTTON_LONG_PRESS_TIME		1000		// Threshold for qualifying a long-press in milliseconds
-
-#define BUTTON_LONG_PRESS_TIMER_VALUE	BUTTON_LONG_PRESS_TIME/BUTTON_TIMER_INCREMENT
-
-
-// Assign these by bits so we can use masks in the LCD task (ie, BUTTON_UP | BUTTON_LONG_UP )
-#define BUTTON_UP					0b00000001
-#define BUTTON_DOWN					0b00000010
-#define BUTTON_SELECT				0b00000100
-#define BUTTON_BACK					0b00001000
-
-#define BUTTON_LONG_UP				0b00010000
-#define BUTTON_LONG_DOWN			0b00100000
-#define BUTTON_LONG_SELECT			0b01000000
-#define BUTTON_LONG_BACK			0b10000000
-
-
-
-void buttons_task_init( void );
-void buttons_task( void *pvParameters );
-
-
-
-#endif /* BUTTON_H_ */
+if( xQueueReceive(queueLCDmenu, &button, 0) == pdTRUE ){
+	switch(button){
+		
+		// ---------------------------------
+		// Short duration button presses
+		// ---------------------------------
+		case(BUTTON_UP):
+			menu_scrollUp(&mainMenu);
+			break;
+			
+		case(BUTTON_DOWN):
+			menu_scrollDown(&mainMenu);
+			break;
+			
+		case(BUTTON_SELECT):
+			lcd_force_redraw();
+			lcd_change_screens( menu_readCallback(&mainMenu) );
+			break;
+			
+		case(BUTTON_BACK):
+			asm("nop");
+			break;
+			
+			
+		// ---------------------------------
+		// Long duration button presses
+		// ---------------------------------
+		case(BUTTON_LONG_UP):
+			menu_scrollUp(&mainMenu);
+			break;
+			
+		case(BUTTON_LONG_DOWN):
+			menu_scrollDown(&mainMenu);
+			break;
+			
+		case(BUTTON_LONG_SELECT):
+			asm("nop");
+			break;
+			
+		case(BUTTON_LONG_BACK):
+			asm("nop");
+			break;
+	}
+}

@@ -31,8 +31,8 @@
 #include "drivers.h"
 #include "lcd/menu.h"
 
-extern struct tMenu mainMenu;
 static xQueueHandle buttonPress;
+extern xQueueHandle queueLCDmenu;
 
 
 //------------------------------
@@ -104,35 +104,29 @@ void buttons_task( void *pvParameters ){
 			// Qualified a long button press
 			switch(button){
 				case(BUTTON_UP):
-					asm("nop");
+					button = BUTTON_LONG_UP;
+					xQueueSend(queueLCDmenu, &button, portMAX_DELAY);
 					break;
+					
 				case(BUTTON_DOWN):
-					asm("nop");
+					button = BUTTON_LONG_DOWN;
+					xQueueSend(queueLCDmenu, &button, portMAX_DELAY);
 					break;
+					
 				case(BUTTON_BACK):
-					asm("nop");
+					button = BUTTON_LONG_BACK;
+					xQueueSend(queueLCDmenu, &button, portMAX_DELAY);
 					break;
+					
 				case(BUTTON_SELECT):
-					asm("nop");
+					button = BUTTON_LONG_SELECT;
+					xQueueSend(queueLCDmenu, &button, portMAX_DELAY);
 					break;
 			}
 			
 		}else{
 			// Normal short button press
-			switch(button){
-				case(BUTTON_UP):
-					menu_scrollUp(&mainMenu);
-					break;
-				case(BUTTON_DOWN):
-					menu_scrollDown(&mainMenu);
-					break;
-				case(BUTTON_BACK):
-					asm("nop");
-					break;
-				case(BUTTON_SELECT):
-					asm("nop");
-					break;
-			}
+			xQueueSend(queueLCDmenu, &button, portMAX_DELAY);
 		}						
 			
 		// Clear any pending EXTINT interrupts and re-enable them

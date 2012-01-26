@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Button Interface
+ * LCD interface
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -27,31 +27,44 @@
  *
  ******************************************************************************/
 
-#ifndef BUTTON_H_
-#define BUTTON_H_
 
-#define BUTTON_TIMER_INCREMENT		50			// Interval to check button status in milliseconds
-#define BUTTON_LONG_PRESS_TIME		1000		// Threshold for qualifying a long-press in milliseconds
+#ifndef CONTROL_FSM_H_
+#define CONTROL_FSM_H_
 
-#define BUTTON_LONG_PRESS_TIMER_VALUE	BUTTON_LONG_PRESS_TIME/BUTTON_TIMER_INCREMENT
+// Main Menu
+#define LCDFSM_MAINMENU					0
+#define LCDFSM_RECORD_NEW_SESSION		1
+#define LCDFSM_TIMED_MOTO				2
+#define LCDFSM_REVIEW_SESSION			3
+#define LCDFSM_OPTIONS					4
+#define LCDFSM_HELP						5
 
-
-// Assign these by bits so we can use masks in the LCD task (ie, BUTTON_UP | BUTTON_LONG_UP )
-#define BUTTON_UP					0b00000001
-#define BUTTON_DOWN					0b00000010
-#define BUTTON_SELECT				0b00000100
-#define BUTTON_BACK					0b00001000
-
-#define BUTTON_LONG_UP				0b00010000
-#define BUTTON_LONG_DOWN			0b00100000
-#define BUTTON_LONG_SELECT			0b01000000
-#define BUTTON_LONG_BACK			0b10000000
+// Main Menu -> Record New Session
+#define LCDFSM_SELECT_EXISTING_TRACK	100
+#define LCDFSM_CREATE_NEW_TRACK			101
 
 
+// Main Menu -> Timed Moto
+#define LCDFSM_LAP_BASED				200
+#define LCDFSM_TIME_BASED				201
 
-void buttons_task_init( void );
-void buttons_task( void *pvParameters );
+
+// Main Menu -> Review Session
+
+
+// Main Menu -> Options
+#define LCDFSM_OPTIONS_CREATE_NEW_TRACK	400
+#define LCDFSM_MODIFY_EXISTING_TRACK	401
+#define LCDFSM_DISPLAY					402
+#define LCDFSM_DATE_AND_TIME			403
+
+
+// Main Menu -> Help
+#define LCDFSM_HOW_TO_USE				500
+#define LCDFSM_ABOUT					501
+#define LCDFSM_DISCLAIMER				502
 
 
 
-#endif /* BUTTON_H_ */
+
+#endif /* CONTROL_FSM_H_ */

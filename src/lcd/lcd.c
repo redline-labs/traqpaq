@@ -30,6 +30,7 @@
 #include <asf.h>
 #include "drivers.h"
 #include "menu.h"
+#include "control_fsm.h"
 
 #include FONT_SMALL_INCLUDE
 #include FONT_LARGE_INCLUDE
@@ -69,9 +70,11 @@ const unsigned char pwmFadeTable[] = {
 
 const unsigned char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
-// Data Structs
-struct tLCDTopBar topBar;
-struct tMenu mainMenu;
+// Queues
+xQueueHandle queueLCDwidgets;
+xQueueHandle queueLCDmenu;
+
+
 
 // Create task for FreeRTOS
 void lcd_task_init( void ){
@@ -80,40 +83,87 @@ void lcd_task_init( void ){
 
 // LCD GUI Task
 void lcd_gui_task( void *pvParameters ){
-	
 	unsigned char i = 0;
+	
+	struct tLCDRequest request;
+	struct tLCDTopBar topBar;
+	struct tMenu mainMenu;
+	
+	unsigned char button;
+	volatile unsigned short lcd_fsm = LCDFSM_MAINMENU;
+	unsigned char redraw = TRUE;
+	
+	queueLCDwidgets = xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(request));
+	queueLCDmenu	= xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(unsigned char));
 	
 	lcd_reset();
 	
 	if( lcd_readID() != LCD_DEVICE_ID){
-		// We broke the display!!
 		debug_log("WARNING [LCD]: Incorrect device ID");
 	}
 	
 	lcd_init();
 	
+	// Clear the screen
 	lcd_fillRGB(COLOR_WHITE);
 	
-	topBar = lcd_createTopBar("Ryan's traq|paq", COLOR_WHITE, COLOR_BLACK);
-	lcd_updateBattery(&topBar, 70);
-	lcd_updateAntenna(&topBar, 3);
+	// Create GUI element
+	topBar = lcd_createTopBar("Ryan's traq|paq", COLOR_WHITE, COLOR_BLACK);	
+	mainMenu = menu_init();
 	
-	mainMenu = menu_create("Main Menu", FONT_SMALL_POINTER);
-	menu_addItem(&mainMenu, "Standard Session", 1);
-	menu_addItem(&mainMenu, "Timed Moto", 2);
-	menu_addItem(&mainMenu, "Settings", 3);
-	menu_addItem(&mainMenu, "Review", 4);
-	menu_addItem(&mainMenu, "About", 5);
-	
-	// Prevent backlight from turning on while screen is being initialize
-	vTaskDelay( (portTickType)TASK_DELAY_MS(50) );
-	
+	// Prevent backlight from turning on while screen is being initialized
+	vTaskDelay( (portTickType)TASK_DELAY_MS(100) );
 	lcd_fadeBacklightIn();
 	
 	
 	while(1){
-		//vTaskDelay( (portTickType)TASK_DELAY_MS(1000) );
-		vTaskSuspend(NULL);
+		// See if a widget needs to be updated
+		if( xQueueReceive(queueLCDwidgets, &request, 0) == pdTRUE ){
+			switch(request.action){
+				case(LCD_REQUEST_UPDATE_BATTERY):
+					lcd_updateBattery(&topBar, request.data);
+					break;
+					
+				case(LCD_REQUEST_UPDATE_ANTENNA):
+					lcd_updateAntenna(&topBar, request.data);
+					break;
+			}
+		}
+		
+		// See if screen needs to be updated
+		switch(lcd_fsm){
+			case(LCDFSM_MAINMENU):
+				#include "screens/main_menu.h"
+				break;
+				
+			case(LCDFSM_RECORD_NEW_SESSION):
+				#include "screens/record_new_session.h"
+				break;
+				
+			case(LCDFSM_TIMED_MOTO):
+				#include "screens/timed_moto.h"
+				break;
+				
+			case(LCDFSM_REVIEW_SESSION):
+				#include "screens/review_session.h"
+				break;
+				
+			case(LCDFSM_OPTIONS):
+				#include "screens/options.h"
+				break;
+				
+			case(LCDFSM_HELP):
+				#include "screens/help.h"
+				break;
+				
+			default:
+				#include "screens/unknown_menu.h"
+				break;
+			
+		}
+		
+
+		vTaskDelay( (portTickType)TASK_DELAY_MS(LCD_TASK_SLEEP_TIME) );
 	}
 }
 

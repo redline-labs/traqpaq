@@ -31,18 +31,13 @@
 #include "lcd.h"
 #include FONT_LARGE_INCLUDE
 
-struct tMenu menu_create(unsigned char *title, unsigned char *font){
+struct tMenu menu_init(){
 	struct tMenu menu;
-	strcpy(menu.title, title);
-	
 	menu.numItems = 0;		// Initialize number of items in menu
-	
-	//lcd_updateTopBarText(menu.title);
-	
 	return menu;
 }
 
-void menu_addItem(struct tMenu *menu, unsigned char *itemText, unsigned char actionCode) {
+void menu_addItem(struct tMenu *menu, unsigned char *itemText, unsigned short actionCode) {
 	strcpy(menu->item[menu->numItems].text, itemText);
 	menu->item[menu->numItems].callback = actionCode;
 	
@@ -61,15 +56,27 @@ void menu_addItem(struct tMenu *menu, unsigned char *itemText, unsigned char act
 						COLOR_WHITE);
 						
 		menu->selectedIndex = 0;
+		menu->item[menu->numItems].visible = TRUE;
 		menu->numItems += 1;
-			
-	}else if(menu->numItems < MENU_MAX_ITEMS){
+		
+	}else if( (menu->numItems < MENU_MAX_ITEMS) && (menu->numItems <= MENU_ITEMS_PER_SCREEN) ){
 		lcd_writeText_16x32(menu->item[menu->numItems].text,
 					FONT_LARGE_POINTER,
 					MENU_TEXT_X_PADDING,
 					MENU_Y_START - ((menu->numItems + 1) * MENU_ROW_HEIGHT) + MENU_TEXT_Y_PADDING,
 					COLOR_BLACK);
-					
+		
+		menu->item[menu->numItems].visible = TRUE;
+		menu->numItems += 1;
+			
+	}else if( menu->numItems < MENU_MAX_ITEMS){
+		lcd_writeText_16x32(menu->item[menu->numItems].text,
+					FONT_LARGE_POINTER,
+					MENU_TEXT_X_PADDING,
+					MENU_Y_START - ((menu->numItems + 1) * MENU_ROW_HEIGHT) + MENU_TEXT_Y_PADDING,
+					COLOR_BLACK);
+		
+		menu->item[menu->numItems].visible = FALSE;
 		menu->numItems += 1;
 	}
 }
@@ -148,4 +155,13 @@ void menu_scrollDown(struct tMenu *menu) {
 				COLOR_WHITE);
 	
 	menu->selectedIndex = newIndex;
+}
+
+unsigned short menu_readCallback(struct tMenu *menu){
+	return menu->item[menu->selectedIndex].callback;
+}
+
+void menu_clear(struct tMenu *menu){
+	lcd_drawFilledRectangle(LCD_MIN_X, MENU_Y_START, LCD_MAX_X, LCD_MIN_Y, COLOR_WHITE);
+	menu->numItems = 0;
 }
