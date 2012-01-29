@@ -235,7 +235,29 @@ void board_init(void){
 		spi_initMaster(DATAFLASH_SPI, &dataflashOptions);
 		spi_selectionMode(DATAFLASH_SPI, SPI_VARIABLE_PS, SPI_PCS_DECODE, SPI_SCLK_DELAY);
 		spi_enable(DATAFLASH_SPI);
-		spi_setupChipReg(DATAFLASH_SPI, &dataflashOptions, APPL_PBA_SPEED);		
+		spi_setupChipReg(DATAFLASH_SPI, &dataflashOptions, APPL_PBA_SPEED);
+		
+		static const pdca_channel_options_t pdcaSPItx = { 
+			.addr = NULL,								// memory address 
+			.pid = AVR32_PDCA_PID_SPI0_TX,				// select peripheral - SPI transfer channel 
+			.size = NULL,								// transfer counter 
+			.r_addr = NULL,								// next memory address 
+			.r_size = NULL,								// next transfer counter 
+			.transfer_size = PDCA_TRANSFER_SIZE_BYTE	// select size of the transfer 
+		};
+		
+		pdca_init_channel(SPI_TX_PDCA_CHANNEL, &pdcaSPItx);
+		
+		static const pdca_channel_options_t pdcaSPIrx = { 
+			.addr = NULL,								// memory address 
+			.pid = AVR32_PDCA_PID_SPI0_RX,				// select peripheral - SPI transfer channel 
+			.size = NULL,								// transfer counter 
+			.r_addr = NULL,								// next memory address 
+			.r_size = NULL,								// next transfer counter 
+			.transfer_size = PDCA_TRANSFER_SIZE_BYTE	// select size of the transfer 
+		};
+		
+		pdca_init_channel(SPI_RX_PDCA_CHANNEL, &pdcaSPIrx);
 		
 		
 	#endif

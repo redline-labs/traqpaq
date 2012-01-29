@@ -59,7 +59,7 @@
 
 // Security Commands
 #define DATAFLASH_CMD_SECTOR_LOCKDOWN		0x33
-#define DATAFLASH_CMD_FREEZE_SECTOR_LOCKDOWN	0x34
+#define DATAFLASH_CMD_FREEZE_SECTOR_LOCKDOWN 0x34
 #define DATAFLASH_CMD_READ_SECTOR_LOCKDOWN	0x35
 #define DATAFLASH_CMD_PROGRAM_OTP			0x9B
 #define DATAFLASH_CMD_READ_OTP				0x77
@@ -147,6 +147,9 @@
 
 #define DATAFLASH_STATUS_GLOBAL_UNPROTECT	0x00
 
+#define DATAFLASH_PDCA_CHECK_TIME			5	// Time in milliseconds to suspend task before checking PDCA status again
+#define DATAFLASH_STATUS_CHECK_TIME			5	// Time in milliseconds to suspend task before checking status register again
+
 
 typedef struct tDataflashStatusRegisters{
 	unsigned SPRL	: 1;		// Sector Protection Registers Locked
@@ -172,19 +175,20 @@ typedef union tDataflashStatus{
 
 void dataflash_task_init( void );
 void dataflash_task( void *pvParameters );
-unsigned char dataflash_checkID(void);
-union tDataflashStatus dataflash_readStatus(void);
-unsigned char dataflash_GlobalUnprotect(void);
-unsigned char dataflash_WriteEnable(void);
-unsigned char dataflash_WriteDisable(void);
-unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned char length, unsigned char *bufferPointer);
-unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned char length, unsigned char *bufferPointer);
+unsigned char dataflash_checkID( void );
+union tDataflashStatus dataflash_readStatus( void );
+unsigned char dataflash_GlobalUnprotect( void );
+unsigned char dataflash_WriteEnable( void );
+unsigned char dataflash_WriteDisable( void );
+unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer);
+unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer);
 unsigned char dataflash_ReadOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer);
 unsigned char dataflash_WriteOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer);
 unsigned char dataflash_eraseBlock(unsigned char blockSize, unsigned long startAddress);
-unsigned char dataflash_chipErase(void);
-unsigned char dataflash_powerDown(void);
-unsigned char dataflash_wakeUp(void);
+unsigned char dataflash_chipErase( void );
+unsigned char dataflash_powerDown( void );
+unsigned char dataflash_wakeUp( void );
+unsigned char dataflash_is_busy( void );
 
 
 #endif /* DATAFLASH_H_ */

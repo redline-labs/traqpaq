@@ -30,18 +30,15 @@
 #include <asf.h>
 #include "drivers.h"
 #include "dataflash_layout.h"
-#include "crc/crc.h"
 
 void dataflash_task_init( void ){
 	xTaskCreate(dataflash_task, configTSK_DATAFLASH_TASK_NAME, configTSK_DATAFLASH_TASK_STACK_SIZE, NULL, configTSK_DATAFLASH_TASK_PRIORITY, NULL);
 }
 
+unsigned char readBuffer[256];
+
 void dataflash_task( void *pvParameters ){
-	unsigned char i;	
-	unsigned char buffer[32];
-	unsigned short crc = 0;
-	
-	union tDataflashStatus status;
+	unsigned short i;
 	
 	if( !dataflash_checkID() ){
 		debug_log("WARNING [DATAFLASH]: Incorrect device ID");
@@ -50,15 +47,13 @@ void dataflash_task( void *pvParameters ){
 	dataflash_GlobalUnprotect();
 	dataflash_WriteEnable();
 	
-	status = dataflash_readStatus();
-	if(status.registers.BSY0){
+	if( dataflash_is_busy() ){
 		debug_log("WARNING [DATAFLASH]: Busy response received");
 	}
 	
+	
 	while(TRUE){
-		asm("nop");
 		vTaskSuspend(NULL);
-		
 	}
 }
 
@@ -140,10 +135,10 @@ unsigned char dataflash_WriteDisable(void){
 }
 
 
-unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned char length, unsigned char *bufferPointer){
-	unsigned char i;
-	unsigned short temp;
+unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){	
 	
+	pdca_load_channel(SPI_TX_PDCA_CHANNEL, (void *)0x80000000, length); // Use start of Flash as Dummy Bytes to Clock Out
+	pdca_load_channel(SPI_RX_PDCA_CHANNEL, bufferPointer, length);
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	
 	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_READ_ARRAY);
@@ -151,10 +146,11 @@ unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned char l
 	spi_write(DATAFLASH_SPI, (startAddress >>  8) & 0xFF);
 	spi_write(DATAFLASH_SPI, (startAddress >>  0) & 0xFF);
 	
-	for(i = 0; i < length; i++){
-		spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DUMMY);
-		spi_read(DATAFLASH_SPI, &temp);
-		bufferPointer[i] = temp & 0xFF;
+	pdca_enable(SPI_RX_PDCA_CHANNEL);
+	pdca_enable(SPI_TX_PDCA_CHANNEL);
+	
+	while(pdca_get_transfer_status(SPI_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE){
+		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PDCA_CHECK_TIME ) );
 	}
 	
 	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
@@ -162,11 +158,12 @@ unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned char l
 	return DATAFLASH_RESPONSE_OK;
 }
 
-unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned char length, unsigned char *bufferPointer){
+unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){
 	unsigned char i;
 	
 	dataflash_WriteEnable();
 	
+	pdca_load_channel(SPI_TX_PDCA_CHANNEL, bufferPointer, length); // Use start of Flash as Dummy Bytes to Clock Out
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	
 	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_PAGE_PROGRAM);
@@ -174,8 +171,10 @@ unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned cha
 	spi_write(DATAFLASH_SPI, (startAddress >>  8) & 0xFF);
 	spi_write(DATAFLASH_SPI, (startAddress >>  0) & 0xFF);
 	
-	for(i = 0; i < length; i++){
-		spi_write(DATAFLASH_SPI, bufferPointer[i]);
+	pdca_enable(SPI_TX_PDCA_CHANNEL);
+	
+	while(pdca_get_transfer_status(SPI_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE){
+		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PDCA_CHECK_TIME ) );
 	}
 	
 	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
@@ -247,7 +246,7 @@ unsigned char dataflash_eraseBlock(unsigned char blockSize, unsigned long startA
 	}
 }
 
-unsigned char dataflash_chipErase(void){
+unsigned char dataflash_chipErase( void ){
 		dataflash_WriteEnable();
 	
 		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
@@ -257,7 +256,7 @@ unsigned char dataflash_chipErase(void){
 		return DATAFLASH_RESPONSE_OK;
 }
 
-unsigned char dataflash_powerDown(void){
+unsigned char dataflash_powerDown( void ){
 		
 		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 		spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DEEP_POWER_DOWN);
@@ -266,11 +265,24 @@ unsigned char dataflash_powerDown(void){
 		return DATAFLASH_RESPONSE_OK;
 }
 
-unsigned char dataflash_wakeUp(void){
+unsigned char dataflash_wakeUp( void ){
 		
 		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 		spi_write(DATAFLASH_SPI, DATAFLASH_CMD_WAKEUP);
 		spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 		
 		return DATAFLASH_RESPONSE_OK;
+}
+
+
+unsigned char dataflash_is_busy( void ){
+	union tDataflashStatus status;
+	
+	status = dataflash_readStatus();
+	
+	if( status.registers.BSY0 ){
+		return TRUE;
+	}else{
+		return FALSE;
+	}		
 }

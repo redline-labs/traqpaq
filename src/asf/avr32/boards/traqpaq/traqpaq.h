@@ -142,13 +142,7 @@
 #define DATAFLASH_SPI_NPCS0_FUNCTION	AVR32_SPI0_NPCS_0_1_FUNCTION
 
 #define DATAFLASH_SPI_NPCS				0
-#define SPI_BAUDRATE					1000000
-#define SPI_SCBR						(APPL_CPU_SPEED / SPI_BAUDRATE)
-
-// Check to make sure our divisor is valid
-#if(SPI_SCBR == 0)
-	#error Invalid SPI Frequency divisor
-#endif
+#define SPI_BAUDRATE					12000000
 
 #define SPI_BITS_PER_XFER			8			// 8 Bits per transfer
 #define SPI_SCLK_DELAY				0			// Delay from CS to first CLK
@@ -163,6 +157,9 @@
 #define SPI_VARIABLE_PS				0			// SPI Variable PS
 #define SPI_PCS_DECODE				0			// SPI PCS Decode
 #define SPI_PCS_DELAY				0			// SPI PCS Delay
+
+#define SPI_TX_PDCA_CHANNEL			0
+#define SPI_RX_PDCA_CHANNEL			1
 
 
 // ------------------------------------------------------------
