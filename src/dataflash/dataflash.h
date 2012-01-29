@@ -168,10 +168,12 @@ typedef struct tDataflashStatusRegisters{
 	unsigned BSY1	: 1;		// Ready/Busy Status
 };
 
-typedef union tDataflashStatus{
+
+typedef union tDataflashStatus {
 	struct tDataflashStatusRegisters registers;
 	unsigned char raw[2];
 };
+	
 
 void dataflash_task_init( void );
 void dataflash_task( void *pvParameters );
@@ -189,6 +191,7 @@ unsigned char dataflash_chipErase( void );
 unsigned char dataflash_powerDown( void );
 unsigned char dataflash_wakeUp( void );
 unsigned char dataflash_is_busy( void );
+unsigned short dataflash_calculate_otp_crc( void );
 
 
 #endif /* DATAFLASH_H_ */

@@ -61,6 +61,7 @@
 
 #include "usb_standard_request.h"
 #include "usb_task.h"
+#include "dataflash/dataflash_otp_layout.h"
 
 
 //_____ M A C R O S ________________________________________________________
@@ -93,7 +94,7 @@
 #define CONF_NB            1     //! Number of this configuration
 #define CONF_INDEX         0
 #define CONF_ATTRIBUTES    USB_CONFIG_SELFPOWERED
-#define MAX_POWER          250    // 100 mA
+#define MAX_POWER          250    // 500 mA
 
             // USB Interface descriptor
 #define INTERFACE_NB_TEMP        0                  //! The number of this interface
@@ -160,23 +161,7 @@
   Usb_unicode('q')\
 }
 
-#define USB_SN_LENGTH         13
-#define USB_SERIAL_NUMBER \
-{\
-  Usb_unicode('T'),\
-  Usb_unicode('R'),\
-  Usb_unicode('A'),\
-  Usb_unicode('Q'),\
-  Usb_unicode('2'),\
-  Usb_unicode('3'),\
-  Usb_unicode('4'),\
-  Usb_unicode('1'),\
-  Usb_unicode('1'),\
-  Usb_unicode('0'),\
-  Usb_unicode('0'),\
-  Usb_unicode('0'),\
-  Usb_unicode('1') \
-}
+// Serial Number is stored in OTP!
 
 #define LANGUAGE_ID           0x0409
 
@@ -412,7 +397,7 @@ __attribute__((__packed__))
 {
   U8  bLength;                  //!< Size of this descriptor in bytes
   U8  bDescriptorType;          //!< STRING descriptor type
-  U16 wstring[USB_SN_LENGTH];   //!< Unicode characters
+  U16 wstring[OTP_SERIAL_LENGTH];   //!< Unicode characters
 }
 #if __ICCAVR32__
 #pragma pack()

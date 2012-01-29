@@ -67,7 +67,7 @@ extern const S_usb_device_descriptor usb_dev_desc;
 extern const S_usb_user_configuration_descriptor usb_conf_desc;
 extern const S_usb_manufacturer_string_descriptor usb_user_manufacturer_string_descriptor;
 extern const S_usb_product_string_descriptor usb_user_product_string_descriptor;
-extern const S_usb_serial_number usb_user_serial_number;
+extern		 S_usb_serial_number module_serial_number;
 extern const S_usb_language_id usb_user_language_id;
 
 //! @defgroup specific_request USB device specific requests

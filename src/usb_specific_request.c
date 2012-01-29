@@ -159,8 +159,9 @@ bool usb_user_get_descriptor(U8 type, U8 string)
       break;
 
     case SN_INDEX:
-      data_to_transfer = sizeof(usb_user_serial_number);
-      pbuffer = &usb_user_serial_number;
+		// module_serial_number is loaded by Dataflash Task Init routine from OTP
+      data_to_transfer = sizeof(module_serial_number);
+      pbuffer = &module_serial_number;
       break;
 
     default:

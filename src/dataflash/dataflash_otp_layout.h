@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Board Configuration File
+ * Dataflash Layout for OTP registers
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -27,23 +27,33 @@
  *
  ******************************************************************************/
 
-#ifndef CONF_BOARD_H
-#define CONF_BOARD_H
 
-// Configure/Deconfigure hardware on the module
-#define TRAQPAQ_HW_PWM_ENABLED			FALSE
-#define TRAQPAQ_HW_EBI_ENABLED			FALSE
-#define TRAQPAQ_HW_GPS_ENABLED			FALSE
-#define TRAQPAQ_HW_SPI_ENABLED			TRUE
-#define TRAQPAQ_HW_TWI_ENABLED			FALSE
-#define TRAQPAQ_HW_EXINT_ENABLED		FALSE
-#define TRAQPAQ_HW_USB_ENABLED			TRUE
-#define TRAQPAQ_HW_DEBUG_ENABLED		FALSE
-#define TRAQPAQ_HW_PLL_ENABLED			TRUE
-#define TRAQPAQ_HW_WDT_ENABLED			FALSE
-#define TRAQPAQ_HW_ADC_ENABLED			FALSE
-#define TRAQPAQ_HW_CHARGE_ENABLED		FALSE
+#ifndef DATAFLASH_OTP_LAYOUT_H_
+#define DATAFLASH_OTP_LAYOUT_H_
 
-#define TRAQPAQ_HW_USB_FASTCHG_ENABLED	FALSE
+#define OTP_START_INDEX			0
+#define OTP_END_INDEX			17
+#define OTP_LENGTH				18
 
-#endif // CONF_BOARD_H
+#define OTP_SERIAL_INDEX		0
+#define OTP_SERIAL_LENGTH		13
+
+#define OTP_PCB_REV_INDEX		13
+#define OTP_TESTER_ID_INDEX		14
+#define OTP_RESERVED_INDEX		15
+
+#define OTP_CRC_MSB_INDEX		16
+#define OTP_CRC_LSB_INDEX		17
+
+#define OTP_RESERVED_DATA		0xAA
+
+
+typedef struct tDataflashOTP {
+	unsigned char serial[OTP_SERIAL_LENGTH];
+	unsigned char pcb_rev;
+	unsigned char tester_id;
+	unsigned char reserved;
+	unsigned short crc;
+};
+
+#endif /* DATAFLASH_OTP_LAYOUT_H_ */

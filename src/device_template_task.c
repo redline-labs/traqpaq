@@ -107,23 +107,17 @@ void device_template_task(void *pvParameters){
 					break;
 					
 				case(USB_CMD_REQ_HARDWARE_VER):
-					txBuf[data_length++] = TRAQPAQ_HW_LEVEL;
+					txBuf[data_length++] = dataflashOTP.pcb_rev;
 					break;
 					
 				case(USB_CMD_REQ_SERIAL_NUMBER):
-					txBuf[data_length++] = 'T';
-					txBuf[data_length++] = 'R';
-					txBuf[data_length++] = 'A';
-					txBuf[data_length++] = 'Q';
-					txBuf[data_length++] = '2';
-					txBuf[data_length++] = '3';
-					txBuf[data_length++] = '9';
-					txBuf[data_length++] = '1';
-					txBuf[data_length++] = '1';
-					txBuf[data_length++] = '0';
-					txBuf[data_length++] = '0';
-					txBuf[data_length++] = '0';
-					txBuf[data_length++] = '1';
+					for(i = 0; i < OTP_SERIAL_LENGTH; i++){
+						txBuf[data_length++] = dataflashOTP.serial[i];
+					}					
+					break;
+					
+				case(USB_CMD_REQ_TESTER_ID):
+					txBuf[data_length++] = dataflashOTP.tester_id;				
 					break;
 					
 				case(USB_CMD_REQ_BATTINFO):

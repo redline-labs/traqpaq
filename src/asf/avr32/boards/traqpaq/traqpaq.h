@@ -44,8 +44,6 @@
 #define TRAQPAQ_SW_LEVEL_ASCII		"1.0"
 #define TRAQPAQ_SW_BUILD_DATE		__DATE__
 #define TRAQPAQ_SW_SUPPORT_VER		__VERSION__
-#define TRAQPAQ_HW_LEVEL			0x11
-#define TRAQPAQ_HW_LEVEL_ASCII		"1.1"
 
 
 // ------------------------------------------------------------

@@ -52,6 +52,11 @@
 //_____ I N C L U D E S ____________________________________________________
 
 #include "conf_usb.h"
+#include "usb_descriptors.h"
+
+
+//_____ D E F I N I T I O N S ______________________________________________
+extern struct tDataflashOTP dataflashOTP;
 
 
 //_____ M A C R O S ________________________________________________________
@@ -66,34 +71,35 @@ extern void device_template_task(void *pvParameters);
 #define USB_CMD_REQ_APPL_VER			0x00
 #define USB_CMD_REQ_HARDWARE_VER		0x01
 #define USB_CMD_REQ_SERIAL_NUMBER		0x02
-#define USB_CMD_REQ_BATTINFO			0x03
+#define USB_CMD_REQ_TESTER_ID			0x03
+#define USB_CMD_REQ_BATTINFO			0x04
 
 // Commands to interact with the dataflash
-#define USB_CMD_READ_USERPREFS			0x04
-#define USB_CMD_READ_SAVEDTRACKS		0x05
-#define USB_CMD_READ_RECORDTABLE		0x06
-#define USB_CMD_READ_RECORDDATA			0x07
-#define USB_CMD_ERASE_USERPREFS			0x08
-#define USB_CMD_ERASE_SAVEDTRACKS		0x09
-#define USB_CMD_ERASE_RECORDTABLE		0x0A
-#define USB_CMD_ERASE_RECORDDATA		0x0B
-#define USB_CMD_WRITE_USERPREFS			0x0C
-#define USB_CMD_WRITE_SAVEDTRACKS		0x0D
-#define USB_CMD_WRITE_RECORDTABLE		0x0E
-#define USB_CMD_WRITE_RECORDDATA		0x0F
-#define USB_CMD_READ_OTP				0x10
-#define USB_CMD_WRITE_OTP				0x11
+#define USB_CMD_READ_USERPREFS			0x10
+#define USB_CMD_READ_SAVEDTRACKS		0x11
+#define USB_CMD_READ_RECORDTABLE		0x12
+#define USB_CMD_READ_RECORDDATA			0x13
+#define USB_CMD_ERASE_USERPREFS			0x14
+#define USB_CMD_ERASE_SAVEDTRACKS		0x15
+#define USB_CMD_ERASE_RECORDTABLE		0x16
+#define USB_CMD_ERASE_RECORDDATA		0x17
+#define USB_CMD_WRITE_USERPREFS			0x18
+#define USB_CMD_WRITE_SAVEDTRACKS		0x19
+#define USB_CMD_WRITE_RECORDTABLE		0x1A
+#define USB_CMD_WRITE_RECORDDATA		0x1B
+#define USB_CMD_READ_OTP				0x1C
+#define USB_CMD_WRITE_OTP				0x1D
 
 // Debug Commands
-#define USB_DBG_SEND_DF_CMD				0x12	// Send a command to the dataflash
-#define USB_DBG_READ_PM_PGOOD1			0x13	// Read the PM_PGOOD1 for the power supply
-#define USB_DBG_READ_PM_PGOOD3			0x14	// Read the PM_PGOOD3 for the power supply
-#define USB_DBG_READ_ADC_VCC			0x15	// Read the ADC value for VCC
-#define USB_DBG_READ_ADC_VEE			0x16	// Read the ADC value for VEE
-#define USB_DBG_READ_ADC_3V3			0x17	// Read the ADC value for 3V3
-#define USB_DBG_SEND_GPS_CMD			0x18	// Send a command to the GPS
-#define USB_DBG_READ_CHG_STAT			0x19	// Read the status for the charging
-#define USB_DBG_SEND_FUEL_CMD			0x1A	// Send a command to the fuel gauge
+#define USB_DBG_SEND_DF_CMD				0x30	// Send a command to the dataflash
+#define USB_DBG_READ_PM_PGOOD1			0x31	// Read the PM_PGOOD1 for the power supply
+#define USB_DBG_READ_PM_PGOOD3			0x32	// Read the PM_PGOOD3 for the power supply
+#define USB_DBG_READ_ADC_VCC			0x33	// Read the ADC value for VCC
+#define USB_DBG_READ_ADC_VEE			0x34	// Read the ADC value for VEE
+#define USB_DBG_READ_ADC_3V3			0x35	// Read the ADC value for 3V3
+#define USB_DBG_SEND_GPS_CMD			0x36	// Send a command to the GPS
+#define USB_DBG_READ_CHG_STAT			0x37	// Read the status for the charging
+#define USB_DBG_SEND_FUEL_CMD			0x38	// Send a command to the fuel gauge
 
 
 #define INDEX_CMD						0

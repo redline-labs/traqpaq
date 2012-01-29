@@ -42,5 +42,8 @@
 #include "queue.h"
 #include "semphr.h"
 
+// CRC
+#include "crc/crc.h"
+
 
 #endif /* DRIVERS_H_ */

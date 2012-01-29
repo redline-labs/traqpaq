@@ -59,13 +59,13 @@ int main( void ){
 	lcd_task_init();
 	#endif
 	
+	#if( TRAQPAQ_HW_SPI_ENABLED )
+	dataflash_task_init();
+	#endif
+	
 	#if( TRAQPAQ_HW_USB_ENABLED )
 	usb_task_init();
 	device_template_task_init();
-	#endif
-	
-	#if( TRAQPAQ_HW_SPI_ENABLED )
-	dataflash_task_init();
 	#endif
 	
 	#if( TRAQPAQ_HW_TWI_ENABLED )

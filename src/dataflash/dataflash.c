@@ -30,8 +30,41 @@
 #include <asf.h>
 #include "drivers.h"
 #include "dataflash_layout.h"
+#include "dataflash_otp_layout.h"
+#include "usb_task.h"
+#include "usb_descriptors.h"
+
+// Struct for holding USB serial number
+S_usb_serial_number module_serial_number;
+struct tDataflashOTP dataflashOTP;
 
 void dataflash_task_init( void ){
+	unsigned char i;
+	
+	// Check the dataflash device ID
+	if( !dataflash_checkID() ){
+		debug_log("WARNING [DATAFLASH]: Incorrect device ID");
+	}
+	
+	// Read out the OTP registers
+	dataflash_ReadOTP(OTP_START_INDEX, OTP_LENGTH, &dataflashOTP);
+	
+	module_serial_number.bLength = sizeof(module_serial_number);
+	module_serial_number.bDescriptorType = STRING_DESCRIPTOR;
+	
+	if( dataflash_calculate_otp_crc() == dataflashOTP.crc ){
+		for(i = 0; i < OTP_SERIAL_LENGTH; i++){
+			module_serial_number.wstring[i] = Usb_unicode( dataflashOTP.serial[i] );
+		}
+		
+	}else{
+		for(i = 0; i < OTP_SERIAL_LENGTH; i++){
+			module_serial_number.wstring[i] = Usb_unicode('0');
+		}
+		
+	}
+	
+	// Finally schedule the dataflash task
 	xTaskCreate(dataflash_task, configTSK_DATAFLASH_TASK_NAME, configTSK_DATAFLASH_TASK_STACK_SIZE, NULL, configTSK_DATAFLASH_TASK_PRIORITY, NULL);
 }
 
@@ -39,10 +72,6 @@ unsigned char readBuffer[256];
 
 void dataflash_task( void *pvParameters ){
 	unsigned short i;
-	
-	if( !dataflash_checkID() ){
-		debug_log("WARNING [DATAFLASH]: Incorrect device ID");
-	}
 	
 	dataflash_GlobalUnprotect();
 	dataflash_WriteEnable();
@@ -285,4 +314,19 @@ unsigned char dataflash_is_busy( void ){
 	}else{
 		return FALSE;
 	}		
+}
+
+unsigned short dataflash_calculate_otp_crc( void ){
+	unsigned short crc = 0;
+	unsigned char i;
+	
+	for(i = 0; i < OTP_SERIAL_LENGTH; i++){
+		crc = update_crc_ccitt(crc, dataflashOTP.serial[i]);
+	}
+	
+	crc = update_crc_ccitt(crc, dataflashOTP.pcb_rev);
+	crc = update_crc_ccitt(crc, dataflashOTP.tester_id);
+	crc = update_crc_ccitt(crc, dataflashOTP.reserved);
+	
+	return crc;
 }
