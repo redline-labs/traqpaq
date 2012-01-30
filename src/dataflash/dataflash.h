@@ -147,8 +147,14 @@
 
 #define DATAFLASH_STATUS_GLOBAL_UNPROTECT	0x00
 
+
+#define DATAFLASH_4KB						4096	// Number of bytes in 4KB
+
+
 #define DATAFLASH_PDCA_CHECK_TIME			5	// Time in milliseconds to suspend task before checking PDCA status again
-#define DATAFLASH_STATUS_CHECK_TIME			5	// Time in milliseconds to suspend task before checking status register again
+#define DATAFLASH_STATUS_CHECK_TIME			10	// Time in milliseconds to suspend task before checking status register again
+#define DATAFLASH_PROGRAM_TIME				4
+#define DATAFLASH_ERASE_TIME				20
 
 
 typedef struct tDataflashStatusRegisters{
@@ -182,6 +188,7 @@ union tDataflashStatus dataflash_readStatus( void );
 unsigned char dataflash_GlobalUnprotect( void );
 unsigned char dataflash_WriteEnable( void );
 unsigned char dataflash_WriteDisable( void );
+unsigned char dataflash_UpdateSector(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer);
 unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer);
 unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer);
 unsigned char dataflash_ReadOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer);

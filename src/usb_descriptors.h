@@ -83,7 +83,7 @@
 #define EP_CONTROL_LENGTH     64
 #define VENDOR_ID             REDLINE_VID           //! Atmel vendor ID
 #define PRODUCT_ID            TRAQPAQ_PID
-#define RELEASE_NUMBER        0x1000
+#define RELEASE_NUMBER        TRAQPAQ_SW_LEVEL
 #define MAN_INDEX             0x01
 #define PROD_INDEX            0x02
 #define SN_INDEX              0x03

@@ -40,8 +40,8 @@
 // Versions
 // ------------------------------------------------------------
 #define TRAQPAQ_DEBUG_HEADER		"TRAQPaq Debug Mode\r"
-#define TRAQPAQ_SW_LEVEL			0x10
-#define TRAQPAQ_SW_LEVEL_ASCII		"1.0"
+#define TRAQPAQ_SW_LEVEL			0x0100
+#define TRAQPAQ_SW_LEVEL_ASCII		"1.00"
 #define TRAQPAQ_SW_BUILD_DATE		__DATE__
 #define TRAQPAQ_SW_SUPPORT_VER		__VERSION__
 

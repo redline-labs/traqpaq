@@ -36,6 +36,8 @@
 
 // Struct for holding USB serial number
 S_usb_serial_number module_serial_number;
+
+// Struct for holding serial number, HW Version, and Tester ID;
 struct tDataflashOTP dataflashOTP;
 
 void dataflash_task_init( void ){
@@ -52,12 +54,15 @@ void dataflash_task_init( void ){
 	module_serial_number.bLength = sizeof(module_serial_number);
 	module_serial_number.bDescriptorType = STRING_DESCRIPTOR;
 	
+	// Check validity of OTP
 	if( dataflash_calculate_otp_crc() == dataflashOTP.crc ){
+		// Copy OTP serial number to USB Descriptor
 		for(i = 0; i < OTP_SERIAL_LENGTH; i++){
 			module_serial_number.wstring[i] = Usb_unicode( dataflashOTP.serial[i] );
 		}
 		
-	}else{
+	}else{	// CRC verification failed
+		// Copy null serial number to USB descriptor
 		for(i = 0; i < OTP_SERIAL_LENGTH; i++){
 			module_serial_number.wstring[i] = Usb_unicode('0');
 		}
@@ -68,8 +73,6 @@ void dataflash_task_init( void ){
 	xTaskCreate(dataflash_task, configTSK_DATAFLASH_TASK_NAME, configTSK_DATAFLASH_TASK_STACK_SIZE, NULL, configTSK_DATAFLASH_TASK_PRIORITY, NULL);
 }
 
-unsigned char readBuffer[256];
-
 void dataflash_task( void *pvParameters ){
 	unsigned short i;
 	
@@ -79,7 +82,6 @@ void dataflash_task( void *pvParameters ){
 	if( dataflash_is_busy() ){
 		debug_log("WARNING [DATAFLASH]: Busy response received");
 	}
-	
 	
 	while(TRUE){
 		vTaskSuspend(NULL);
@@ -164,16 +166,55 @@ unsigned char dataflash_WriteDisable(void){
 }
 
 
-unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){	
+unsigned char dataflash_UpdateSector(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){
+	unsigned char sectorBuffer[DATAFLASH_4KB];
+	unsigned long sectorAddress = startAddress & 0xFFFFF000; // Mask off address bits A11 through A0 for 4KB sector address
+	unsigned short offset = startAddress & 0x0FFF;
+	unsigned short i;
 	
-	pdca_load_channel(SPI_TX_PDCA_CHANNEL, (void *)0x80000000, length); // Use start of Flash as Dummy Bytes to Clock Out
-	pdca_load_channel(SPI_RX_PDCA_CHANNEL, bufferPointer, length);
+	dataflash_ReadToBuffer(sectorAddress, DATAFLASH_4KB, &sectorBuffer);
+	
+	// Wait for dataflash to become ready again.
+	while( dataflash_is_busy() ){
+		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_STATUS_CHECK_TIME ) );
+	}
+	
+	dataflash_eraseBlock(DATAFLASH_CMD_BLOCK_ERASE_4KB, sectorAddress);
+	
+	// Copy new data to buffer
+	for(i = 0; i < length; i++){
+		sectorBuffer[ i + offset ] = bufferPointer[i];
+	}
+	
+	while( dataflash_is_busy() ){
+		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_ERASE_TIME ) );
+	}
+
+	for(i = 0; i < DATAFLASH_4KB; i += DATAFLASH_PAGE_SIZE){
+		dataflash_WriteFromBuffer(sectorAddress + i, DATAFLASH_PAGE_SIZE, &(sectorBuffer[i]));
+		
+		// Wait for dataflash to become ready again.
+		while( dataflash_is_busy() ){
+			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
+		}
+	}	
+	
+	return TRUE;
+}
+
+unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){	
+
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	
 	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_READ_ARRAY);
 	spi_write(DATAFLASH_SPI, (startAddress >> 16) & 0xFF);
 	spi_write(DATAFLASH_SPI, (startAddress >>  8) & 0xFF);
-	spi_write(DATAFLASH_SPI, (startAddress >>  0) & 0xFF);
+	spi_write(DATAFLASH_SPI, (startAddress & 0xFF) );
+	
+	while( !spi_writeEndCheck(DATAFLASH_SPI) );
+	
+	pdca_load_channel(SPI_TX_PDCA_CHANNEL, (void *)0x80000000, length); // Use start of Flash as Dummy Bytes to Clock Out
+	pdca_load_channel(SPI_RX_PDCA_CHANNEL, bufferPointer, length);
 	
 	pdca_enable(SPI_RX_PDCA_CHANNEL);
 	pdca_enable(SPI_TX_PDCA_CHANNEL);
@@ -192,13 +233,16 @@ unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned sho
 	
 	dataflash_WriteEnable();
 	
-	pdca_load_channel(SPI_TX_PDCA_CHANNEL, bufferPointer, length); // Use start of Flash as Dummy Bytes to Clock Out
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	
 	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_PAGE_PROGRAM);
 	spi_write(DATAFLASH_SPI, (startAddress >> 16) & 0xFF);
 	spi_write(DATAFLASH_SPI, (startAddress >>  8) & 0xFF);
-	spi_write(DATAFLASH_SPI, (startAddress >>  0) & 0xFF);
+	spi_write(DATAFLASH_SPI, (startAddress & 0xFF) );
+	
+	while( !spi_writeEndCheck(DATAFLASH_SPI) );
+	
+	pdca_load_channel(SPI_TX_PDCA_CHANNEL, bufferPointer, length);
 	
 	pdca_enable(SPI_TX_PDCA_CHANNEL);
 	
