@@ -30,7 +30,7 @@
 #include "drivers.h"
 
 void wdt_task_init(){
-	xTaskCreate(wdt_task, configTSK_WATCHDOG_TASK_NAME, configTSK_WATCHDOG_TASK_STACK_SIZE, NULL, configTSK_WATCHDOG_TASK_PRIORITY, NULL);
+	xTaskCreate(wdt_task, configTSK_WATCHDOG_TASK_NAME, configTSK_WATCHDOG_TASK_STACK_SIZE, NULL, configTSK_WATCHDOG_TASK_PRIORITY, configTSK_WATCHDOG_TASK_HANDLE);
 }
 
 void wdt_task( void *pvParameters ){

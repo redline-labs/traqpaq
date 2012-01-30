@@ -53,7 +53,7 @@ void gps_task_init( void ){
 	INTC_register_interrupt(&ISR_gps_rxd, AVR32_USART0_IRQ, AVR32_INTC_INT0);
 	GPS_USART->ier = AVR32_USART_IER_RXRDY_MASK;
 	
-	xTaskCreate(gps_task, configTSK_GPS_TASK_NAME, configTSK_GPS_TASK_STACK_SIZE, NULL, configTSK_GPS_TASK_PRIORITY, NULL);
+	xTaskCreate(gps_task, configTSK_GPS_TASK_NAME, configTSK_GPS_TASK_STACK_SIZE, NULL, configTSK_GPS_TASK_PRIORITY, configTSK_GPS_TASK_HANDLE);
 }
 
 

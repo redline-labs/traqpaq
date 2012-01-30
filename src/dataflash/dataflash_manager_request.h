@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Charge Control
+ * Dataflash Manager
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -27,37 +27,32 @@
  *
  ******************************************************************************/
 
-/* TODO: Add software framework include drivers below */
-#include "asf.h"
+
+#ifndef DATAFLASH_MANAGER_REQUEST_H_
+#define DATAFLASH_MANAGER_REQUEST_H_
+
 #include "drivers.h"
 
-void charge_task_init( void ){
-	xTaskCreate(charge_task, configTSK_CHARGE_TASK_NAME, configTSK_CHARGE_TASK_STACK_SIZE, NULL, configTSK_CHARGE_TASK_PRIORITY, configTSK_CHARGE_TASK_HANDLE);
-}
 
-void charge_task( void *pvParameters ){
-	unsigned char chargeState;
-	
-	while( TRUE ){
-		chargeState = charge_state();
-		vTaskDelay( (portTickType)TASK_DELAY_MS(500) );
-	}
-}
 
-void charge_setRate(unsigned char rate){
-	if(rate == CHARGE_RATE_HIGH){
-		#if(TRAQPAQ_HW_USB_FASTCHG_ENABLED)
-		gpio_set_gpio_pin(CHARGE_RATE);
-		#endif
-	}else{
-		gpio_clr_gpio_pin(CHARGE_RATE);
-	}
-}
+#define DFMAN_REQUEST_UPDATE_RECORDTABLE		0
+#define DFMAN_REQUEST_UPDATE_TRACKLIST			1
+#define DFMAN_REQUEST_ADD_RECORDDATA			2
+#define DFMAN_REQUEST_ERASE_RECORD				3
+#define DFMAN_REQUEST_READ_RECORDTABLE			4
+#define DFMAN_REQUEST_READ_OTP					5
 
-unsigned char charge_powerGood( void ){
-	return gpio_get_pin_value(CHARGE_PG);
-}
 
-unsigned char charge_state( void ){
-	return (( gpio_get_pin_value(CHARGE_STAT1) << 2 ) |  ( gpio_get_pin_value(CHARGE_STAT2) << 1 ) | ( gpio_get_pin_value(CHARGE_PG) << 0 ));
-}
+typedef struct tDataflashRequest {
+	unsigned char command;		// Define the request
+	unsigned char *pointer;		// Pointer for data to be written
+	unsigned short length;		// Length of data to be written
+	unsigned long index;		// Used for reading requests
+
+	xTaskHandle resume;			// Handle of task to resume after completion
+};
+
+
+#define DFMAN_QUEUE_SIZE		5							// Items to buffer in queue
+
+#endif /* DATAFLASH_MANAGER_REQUEST_H_ */

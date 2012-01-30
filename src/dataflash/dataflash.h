@@ -156,7 +156,6 @@
 #define DATAFLASH_PROGRAM_TIME				4
 #define DATAFLASH_ERASE_TIME				20
 
-
 typedef struct tDataflashStatusRegisters{
 	unsigned SPRL	: 1;		// Sector Protection Registers Locked
 	unsigned RES0	: 1;		// Reserved for future use

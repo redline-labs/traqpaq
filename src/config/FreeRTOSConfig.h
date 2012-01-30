@@ -90,7 +90,7 @@ to exclude the API function. */
 #define INCLUDE_vTaskSuspend                1
 #define INCLUDE_vTaskDelayUntil             1
 #define INCLUDE_vTaskDelay                  1
-#define INCLUDE_xTaskGetCurrentTaskHandle   0
+#define INCLUDE_xTaskGetCurrentTaskHandle   1
 #define INCLUDE_xTaskGetSchedulerState      0
 
 
@@ -176,60 +176,70 @@ to exclude the API function. */
 #define configTSK_USB_NAME					((const signed portCHAR *)"USB")
 #define configTSK_USB_STACK_SIZE			256
 #define configTSK_USB_PRIORITY				(tskIDLE_PRIORITY + 3)
+#define configTSK_USB_HANDLE				NULL
 
 /* USB device task definitions. */
 #define configTSK_USB_DEV_NAME				((const signed portCHAR *)"USB Device")
 #define configTSK_USB_DEV_STACK_SIZE		256
 #define configTSK_USB_DEV_PRIORITY			(tskIDLE_PRIORITY + 2)
 #define configTSK_USB_DEV_PERIOD			20
+#define configTSK_USB_DEV_HANDLE			NULL
 
 /* USB device template task definitions. */
 #define configTSK_USB_DTP_NAME				((const signed portCHAR *)"USB Device Template")
 #define configTSK_USB_DTP_STACK_SIZE		256
 #define configTSK_USB_DTP_PRIORITY			(tskIDLE_PRIORITY + 1)
 #define configTSK_USB_DTP_PERIOD			20
+#define configTSK_USB_DTP_HANDLE			NULL
 
 /* GUI Task */
 #define configTSK_GUI_TASK_NAME				((const signed portCHAR *)"GUI")
 #define configTSK_GUI_TASK_STACK_SIZE		512
 #define configTSK_GUI_TASK_PRIORITY			(tskIDLE_PRIORITY + 1)
 #define configTSK_GUI_TASK_PERIOD			20
+#define configTSK_GUI_TASK_HANDLE			NULL
 
 /* Watchdog Task */
 #define configTSK_WATCHDOG_TASK_NAME        ((const signed portCHAR *)"Watchdog")
 #define configTSK_WATCHDOG_TASK_STACK_SIZE  256
 #define configTSK_WATCHDOG_TASK_PRIORITY    (tskIDLE_PRIORITY + 3)
 #define configTSK_WATCHDOG_TASK_PERIOD      20
+#define configTSK_WATCHDOG_TASK_HANDLE		NULL
 
 /* Dataflash Task */
 #define configTSK_DATAFLASH_TASK_NAME		((const signed portCHAR *)"Dataflash")
 #define configTSK_DATAFLASH_TASK_STACK_SIZE	4352	// 4.25KB
 #define configTSK_DATAFLASH_TASK_PRIORITY	(tskIDLE_PRIORITY + 1)
 #define configTSK_DATAFLASH_TASK_PERIOD		20
+#define configTSK_DATAFLASH_TASK_HANDLE		NULL
 
 /* Fuel Task */
 #define configTSK_FUEL_TASK_NAME			((const signed portCHAR *)"Fuel")
 #define configTSK_FUEL_TASK_STACK_SIZE		256
 #define configTSK_FUEL_TASK_PRIORITY		(tskIDLE_PRIORITY + 1)
 #define configTSK_FUEL_TASK_PERIOD			20
+#define configTSK_FUEL_TASK_HANDLE			NULL
 
 /* GPS Task */
 #define configTSK_GPS_TASK_NAME				((const signed portCHAR *)"GPS")
 #define configTSK_GPS_TASK_STACK_SIZE		256
 #define configTSK_GPS_TASK_PRIORITY			(tskIDLE_PRIORITY + 1)
 #define configTSK_GPS_TASK_PERIOD			20
+#define configTSK_GPS_TASK_HANDLE			NULL
 
 /* Charge Task */
 #define configTSK_CHARGE_TASK_NAME			((const signed portCHAR *)"Charge")
 #define configTSK_CHARGE_TASK_STACK_SIZE	256
 #define configTSK_CHARGE_TASK_PRIORITY		(tskIDLE_PRIORITY + 1)
 #define configTSK_CHARGE_TASK_PERIOD		20
+#define configTSK_CHARGE_TASK_HANDLE		NULL
 
 /* Buttons Task */
 #define configTSK_BUTTONS_TASK_NAME			((const signed portCHAR *)"Buttons")
 #define configTSK_BUTTONS_TASK_STACK_SIZE	256
 #define configTSK_BUTTONS_TASK_PRIORITY		(tskIDLE_PRIORITY + 1)
 #define configTSK_BUTTONS_TASK_PERIOD		20
+#define configTSK_BUTTONS_TASK_HANDLE		NULL
 
 
 #endif /* FREERTOS_CONFIG_H */

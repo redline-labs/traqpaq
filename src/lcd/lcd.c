@@ -78,7 +78,7 @@ xQueueHandle queueLCDmenu;
 
 // Create task for FreeRTOS
 void lcd_task_init( void ){
-	xTaskCreate(lcd_gui_task, configTSK_GUI_TASK_NAME, configTSK_GUI_TASK_STACK_SIZE, NULL, configTSK_GUI_TASK_PRIORITY, NULL);
+	xTaskCreate(lcd_gui_task, configTSK_GUI_TASK_NAME, configTSK_GUI_TASK_STACK_SIZE, NULL, configTSK_GUI_TASK_PRIORITY, configTSK_GUI_TASK_HANDLE);
 }
 
 // LCD GUI Task

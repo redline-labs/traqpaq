@@ -108,7 +108,7 @@
             // USB Endpoint 1 descriptor
 #define ENDPOINT_NB_TEMP1       (EP_TEMP_IN | MSK_EP_DIR)
 #define EP_ATTRIBUTES_TEMP1     TYPE_BULK
-#define EP_IN_LENGTH_TEMP1      64
+#define EP_IN_LENGTH_TEMP1      256
 #define EP_SIZE_TEMP1           EP_IN_LENGTH_TEMP1
 #define EP_INTERVAL_TEMP1       0x00            //! Interrupt polling interval from host
 

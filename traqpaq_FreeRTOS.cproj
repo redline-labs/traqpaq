@@ -705,6 +705,9 @@
     <Compile Include="src\crc\crc.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\dataflash\dataflash_manager_request.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\dataflash\dataflash_otp_layout.h">
       <SubType>compile</SubType>
     </Compile>

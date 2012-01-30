@@ -37,12 +37,7 @@
 
 
 typedef struct tRecordsEntry {
-	unsigned record_complete	:1;  
-	unsigned buffer_overrun		:1;	
-	unsigned gps_overrun		:1;	
-	unsigned crc_error			:1;
-	unsigned mem_full			:1;							
-	unsigned reserved0			:3;
+	unsigned char recordEmpty;
 
 	unsigned long datestamp;
 	unsigned long startAddress;
@@ -52,7 +47,7 @@ typedef struct tRecordsEntry {
 };	// tRecordsEntry - 16 Bytes
 
 #define RECORD_ENTRY_SIZE		sizeof(tRecordsEntry)
-#define RECORDS_TOTAL_POSSIBLE	64
+#define RECORDS_TOTAL_POSSIBLE	256
 #define RECORDS_ENTRY_PER_PAGE	16
 
 typedef struct tRecordsEntryPage {
@@ -82,11 +77,14 @@ typedef struct tRecordDataPage {
 	struct tRecordData data[RECORD_DATA_PER_PAGE];
 };
 
-#define DATAFLASH_ADDR_RECORDTABLE_START		0x00000000	// Size is exactly 1024B
-#define DATAFLASH_ADDR_RECORDTABLE_END			0x000003FF
+#define DATAFLASH_ADDR_RECORDTABLE_START		0x00000000
+#define DATAFLASH_ADDR_RECORDTABLE_END			0x00000FFF	// Align to 4KB sector
 
-#define DATAFLASH_ADDR_RECORDDATA_START			0x00000400	// Size is remainder of 16Mb
-#define DATAFLASH_ADDR_RECORDDATA_END			0x001FFFFF
+#define DATAFLASH_ADDR_TRACKLIST_START			0x00001000
+#define DATAFLASH_ADDR_TRACKLIST_END			0x00001FFF	// Align to 4KB sector
+
+#define DATAFLASH_ADDR_RECORDDATA_START			0x00002000	// Size is remainder of 16Mb
+#define DATAFLASH_ADDR_RECORDDATA_END			0x001FFFFF	// Dataflash End Address
 
 // Define the the number of record samples available in Dataflash space alloted
 //#define RECORDSDATA_TOTAL_POSSIBLE (DATAFLASH_ADDR_RECORDDATA_END - DATAFLASH_ADDR_RECORDDATA_START) / RECORD_PAGE_SIZE

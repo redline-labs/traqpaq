@@ -53,6 +53,7 @@
 #include "usb_descriptors.h"
 #include "usb_standard_request.h"
 #include "device_template_task.h"
+#include "dataflash/dataflash_manager_request.h"
 
 #define Enable_usb_dma_tx_send(start_address, length); { \ 
   AVR32_USBB.uddma1_addr = (uint32_t)(start_address);   \ 
@@ -61,25 +62,29 @@
     AVR32_USBB_UXDMAX_CONTROL_CH_EN_MASK;               \ 
 }
 
-static unsigned char data_length = 0;
+static unsigned long data_length = 0;
+
+extern xQueueHandle dataflashManagerQueue;
 
 
 void device_template_task_init(void){
 
-	xTaskCreate(device_template_task, configTSK_USB_DTP_NAME, configTSK_USB_DTP_STACK_SIZE, NULL, configTSK_USB_DTP_PRIORITY, NULL);
+	xTaskCreate(device_template_task, configTSK_USB_DTP_NAME, configTSK_USB_DTP_STACK_SIZE, NULL, configTSK_USB_DTP_PRIORITY, configTSK_USB_DTP_HANDLE);
 }
 
 
 void device_template_task(void *pvParameters){
 	unsigned char i;
 	static U8 rxBuf[EP_SIZE_TEMP2];
-	static U8 txBuf[EP_SIZE_TEMP2];
+	static U8 txBuf[EP_SIZE_TEMP1];
 	
 	unsigned char responseU8;
 	unsigned short responseU16;
 	unsigned int responseU32;
 
 	portTickType xLastWakeTime;
+	
+	struct tDataflashRequest request;
 
 	xLastWakeTime = xTaskGetTickCount();
 	while (true){
@@ -140,18 +145,14 @@ void device_template_task(void *pvParameters){
 					
 	
 				case(USB_CMD_READ_OTP):
-					if(rxBuf[1] == 0){
-						for(i = 0; i <= 63; i++){
-							txBuf[i] = i;
-						}
-						data_length = 64;
-						
-					}else{
-						for(i = 0; i <= 63; i++){
-							txBuf[i] = i+63;
-						}
-						data_length = 64;
-					}
+					request.command	= DFMAN_REQUEST_READ_OTP;
+					request.length	= rxBuf[1];
+					request.pointer	= &txBuf;
+					request.resume	= xTaskGetCurrentTaskHandle();
+					data_length = rxBuf[1];
+					xQueueSend(dataflashManagerQueue, &request, 20);
+					vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
+
 					
 				case(USB_CMD_WRITE_OTP):
 					
@@ -164,10 +165,19 @@ void device_template_task(void *pvParameters){
 			}
 			
 			
-			Usb_reset_endpoint_fifo_access(EP_TEMP_IN);
+			while (data_length){
+			  while (!Is_usb_in_ready(EP_TEMP_IN));
+
+			  Usb_reset_endpoint_fifo_access(EP_TEMP_IN);
+			  data_length = usb_write_ep_txpacket(EP_TEMP_IN, &(txBuf), data_length, NULL);
+			  Usb_ack_in_ready_send(EP_TEMP_IN);
+			}
+			
+			
+			/*Usb_reset_endpoint_fifo_access(EP_TEMP_IN);
 			usb_write_ep_txpacket(EP_TEMP_IN, &(txBuf), data_length, NULL);
 			Usb_ack_in_ready_send(EP_TEMP_IN);
-			data_length = 0;	
+			data_length = 0;*/
 		}
 	}
 }

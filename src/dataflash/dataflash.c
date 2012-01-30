@@ -31,8 +31,10 @@
 #include "drivers.h"
 #include "dataflash_layout.h"
 #include "dataflash_otp_layout.h"
+#include "dataflash_manager_request.h"
 #include "usb_task.h"
 #include "usb_descriptors.h"
+
 
 // Struct for holding USB serial number
 S_usb_serial_number module_serial_number;
@@ -40,8 +42,16 @@ S_usb_serial_number module_serial_number;
 // Struct for holding serial number, HW Version, and Tester ID;
 struct tDataflashOTP dataflashOTP;
 
+// Queue for receiving requests into the dataflash manager
+xQueueHandle dataflashManagerQueue;
+
+struct tDataflashRequest request;
+
+
 void dataflash_task_init( void ){
 	unsigned char i;
+	
+	dataflashManagerQueue = xQueueCreate(DFMAN_QUEUE_SIZE, sizeof(request));
 	
 	// Check the dataflash device ID
 	if( !dataflash_checkID() ){
@@ -70,7 +80,7 @@ void dataflash_task_init( void ){
 	}
 	
 	// Finally schedule the dataflash task
-	xTaskCreate(dataflash_task, configTSK_DATAFLASH_TASK_NAME, configTSK_DATAFLASH_TASK_STACK_SIZE, NULL, configTSK_DATAFLASH_TASK_PRIORITY, NULL);
+	xTaskCreate(dataflash_task, configTSK_DATAFLASH_TASK_NAME, configTSK_DATAFLASH_TASK_STACK_SIZE, NULL, configTSK_DATAFLASH_TASK_PRIORITY, configTSK_DATAFLASH_TASK_HANDLE);
 }
 
 void dataflash_task( void *pvParameters ){
@@ -84,7 +94,44 @@ void dataflash_task( void *pvParameters ){
 	}
 	
 	while(TRUE){
-		vTaskSuspend(NULL);
+		xQueueReceive(dataflashManagerQueue, &request, portMAX_DELAY);
+		
+		switch(request.command){
+			case(DFMAN_REQUEST_UPDATE_RECORDTABLE):
+				asm("nop");
+				break;
+				
+			case(DFMAN_REQUEST_UPDATE_TRACKLIST):
+				asm("nop");
+				break;
+				
+			case(DFMAN_REQUEST_ADD_RECORDDATA):
+				asm("nop");
+				break;
+				
+			case(DFMAN_REQUEST_ERASE_RECORD):
+				asm("nop");
+				break;
+				
+			case(DFMAN_REQUEST_READ_RECORDTABLE):
+				dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + ((request.index / RECORDS_ENTRY_PER_PAGE) * DATAFLASH_PAGE_SIZE), request.length, request.pointer);
+				if(request.resume != NULL){
+					vTaskResume(request.resume);
+				}
+				break;
+				
+			case(DFMAN_REQUEST_READ_OTP):
+				dataflash_ReadOTP(request.index, request.length, request.pointer);
+				if(request.resume != NULL){
+					vTaskResume(request.resume);
+				}
+				break;
+				
+			default:
+				asm("nop");
+				break;
+		}
+		
 	}
 }
 

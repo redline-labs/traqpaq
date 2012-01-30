@@ -74,7 +74,7 @@ void buttons_task_init( void ){
 	INTC_register_interrupt(&ISR_button2, EXTINT_BUTTON2_IRQ, EXTINT_BUTTON2); 
 	INTC_register_interrupt(&ISR_button3, EXTINT_BUTTON3_IRQ, EXTINT_BUTTON3); 
 	
-	xTaskCreate(buttons_task, configTSK_BUTTONS_TASK_NAME, configTSK_BUTTONS_TASK_STACK_SIZE, NULL, configTSK_BUTTONS_TASK_PRIORITY, NULL);
+	xTaskCreate(buttons_task, configTSK_BUTTONS_TASK_NAME, configTSK_BUTTONS_TASK_STACK_SIZE, NULL, configTSK_BUTTONS_TASK_PRIORITY, configTSK_BUTTONS_TASK_HANDLE);
 }
 
 
