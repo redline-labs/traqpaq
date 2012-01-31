@@ -75,13 +75,15 @@ void device_template_task_init(void){
 
 void device_template_task(void *pvParameters){
 	unsigned char i;
-	static U8 rxBuf[EP_SIZE_TEMP2];
-	static U8 txBuf[EP_SIZE_TEMP1];
+	static U8 rxBuf[EP_BUFFER_TEMP2];
+	static U8 txBuf[EP_BUFFER_TEMP1];
 	
 	unsigned char responseU8;
 	unsigned short responseU16;
 	unsigned int responseU32;
-
+	
+	unsigned long i;
+	
 	portTickType xLastWakeTime;
 	
 	struct tDataflashRequest request;
@@ -143,19 +145,29 @@ void device_template_task(void *pvParameters){
 					txBuf[data_length++] = (responseU16 >> 0) & 0xFF;
 					break;
 					
-	
+
 				case(USB_CMD_READ_OTP):
 					request.command	= DFMAN_REQUEST_READ_OTP;
 					request.length	= rxBuf[1];
+					request.index	= rxBuf[2];
 					request.pointer	= &txBuf;
 					request.resume	= xTaskGetCurrentTaskHandle();
 					data_length = rxBuf[1];
 					xQueueSend(dataflashManagerQueue, &request, 20);
 					vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
+					break;
 
 					
-				case(USB_CMD_WRITE_OTP):
-					
+				case(USB_CMD_READ_RECORDTABLE):
+					request.command	= DFMAN_REQUEST_READ_RECORDTABLE;
+					request.length	= rxBuf[1];
+					request.index	= rxBuf[2];
+					request.pointer	= &txBuf;
+					request.resume	= xTaskGetCurrentTaskHandle();
+					data_length = rxBuf[1];
+					xQueueSend(dataflashManagerQueue, &request, 20);
+					vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
+					break;
 					
 					
 				default:
@@ -164,12 +176,13 @@ void device_template_task(void *pvParameters){
 
 			}
 			
-			
+			i = 0;
 			while (data_length){
 			  while (!Is_usb_in_ready(EP_TEMP_IN));
 
 			  Usb_reset_endpoint_fifo_access(EP_TEMP_IN);
-			  data_length = usb_write_ep_txpacket(EP_TEMP_IN, &(txBuf), data_length, NULL);
+			  data_length = usb_write_ep_txpacket(EP_TEMP_IN, &(txBuf[i]), data_length, NULL);
+			  i += 64;
 			  Usb_ack_in_ready_send(EP_TEMP_IN);
 			}
 			
