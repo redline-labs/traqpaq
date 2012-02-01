@@ -29,11 +29,11 @@
 
 #include <asf.h>
 #include "drivers.h"
-#include "dataflash_layout.h"
 #include "dataflash_otp_layout.h"
 #include "dataflash_manager_request.h"
 #include "usb_task.h"
 #include "usb_descriptors.h"
+#include "dataflash_layout.h"
 
 
 // Struct for holding USB serial number
@@ -46,7 +46,6 @@ struct tDataflashOTP dataflashOTP;
 xQueueHandle dataflashManagerQueue;
 
 struct tDataflashRequest request;
-
 
 void dataflash_task_init( void ){
 	unsigned char i;
@@ -85,6 +84,8 @@ void dataflash_task_init( void ){
 
 void dataflash_task( void *pvParameters ){
 	unsigned short i;
+	volatile unsigned char recordTableIndex = 0;	// Index of first empty record table
+	struct tRecordsEntry recordTable, prevRecordTable;
 	
 	dataflash_GlobalUnprotect();
 	dataflash_WriteEnable();
@@ -93,12 +94,41 @@ void dataflash_task( void *pvParameters ){
 		debug_log("WARNING [DATAFLASH]: Busy response received");
 	}
 	
+	// Find the first empty record
+	//while( (recordTableIndex < RECORDS_TOTAL_POSSIBLE) && (recordTable.recordEmpty) ){
+	//	dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
+	//	recordTableIndex++;
+	//}
+	
+	
+	// Figure out the start address of the new record table
+	//if(recordTableIndex == 0){
+		// The record table is empty!
+		recordTable.startAddress = DATAFLASH_ADDR_RECORDDATA_START;
+		recordTable.endAddress = DATAFLASH_ADDR_RECORDDATA_START;
+	//}else{
+		// Peek at the last available record
+	//	dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(prevRecordTable) * (recordTableIndex - 1)), sizeof(prevRecordTable), &prevRecordTable);
+	//	recordTable.startAddress = (prevRecordTable.endAddress + 1) & 0xFFFFFF00;	// Align to page
+	//	recordTable.endAddress = recordTable.startAddress;
+	//}
+	
 	while(TRUE){
 		xQueueReceive(dataflashManagerQueue, &request, portMAX_DELAY);
 		
 		switch(request.command){
 			case(DFMAN_REQUEST_UPDATE_RECORDTABLE):
-				asm("nop");
+				recordTable.recordEmpty = FALSE;
+				recordTable.trackID = 0xAA;
+				
+				dataflash_UpdateSector(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
+				
+				// Get the new record table ready!
+				recordTableIndex++;
+				recordTable.recordEmpty = TRUE;
+				recordTable.startAddress = recordTable.endAddress; 
+				recordTable.trackID = 0xFF;
+				
 				break;
 				
 			case(DFMAN_REQUEST_UPDATE_TRACKLIST):
@@ -106,7 +136,8 @@ void dataflash_task( void *pvParameters ){
 				break;
 				
 			case(DFMAN_REQUEST_ADD_RECORDDATA):
-				asm("nop");
+				dataflash_WriteFromBuffer(recordTable.endAddress, request.length, request.pointer);
+				recordTable.endAddress += DATAFLASH_PAGE_SIZE;
 				break;
 				
 			case(DFMAN_REQUEST_ERASE_RECORD):
@@ -114,22 +145,34 @@ void dataflash_task( void *pvParameters ){
 				break;
 				
 			case(DFMAN_REQUEST_READ_RECORDTABLE):
-				dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + ((request.index / RECORDS_ENTRY_PER_PAGE) * DATAFLASH_PAGE_SIZE), request.length, request.pointer);
-				if(request.resume != NULL){
-					vTaskResume(request.resume);
-				}
+				//dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + ((request.index / RECORDS_ENTRY_PER_PAGE) * DATAFLASH_PAGE_SIZE), request.length, request.pointer);
+				dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START, request.length, request.pointer);
+				break;
+				
+			case(DFMAN_REQUEST_READ_RECORDDATA):
+				dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDDATA_START + (request.index * DATAFLASH_PAGE_SIZE), request.length, request.pointer);
 				break;
 				
 			case(DFMAN_REQUEST_READ_OTP):
 				dataflash_ReadOTP(request.index, request.length, request.pointer);
-				if(request.resume != NULL){
-					vTaskResume(request.resume);
-				}
 				break;
 				
-			default:
-				asm("nop");
+			case(DFMAN_REQUEST_SECTOR_ERASE):
+				dataflash_eraseBlock(DATAFLASH_CMD_BLOCK_ERASE_4KB, (request.index * DATAFLASH_4KB) );
 				break;
+				
+			case(DFMAN_REQUEST_BUSY):
+				*(request.pointer) = dataflash_is_busy();
+				break;
+				
+			case(DFMAN_REQUEST_CHIP_ERASE):
+				*(request.pointer) = dataflash_chipErase();
+				break;
+		}
+		
+		// Resume task if it has been suspended
+		if(request.resume != NULL){
+			vTaskResume(request.resume);
 		}
 		
 	}
@@ -249,7 +292,8 @@ unsigned char dataflash_UpdateSector(unsigned long startAddress, unsigned short 
 	return TRUE;
 }
 
-unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){	
+unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){
+	unsigned short dummyData;
 
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	
@@ -257,11 +301,12 @@ unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned short 
 	spi_write(DATAFLASH_SPI, (startAddress >> 16) & 0xFF);
 	spi_write(DATAFLASH_SPI, (startAddress >>  8) & 0xFF);
 	spi_write(DATAFLASH_SPI, (startAddress & 0xFF) );
+	spi_read(DATAFLASH_SPI, &dummyData);	// Dummy read required to clear the SPI->RDR register before enabling PDCA
 	
 	while( !spi_writeEndCheck(DATAFLASH_SPI) );
 	
-	pdca_load_channel(SPI_TX_PDCA_CHANNEL, (void *)0x80000000, length); // Use start of Flash as Dummy Bytes to Clock Out
 	pdca_load_channel(SPI_RX_PDCA_CHANNEL, bufferPointer, length);
+	pdca_load_channel(SPI_TX_PDCA_CHANNEL, (void *)0x80000000, length); // Use start of Flash as Dummy Bytes to Clock Out
 	
 	pdca_enable(SPI_RX_PDCA_CHANNEL);
 	pdca_enable(SPI_TX_PDCA_CHANNEL);

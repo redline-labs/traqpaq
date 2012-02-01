@@ -41,7 +41,15 @@
 #define DFMAN_REQUEST_ERASE_RECORD				3
 #define DFMAN_REQUEST_READ_RECORDTABLE			4
 #define DFMAN_REQUEST_READ_OTP					5
+#define DFMAN_REQUEST_SECTOR_ERASE				6
+#define DFMAN_REQUEST_BUSY						7
+#define DFMAN_REQUEST_CHIP_ERASE				8
+#define DFMAN_REQUEST_READ_RECORDDATA			9
 
+
+
+#define DFMAN_STATUS_BUSY						0
+#define DFMAN_STATUS_READY						1
 
 typedef struct tDataflashRequest {
 	unsigned char command;		// Define the request

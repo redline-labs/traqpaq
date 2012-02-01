@@ -208,7 +208,7 @@ to exclude the API function. */
 
 /* Dataflash Task */
 #define configTSK_DATAFLASH_TASK_NAME		((const signed portCHAR *)"Dataflash")
-#define configTSK_DATAFLASH_TASK_STACK_SIZE	4352	// 4.25KB
+#define configTSK_DATAFLASH_TASK_STACK_SIZE	5128
 #define configTSK_DATAFLASH_TASK_PRIORITY	(tskIDLE_PRIORITY + 1)
 #define configTSK_DATAFLASH_TASK_PERIOD		20
 #define configTSK_DATAFLASH_TASK_HANDLE		NULL

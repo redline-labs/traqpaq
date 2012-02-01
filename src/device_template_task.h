@@ -101,6 +101,10 @@ extern void device_template_task(void *pvParameters);
 #define USB_DBG_READ_CHG_STAT			0x37	// Read the status for the charging
 #define USB_DBG_SEND_FUEL_CMD			0x38	// Send a command to the fuel gauge
 
+#define USB_DBG_DF_SECTOR_ERASE			0x39
+#define USB_DBG_DF_BUSY					0x40
+#define USB_DBG_DF_CHIP_ERASE			0x41
+
 
 #define INDEX_CMD						0
 #define INDEX_LENGTH					1
