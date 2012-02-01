@@ -95,23 +95,24 @@ void dataflash_task( void *pvParameters ){
 	}
 	
 	// Find the first empty record
-	//while( (recordTableIndex < RECORDS_TOTAL_POSSIBLE) && (recordTable.recordEmpty) ){
-	//	dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
-	//	recordTableIndex++;
-	//}
-	
+	while( recordTableIndex < RECORDS_TOTAL_POSSIBLE ){
+		dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
+		if(recordTable.recordEmpty) break;
+		recordTableIndex++;
+	}
 	
 	// Figure out the start address of the new record table
-	//if(recordTableIndex == 0){
+	if(recordTableIndex == 0){
 		// The record table is empty!
 		recordTable.startAddress = DATAFLASH_ADDR_RECORDDATA_START;
 		recordTable.endAddress = DATAFLASH_ADDR_RECORDDATA_START;
-	//}else{
+	}else{
 		// Peek at the last available record
-	//	dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(prevRecordTable) * (recordTableIndex - 1)), sizeof(prevRecordTable), &prevRecordTable);
-	//	recordTable.startAddress = (prevRecordTable.endAddress + 1) & 0xFFFFFF00;	// Align to page
-	//	recordTable.endAddress = recordTable.startAddress;
-	//}
+		dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(prevRecordTable) * (recordTableIndex - 1)), sizeof(prevRecordTable), &prevRecordTable);
+		recordTable.startAddress = (prevRecordTable.endAddress + 1) & 0xFFFFFF00;	// Align to page
+		recordTable.endAddress = recordTable.startAddress;
+	}
+	
 	
 	while(TRUE){
 		xQueueReceive(dataflashManagerQueue, &request, portMAX_DELAY);
@@ -264,11 +265,12 @@ unsigned char dataflash_UpdateSector(unsigned long startAddress, unsigned short 
 	
 	dataflash_ReadToBuffer(sectorAddress, DATAFLASH_4KB, &sectorBuffer);
 	
-	// Wait for dataflash to become ready again.
+	// Wait for dataflash to become ready again. NEEDED?
 	while( dataflash_is_busy() ){
 		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_STATUS_CHECK_TIME ) );
 	}
 	
+	// Erase the sector
 	dataflash_eraseBlock(DATAFLASH_CMD_BLOCK_ERASE_4KB, sectorAddress);
 	
 	// Copy new data to buffer
@@ -276,10 +278,12 @@ unsigned char dataflash_UpdateSector(unsigned long startAddress, unsigned short 
 		sectorBuffer[ i + offset ] = bufferPointer[i];
 	}
 	
+	// Wait for the erase operation to finish
 	while( dataflash_is_busy() ){
 		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_ERASE_TIME ) );
 	}
 
+	// Write new data back
 	for(i = 0; i < DATAFLASH_4KB; i += DATAFLASH_PAGE_SIZE){
 		dataflash_WriteFromBuffer(sectorAddress + i, DATAFLASH_PAGE_SIZE, &(sectorBuffer[i]));
 		
@@ -335,7 +339,6 @@ unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned sho
 	while( !spi_writeEndCheck(DATAFLASH_SPI) );
 	
 	pdca_load_channel(SPI_TX_PDCA_CHANNEL, bufferPointer, length);
-	
 	pdca_enable(SPI_TX_PDCA_CHANNEL);
 	
 	while(pdca_get_transfer_status(SPI_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE){
