@@ -86,6 +86,7 @@ void dataflash_task( void *pvParameters ){
 	unsigned short i;
 	volatile unsigned char recordTableIndex = 0;	// Index of first empty record table
 	struct tRecordsEntry recordTable, prevRecordTable;
+	unsigned char flashIsFull = FALSE;
 	
 	dataflash_GlobalUnprotect();
 	dataflash_WriteEnable();
@@ -94,16 +95,16 @@ void dataflash_task( void *pvParameters ){
 		debug_log("WARNING [DATAFLASH]: Busy response received");
 	}
 	
-	// Find the first empty record
+	// Find the first empty record table entry
 	while( recordTableIndex < RECORDS_TOTAL_POSSIBLE ){
 		dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
 		if(recordTable.recordEmpty) break;
 		recordTableIndex++;
 	}
 	
-	// Figure out the start address of the new record table
+	// Figure out the start address of the new record table entry
 	if(recordTableIndex == 0){
-		// The record table is empty!
+		// There is no previous record table entry
 		recordTable.startAddress = DATAFLASH_ADDR_RECORDDATA_START;
 		recordTable.endAddress = DATAFLASH_ADDR_RECORDDATA_START;
 	}else{
@@ -128,26 +129,27 @@ void dataflash_task( void *pvParameters ){
 				recordTableIndex++;
 				recordTable.recordEmpty = TRUE;
 				recordTable.startAddress = recordTable.endAddress; 
-				recordTable.trackID = 0xFF;
-				
+				recordTable.trackID = 0xFF;				
 				break;
 				
 			case(DFMAN_REQUEST_UPDATE_TRACKLIST):
-				asm("nop");
+				// Not implemented yet!
 				break;
 				
 			case(DFMAN_REQUEST_ADD_RECORDDATA):
 				dataflash_WriteFromBuffer(recordTable.endAddress, request.length, request.pointer);
 				recordTable.endAddress += DATAFLASH_PAGE_SIZE;
+				if(recordTable.endAddress == DATAFLASH_ADDR_RECORDDATA_END){
+					flashIsFull = TRUE;
+				}
 				break;
 				
 			case(DFMAN_REQUEST_ERASE_RECORD):
-				asm("nop");
+				 // Not implemented yet!
 				break;
 				
 			case(DFMAN_REQUEST_READ_RECORDTABLE):
-				//dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + ((request.index / RECORDS_ENTRY_PER_PAGE) * DATAFLASH_PAGE_SIZE), request.length, request.pointer);
-				dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START, request.length, request.pointer);
+				dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + ( request.index * sizeof(recordTable) ), request.length, request.pointer);
 				break;
 				
 			case(DFMAN_REQUEST_READ_RECORDDATA):
@@ -168,10 +170,19 @@ void dataflash_task( void *pvParameters ){
 				
 			case(DFMAN_REQUEST_CHIP_ERASE):
 				*(request.pointer) = dataflash_chipErase();
+				flashIsFull = FALSE;
+				break;
+				
+			case(DFMAN_REQUEST_IS_FLASH_FULL):
+				*(request.pointer) = flashIsFull;
+				break;
+				
+			case(DFMAN_REQUEST_USED_SPACE):
+				*(request.pointer) = (((recordTable.endAddress - DATAFLASH_ADDR_RECORDDATA_START) * 100) / (DATAFLASH_ADDR_RECORDDATA_END - DATAFLASH_ADDR_RECORDDATA_START)) & 0xFF;
 				break;
 		}
 		
-		// Resume task if it has been suspended
+		// Resume requesting task if it has been suspended
 		if(request.resume != NULL){
 			vTaskResume(request.resume);
 		}

@@ -247,6 +247,7 @@ void board_init(void){
 		};
 		
 		pdca_init_channel(SPI_TX_PDCA_CHANNEL, &pdcaSPItx);
+		pdca_disable(SPI_TX_PDCA_CHANNEL);
 		
 		static const pdca_channel_options_t pdcaSPIrx = { 
 			.addr = NULL,								// memory address 

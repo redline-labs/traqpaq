@@ -51,13 +51,13 @@ void menu_clear(struct tMenu *menu);
 
 typedef struct tMenuItem {
 	unsigned char text[MENU_MAX_ITEM_STRLEN];
-	unsigned char visible;
 	unsigned short callback; //TO DO: Implement call backs
 };
 
 typedef struct tMenu {
 	unsigned char numItems;
 	unsigned char selectedIndex;
+	unsigned char displayIndex;
 	unsigned char title[MENU_MAX_ITEM_STRLEN];
 	struct tMenuItem item[MENU_MAX_ITEMS];
 };

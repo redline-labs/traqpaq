@@ -102,8 +102,10 @@ extern void device_template_task(void *pvParameters);
 #define USB_DBG_SEND_FUEL_CMD			0x38	// Send a command to the fuel gauge
 
 #define USB_DBG_DF_SECTOR_ERASE			0x39
-#define USB_DBG_DF_BUSY					0x40
-#define USB_DBG_DF_CHIP_ERASE			0x41
+#define USB_DBG_DF_BUSY					0x3A
+#define USB_DBG_DF_CHIP_ERASE			0x3B
+#define USB_DBG_DF_IS_FLASH_FULL		0x3C
+#define USB_DBG_DF_USED_SPACE			0x3D	
 
 
 #define INDEX_CMD						0

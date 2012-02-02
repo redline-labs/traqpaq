@@ -231,14 +231,30 @@ void device_template_task(void *pvParameters){
 					xQueueSend(dataflashManagerQueue, &request, 20);
 					break;
 					
+				
+				case(USB_DBG_DF_IS_FLASH_FULL):
+					request.command	= DFMAN_REQUEST_IS_FLASH_FULL;
+					request.pointer = &txBuf;
+					request.resume	= xTaskGetCurrentTaskHandle();
+					data_length = 1;
+					xQueueSend(dataflashManagerQueue, &request, 20);
+					vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
+					break;
 					
-					
+				case(USB_DBG_DF_USED_SPACE):
+					request.command	= DFMAN_REQUEST_USED_SPACE;
+					request.pointer = &txBuf;
+					request.resume	= xTaskGetCurrentTaskHandle();
+					data_length = 1;
+					xQueueSend(dataflashManagerQueue, &request, 20);
+					vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
+					break;
 					
 					
 				default:
 					// Unknown command!
 					debug_log("ERROR [USB]: Unknown command received");
-
+					break;
 			}
 			
 			i = 0;

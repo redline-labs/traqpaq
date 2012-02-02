@@ -36,14 +36,14 @@
 #define DATAFLASH_PAGE_SIZE		256
 
 
-typedef struct tRecordsEntry {
+typedef struct __attribute__ ((packed)) tRecordsEntry {
 	unsigned char recordEmpty;
+	unsigned char trackID;
+	unsigned char reserved1[2];
 
 	unsigned long datestamp;
 	unsigned long startAddress;
 	unsigned long endAddress;
-	unsigned char trackID;
-	unsigned char reserved1[2];
 };	// tRecordsEntry - 16 Bytes
 
 #define RECORD_ENTRY_SIZE		sizeof(tRecordsEntry)
