@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Help -> Technical Info
+ * Help -> Module Info
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -35,9 +35,17 @@ if(lcd_redraw_required()){
 	lcd_writeText_16x32("Build Date: "TRAQPAQ_SW_BUILD_DATE, FONT_LARGE_POINTER, LCD_MIN_X + 5, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 68, COLOR_BLACK);
 	
 	// TODO: Update from dataflashOTP struct
-	lcd_writeText_16x32("Hardware Ver: ", FONT_LARGE_POINTER, LCD_MIN_X + 5, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 100, COLOR_BLACK);
+	lcd_writeText_16x32("Hardware Ver: 1.2", FONT_LARGE_POINTER, LCD_MIN_X + 5, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 100, COLOR_BLACK);
 	
 	lcd_writeText_16x32("S/N: TRAQ022120001", FONT_LARGE_POINTER, LCD_MIN_X + 5, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 132, COLOR_BLACK);
+	
+	progressBar = lcd_createProgressBar(100, 70, 300, 30, COLOR_REDLINERED, COLOR_REDLINERED, COLOR_WHITE);
+	dataflashRequest.pointer = &responseU8;
+	dataflashRequest.command = DFMAN_REQUEST_USED_SPACE;
+	dataflashRequest.resume = xTaskGetCurrentTaskHandle();
+	xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
+	vTaskSuspend(NULL);
+	lcd_updateProgressBar(&progressBar, responseU8);
 	
 	lcd_redraw_complete();
 }

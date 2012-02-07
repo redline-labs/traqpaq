@@ -251,9 +251,41 @@ void device_template_task(void *pvParameters){
 					break;
 					
 					
+				
+				case(USB_CMD_WRITE_OTP):
+					txBuf[data_length++] = 'T';
+					txBuf[data_length++] = 'R';
+					txBuf[data_length++] = 'A';
+					txBuf[data_length++] = 'Q';
+					txBuf[data_length++] = '0';
+					txBuf[data_length++] = '3';
+					txBuf[data_length++] = '6';
+					txBuf[data_length++] = '1';
+					txBuf[data_length++] = '2';
+					txBuf[data_length++] = '0';
+					txBuf[data_length++] = '0';
+					txBuf[data_length++] = '0';
+					txBuf[data_length++] = '1';
+					
+					txBuf[data_length++] = 0x12;	// PCB Rev
+					txBuf[data_length++] = 0x30;	// ID of test fixture
+					txBuf[data_length++] = 0xAA;	// Reserved
+					
+					responseU16 = 0;
+					for(i = 0; i < 16; i++){
+						responseU16 = update_crc_ccitt(responseU16, txBuf[i]);
+					}
+					
+					txBuf[data_length++] = (responseU16 >> 8) & 0xFF;
+					txBuf[data_length++] = (responseU16 >> 0) & 0xFF;
+					
+					dataflash_WriteOTP(0, 18, &txBuf);
+					break;
+					
+					
 				default:
 					// Unknown command!
-					debug_log("ERROR [USB]: Unknown command received");
+					debug_log("ERROR [USB]: Unknown command received");	
 					break;
 			}
 			

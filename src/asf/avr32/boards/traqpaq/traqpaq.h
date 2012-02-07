@@ -39,7 +39,6 @@
 // ------------------------------------------------------------
 // Versions
 // ------------------------------------------------------------
-#define TRAQPAQ_DEBUG_HEADER		"TRAQPaq Debug Mode\r"
 #define TRAQPAQ_SW_LEVEL			0x0100
 #define TRAQPAQ_SW_LEVEL_ASCII		"1.00"
 #define TRAQPAQ_SW_BUILD_DATE		__DATE__
@@ -49,13 +48,13 @@
 // ------------------------------------------------------------
 // Clock Definitions
 // ------------------------------------------------------------
-#define FOSC0						16000000
+#define FOSC0						12000000
 #define OSC0_STARTUP				AVR32_PM_OSCCTRL0_STARTUP_2048_RCOSC
 
-#define APPL_CPU_SPEED				48000000
-#define APPL_CPU_SPEED_ASCII		"48000000"
-#define APPL_PBA_SPEED				24000000
-#define APPL_PBA_SPEED_ASCII		"24000000"
+#define APPL_CPU_SPEED				12000000
+#define APPL_CPU_SPEED_ASCII		"12000000"
+#define APPL_PBA_SPEED				12000000
+#define APPL_PBA_SPEED_ASCII		"12000000"
 
 #define BOARD_OSC0_HZ				FOSC0
 #define BOARD_OSC0_STARTUP_US		17000
@@ -74,12 +73,6 @@
 // ------------------------------------------------------------
 // Backlight and Status LED Definitions (PWM)
 // ------------------------------------------------------------
-#define STATUSLED_PIN	   			AVR32_PIN_PB27
-#define STATUSLED_PWM_PIN			AVR32_PWM_4_1_PIN
-#define STATUSLED_PWM_FUNCTION		AVR32_PWM_4_1_FUNCTION
-#define STATUSLED_PWM_CHANNEL		4
-#define STATUSLED_PWM_ID			0
-
 #define BACKLIGHT_PIN				AVR32_PIN_PB28
 #define BACKLIGHT_PWM_PIN			AVR32_PWM_5_1_PIN
 #define BACKLIGHT_PWM_FUNCTION		AVR32_PWM_5_1_FUNCTION
@@ -95,34 +88,34 @@
 // ------------------------------------------------------------
 // Button Definitions (EXTINT)
 // ------------------------------------------------------------
-#define GPIO_BUTTON0				AVR32_PIN_PA21
-#define GPIO_BUTTON1				AVR32_PIN_PA22
-#define GPIO_BUTTON2				AVR32_PIN_PA23
-#define GPIO_BUTTON3				AVR32_PIN_PA24
+#define GPIO_BUTTON0				AVR32_PIN_PA04
+#define GPIO_BUTTON1				AVR32_PIN_PA08
+#define GPIO_BUTTON2				AVR32_PIN_PA10
+#define GPIO_BUTTON3				AVR32_PIN_PA21
 
 #define EXTINT_NUMBER_LINES			4
 
-#define EXTINT_BUTTON0				EXT_INT0
-#define EXTINT_BUTTON1				EXT_INT1
-#define EXTINT_BUTTON2				EXT_INT2
-#define EXTINT_BUTTON3				EXT_INT3
-#define EXTINT_GPSPPS				EXT_INT4	// TODO: Need to move this with a jumper
+#define EXTINT_BUTTON0				EXT_INT5
+#define EXTINT_BUTTON1				EXT_INT7
+#define EXTINT_BUTTON2				EXT_INT6
+#define EXTINT_BUTTON3				EXT_INT0
+#define EXTINT_GPSPPS				EXT_INT4
 
 #define EXTINT_BUTTON0_IRQ			AVR32_EIC_IRQ_0
 #define EXTINT_BUTTON1_IRQ			AVR32_EIC_IRQ_1
 #define EXTINT_BUTTON2_IRQ			AVR32_EIC_IRQ_2
 #define EXTINT_BUTTON3_IRQ			AVR32_EIC_IRQ_3
 
-#define EXTINT_BUTTON0_PIN			AVR32_EIC_EXTINT_0_PIN
-#define EXTINT_BUTTON1_PIN			AVR32_EIC_EXTINT_1_PIN
-#define EXTINT_BUTTON2_PIN			AVR32_EIC_EXTINT_2_PIN
-#define EXTINT_BUTTON3_PIN			AVR32_EIC_EXTINT_3_PIN
+#define EXTINT_BUTTON0_PIN			AVR32_EIC_EXTINT_5_PIN
+#define EXTINT_BUTTON1_PIN			AVR32_EIC_EXTINT_7_PIN
+#define EXTINT_BUTTON2_PIN			AVR32_EIC_EXTINT_6_PIN
+#define EXTINT_BUTTON3_PIN			AVR32_EIC_EXTINT_0_PIN
 #define EXTINT_GPSPPS_PIN			AVR32_EIC_EXTINT_4_PIN
 
-#define EXTINT_BUTTON0_FUNCTION		AVR32_EIC_EXTINT_0_FUNCTION
-#define EXTINT_BUTTON1_FUNCTION		AVR32_EIC_EXTINT_1_FUNCTION
-#define EXTINT_BUTTON2_FUNCTION		AVR32_EIC_EXTINT_2_FUNCTION
-#define EXTINT_BUTTON3_FUNCTION		AVR32_EIC_EXTINT_3_FUNCTION
+#define EXTINT_BUTTON0_FUNCTION		AVR32_EIC_EXTINT_5_FUNCTION
+#define EXTINT_BUTTON1_FUNCTION		AVR32_EIC_EXTINT_7_FUNCTION
+#define EXTINT_BUTTON2_FUNCTION		AVR32_EIC_EXTINT_6_FUNCTION
+#define EXTINT_BUTTON3_FUNCTION		AVR32_EIC_EXTINT_0_FUNCTION
 #define EXTINT_BUTTON4_FUNCTION		AVR32_EIC_EXTINT_4_FUNCTION
 
 
@@ -178,44 +171,37 @@
 // ------------------------------------------------------------
 // GPIO Definitions
 // ------------------------------------------------------------
-#define CHARGE_RATE					AVR32_PIN_PB02
-#define CHARGE_STAT2				AVR32_PIN_PB03
+#define CHARGE_RATE					AVR32_PIN_PA18
+#define CHARGE_STAT1				AVR32_PIN_PA16
+#define CHARGE_STAT2				AVR32_PIN_PA17
+#define CHARGE_PG					AVR32_PIN_PA19
 
-#define GPS_RESET					AVR32_PIN_PB25
-#define GPS_RESET_TRUE				0
-#define GPS_RESET_FALSE				1
 
-#define GPS_POWER_ON				AVR32_PIN_PB26
-#define GPS_POWER_ON_TRUE			1
-#define GPS_POWER_ON_FALSE			0
+#define PM_SHDN1					AVR32_PIN_PA06
+#define PM_PGOOD1					AVR32_PIN_PA05
+#define PM_PGOOD3					AVR32_PIN_PX11
+#define PM_ENABLE					AVR32_PIN_PA02
 
-#define PM_SHDN1					AVR32_PIN_PB29
-
-#define PM_PGOOD1					AVR32_PIN_PB30
-
-#define PM_PGOOD3					AVR32_PIN_PB31
-
-#define LCD_RESET					AVR32_PIN_PX22
+#define LCD_RESET					AVR32_PIN_PA07
 #define LCD_RESET_TRUE				0
 #define LCD_RESET_FALSE				1
-#define LCD_RESET_TIME				2				// CFAF240400DT-030T Datasheet pg 10, double the min spec
+#define LCD_RESET_TIME				10				// CFAF240400DT-030T Datasheet pg 10, double the min spec
 
-#define CHARGE_PG					AVR32_PIN_PX23
-#define CHARGE_STAT1				AVR32_PIN_PX24
-
-#define PM_ENABLE					AVR32_PIN_PX25
+#define GPS_RESET					AVR32_PIN_PC05
+#define GPS_RESET_TRUE				0
+#define GPS_RESET_FALSE				1
 
 
 // ------------------------------------------------------------
 // GPS Definitions (USART0)
 // ------------------------------------------------------------
-#define GPS_USART               	(&AVR32_USART0)
-#define GPS_TXD						AVR32_USART0_TXD_0_0_PIN
-#define GPS_TXD_FUNCTION			AVR32_USART0_TXD_0_0_FUNCTION
-#define GPS_RXD						AVR32_USART0_RXD_0_0_PIN
-#define GPS_RXD_FUNCTION			AVR32_USART0_RXD_0_0_FUNCTION
-#define GPS_USART_BAUD				115200
-#define GPS_USART_IRQ           	AVR32_USART0_IRQ
+#define GPS_USART               	(&AVR32_USART3)
+#define GPS_TXD						AVR32_USART3_TXD_0_0_PIN
+#define GPS_TXD_FUNCTION			AVR32_USART3_TXD_0_0_FUNCTION
+#define GPS_RXD						AVR32_USART3_RXD_0_0_PIN
+#define GPS_RXD_FUNCTION			AVR32_USART3_RXD_0_0_FUNCTION
+#define GPS_USART_BAUD				57600
+#define GPS_USART_IRQ           	AVR32_USART3_IRQ
 
 
 // ------------------------------------------------------------
@@ -235,18 +221,17 @@
 // ------------------------------------------------------------
 #define ADC							(&AVR32_ADC)
 
-#define ADC_VCC_CHANNEL				1
-#define ADC_VCC_PIN					AVR32_ADC_AD_1_PIN
-#define ADC_VCC_FUNCTION			AVR32_ADC_AD_1_FUNCTION
+#define ADC_3V3_CHANNEL				1
+#define ADC_3V3_PIN					AVR32_ADC_AD_1_PIN
+#define ADC_3V3_FUNCTION			AVR32_ADC_AD_1_FUNCTION
 
-#define ADC_VEE_CHANNEL				2
-#define ADC_VEE_PIN					AVR32_ADC_AD_2_PIN
-#define ADC_VEE_FUNCTION			AVR32_ADC_AD_2_FUNCTION
+#define ADC_VCC_CHANNEL				2
+#define ADC_VCC_PIN					AVR32_ADC_AD_2_PIN
+#define ADC_VCC_FUNCTION			AVR32_ADC_AD_2_FUNCTION
 
-#define ADC_3V3_CHANNEL				3
-#define ADC_3V3_PIN					AVR32_ADC_AD_3_PIN
-#define ADC_3V3_FUNCTION			AVR32_ADC_AD_3_FUNCTION
-
+#define ADC_VEE_CHANNEL				3
+#define ADC_VEE_PIN					AVR32_ADC_AD_3_PIN
+#define ADC_VEE_FUNCTION			AVR32_ADC_AD_3_FUNCTION
 
 
 // Function Prototypes

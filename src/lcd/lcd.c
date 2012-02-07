@@ -31,6 +31,7 @@
 #include "drivers.h"
 #include "menu.h"
 #include "control_fsm.h"
+#include "dataflash/dataflash_manager_request.h"
 
 #include FONT_SMALL_INCLUDE
 #include FONT_LARGE_INCLUDE
@@ -74,7 +75,7 @@ const unsigned char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', 
 xQueueHandle queueLCDwidgets;
 xQueueHandle queueLCDmenu;
 
-
+extern xQueueHandle dataflashManagerQueue;
 
 // Create task for FreeRTOS
 void lcd_task_init( void ){
@@ -88,6 +89,11 @@ void lcd_gui_task( void *pvParameters ){
 	struct tLCDRequest request;
 	struct tLCDTopBar topBar;
 	struct tMenu mainMenu;
+	struct tLCDProgressBar progressBar;
+	struct tDataflashRequest dataflashRequest;
+	
+	unsigned char responseU8;
+	unsigned short responseU16;
 	
 	unsigned char button;
 	volatile unsigned short lcd_fsm = LCDFSM_MAINMENU;		// Useful for testing new screens!
@@ -96,9 +102,16 @@ void lcd_gui_task( void *pvParameters ){
 	queueLCDwidgets = xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(request));
 	queueLCDmenu	= xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(unsigned char));
 	
+	// Turn Boost Converter On
+	gpio_set_gpio_pin(PM_SHDN1);
+	
 	lcd_reset();
 	
-	if( lcd_readID() != LCD_DEVICE_ID){
+	lcd_writeData(0xFFFF);
+	
+	responseU16 = lcd_readID();
+	
+	if( responseU16 != LCD_DEVICE_ID){
 		debug_log("WARNING [LCD]: Incorrect device ID");
 	}
 	
@@ -354,7 +367,7 @@ void lcd_init(void){
 	
 	lcd_writeCommand(LCD_CMD_ENTRY_MODE);				// Entry Mode (R003h)
 	lcd_writeData(LCD_ENTRY_MODE);						// Page 15 of SPFD5420A Datasheet
-
+	
 	//lcd_writeCommand(0x0007);							// Display Control 1 (R007h)
 	//lcd_writeData(0x0000);							// Page 16 of SPFD5420A Datasheet
 	
@@ -404,6 +417,7 @@ void lcd_init(void){
 	lcd_writeData(0x0173);								// Page 16 of SPFD5420A Datasheet
 	
 	vTaskDelay( (portTickType)TASK_DELAY_MS(LCD_SETUP_DELAY) );
+	
 }
 
 unsigned short lcd_readID(){

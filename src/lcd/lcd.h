@@ -66,7 +66,7 @@ extern struct tLCDTopBar topBar;
 // Defines
 //-----------------------------------------------
 // Delays for Init
-#define LCD_SETUP_DELAY				2
+#define LCD_SETUP_DELAY				10
 
 // GUI Elements
 #define LCD_PROGRESSBAR_PADDING		3

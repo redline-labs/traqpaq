@@ -31,7 +31,7 @@
 #define SMC_LCD_H_
 
 //! SMC Peripheral Memory Size in Bytes
-#define EXT_SM_SIZE            0x200001
+#define EXT_SM_SIZE            0x200000
 
 //! SMC Data Bus Width
 #define SMC_DBW                16
@@ -42,19 +42,19 @@
 
 
 // NCS setup time. Unit: ns.
-#define NCS_WR_SETUP            10		//50
+#define NCS_WR_SETUP            50		//50
 
 // NCS pulse time. Unit: ns.
-#define NCS_WR_PULSE            10		//80
+#define NCS_WR_PULSE            80		//80
 
 // NCS hold time. Unit: ns.
 #define NCS_WR_HOLD             10
 
 // NWE setup time. Unit: ns.
-#define NWE_SETUP               10		//100
+#define NWE_SETUP               100		//100
 
 // NWE pulse time. Unit: ns.
-#define NWE_PULSE               10		//50
+#define NWE_PULSE               50		//50
 
 // NWE hold time. Unit: ns.
 #define NWE_HOLD                10		//0
@@ -63,7 +63,7 @@
 #define NWE_CYCLE               Max((NCS_WR_SETUP + NCS_WR_PULSE + NCS_WR_HOLD),(NWE_SETUP + NWE_PULSE + NWE_HOLD))
 
 // NCS setup time. Unit: ns.
-#define NCS_RD_SETUP            0
+#define NCS_RD_SETUP            100
 
 // NCS pulse time. Unit: ns.
 #define NCS_RD_PULSE            240

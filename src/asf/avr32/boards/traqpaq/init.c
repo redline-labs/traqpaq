@@ -58,28 +58,7 @@ void board_init(void){
 	// USB Initialization (PM)
 	// ------------------------------------------------------------
 	#if(TRAQPAQ_HW_USB_ENABLED)
-		// Need to replace this with 'pm_configure_usb_clock(void)'
-		pm_pll_setup(&AVR32_PM,
-			1,  // pll.
-			5,   // mul.  WAS 7 FOR FOSC0=12MHz
-			1,   // div.
-			0,   // osc.
-			16); // lockcount.
-
-		pm_pll_set_option(&AVR32_PM, 1, // pll.
-			1,  // pll_freq: choose the range 80-180MHz.
-			1,  // pll_div2.
-			0); // pll_wbwdisable.
-
-		pm_pll_enable(&AVR32_PM, 1);
-		pm_wait_for_pll1_locked(&AVR32_PM);
-
-		pm_gc_setup(&AVR32_PM, AVR32_PM_GCLK_USBB,  // gc.
-			1,  // osc_or_pll: use Osc (if 0) or PLL (if 1).
-			1,  // pll_osc: select Osc0/PLL0 or Osc1/PLL1.
-			0,  // diven.
-			0); // div.
-		pm_gc_enable(&AVR32_PM, AVR32_PM_GCLK_USBB);
+		pm_configure_usb_clock();
 	#endif
 
 	// ------------------------------------------------------------
@@ -93,9 +72,8 @@ void board_init(void){
 	// ------------------------------------------------------------
 	// GPIO Initialization
 	// ------------------------------------------------------------
-	//gpio_clr_gpio_pin(CHARGE_RATE);
+	gpio_clr_gpio_pin(CHARGE_RATE);
 	gpio_clr_gpio_pin(GPS_RESET);
-	gpio_clr_gpio_pin(GPS_POWER_ON);
 	gpio_clr_gpio_pin(PM_SHDN1);
 	gpio_clr_gpio_pin(LCD_RESET);
 	gpio_clr_gpio_pin(PM_ENABLE);
