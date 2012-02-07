@@ -72,16 +72,18 @@ void board_init(void){
 	// ------------------------------------------------------------
 	// GPIO Initialization
 	// ------------------------------------------------------------
-	gpio_clr_gpio_pin(CHARGE_RATE);
-	gpio_clr_gpio_pin(GPS_RESET);
-	gpio_clr_gpio_pin(PM_SHDN1);
+	gpio_clr_gpio_pin(GPS_RESET);			
+	gpio_clr_gpio_pin(PM_SHDN1);			// Boost Converter
 	gpio_clr_gpio_pin(LCD_RESET);
 	gpio_clr_gpio_pin(PM_ENABLE);
-	//gpio_set_gpio_pin(PM_ENABLE);
+	gpio_clr_gpio_pin(ADC_VREF_EN);
+	
+	//gpio_clr_gpio_pin(CHARGE_RATE);		// Battery Charge Rate
 
 	gpio_enable_pin_pull_up(CHARGE_STAT1);
 	gpio_enable_pin_pull_up(CHARGE_STAT2);
-	gpio_enable_pin_pull_up(CHARGE_PG);
+	gpio_enable_pin_pull_up(CHARGE_PG);		
+	
 
 
 	// ------------------------------------------------------------
@@ -298,7 +300,7 @@ void board_init(void){
 			{ADC_VCC_PIN, ADC_VCC_FUNCTION},
 			{ADC_VEE_PIN, ADC_VEE_FUNCTION},
 			{ADC_3V3_PIN, ADC_3V3_FUNCTION},
-		}
+		};
 	
 		gpio_enable_module(ADC_GPIO_MAP, sizeof(ADC_GPIO_MAP) / sizeof(ADC_GPIO_MAP[0]));
 	
@@ -306,11 +308,13 @@ void board_init(void){
 		// Lower the ADC clock to match the ADC characteristics (because we configured
 		// the CPU clock to 12MHz, and the ADC clock characteristics are usually lower;
 		// cf. the ADC Characteristic section in the datasheet).
-		//AVR32_ADC.mr |= 0x1 << AVR32_ADC_MR_PRESCAL_OFFSET;
+		AVR32_ADC.mr |= 0x1 << AVR32_ADC_MR_PRESCAL_OFFSET;
+		adc_configure(ADC);
 	
+		adc_enable(ADC, ADC_3V3_CHANNEL);
 		adc_enable(ADC, ADC_VCC_CHANNEL);
 		adc_enable(ADC, ADC_VEE_CHANNEL);
-		adc_enable(ADC, ADC_3V3_CHANNEL);
+
 	#endif
 
 }

@@ -107,11 +107,7 @@ void lcd_gui_task( void *pvParameters ){
 	
 	lcd_reset();
 	
-	lcd_writeData(0xFFFF);
-	
-	responseU16 = lcd_readID();
-	
-	if( responseU16 != LCD_DEVICE_ID){
+	if( lcd_readID() != LCD_DEVICE_ID){
 		debug_log("WARNING [LCD]: Incorrect device ID");
 	}
 	

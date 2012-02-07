@@ -87,6 +87,10 @@ int main( void ){
 	wdt_task_init();
 	#endif
 	
+	#if( TRAQPAQ_HW_ADC_ENABLED )
+	adc_task_init();
+	#endif
+	
 	Enable_global_interrupt();
 
 	// Start the scheduler! ---------------------------------------

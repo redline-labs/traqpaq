@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Board Configuration File
+ * ADC Include
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -27,23 +27,23 @@
  *
  ******************************************************************************/
 
-#ifndef CONF_BOARD_H
-#define CONF_BOARD_H
+#ifndef ADC_H_
+#define ADC_H_
 
-// Configure/Deconfigure hardware on the module
-#define TRAQPAQ_HW_PWM_ENABLED			TRUE
-#define TRAQPAQ_HW_EBI_ENABLED			TRUE
-#define TRAQPAQ_HW_GPS_ENABLED			FALSE
-#define TRAQPAQ_HW_SPI_ENABLED			FALSE
-#define TRAQPAQ_HW_TWI_ENABLED			FALSE
-#define TRAQPAQ_HW_EXINT_ENABLED		FALSE
-#define TRAQPAQ_HW_USB_ENABLED			FALSE
-#define TRAQPAQ_HW_DEBUG_ENABLED		FALSE
-#define TRAQPAQ_HW_PLL_ENABLED			FALSE
-#define TRAQPAQ_HW_WDT_ENABLED			FALSE
-#define TRAQPAQ_HW_ADC_ENABLED			FALSE
-#define TRAQPAQ_HW_CHARGE_ENABLED		FALSE
+#define ADC_VREF_SETTLE_TIME			1		// Time in milliseconds for VREF to settle
+												// Testing shows VREF is settled in 200uS
+	
+#define ADC_SLEEP_TIME					1000	// Time in milliseconds for ADC task to sleep
 
-#define TRAQPAQ_HW_USB_FASTCHG_ENABLED	FALSE
+typedef struct tADCvalues {
+	unsigned short main;
+	unsigned short vcc;
+	unsigned short vee;
+};
 
-#endif // CONF_BOARD_H
+
+void adc_task_init( void );
+void adc_task( void *pvParameters );
+
+
+#endif /* ADC_H_ */

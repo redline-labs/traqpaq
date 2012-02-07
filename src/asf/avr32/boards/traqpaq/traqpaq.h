@@ -176,20 +176,17 @@
 #define CHARGE_STAT2				AVR32_PIN_PA17
 #define CHARGE_PG					AVR32_PIN_PA19
 
-
 #define PM_SHDN1					AVR32_PIN_PA06
 #define PM_PGOOD1					AVR32_PIN_PA05
 #define PM_PGOOD3					AVR32_PIN_PX11
 #define PM_ENABLE					AVR32_PIN_PA02
 
 #define LCD_RESET					AVR32_PIN_PA07
-#define LCD_RESET_TRUE				0
-#define LCD_RESET_FALSE				1
 #define LCD_RESET_TIME				10				// CFAF240400DT-030T Datasheet pg 10, double the min spec
 
 #define GPS_RESET					AVR32_PIN_PC05
-#define GPS_RESET_TRUE				0
-#define GPS_RESET_FALSE				1
+
+#define ADC_VREF_EN					AVR32_PIN_PA28
 
 
 // ------------------------------------------------------------

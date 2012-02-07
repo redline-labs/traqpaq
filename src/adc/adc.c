@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Board Configuration File
+ * ADC
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -27,23 +27,34 @@
  *
  ******************************************************************************/
 
-#ifndef CONF_BOARD_H
-#define CONF_BOARD_H
+#include <asf.h>
+#include "drivers.h"
 
-// Configure/Deconfigure hardware on the module
-#define TRAQPAQ_HW_PWM_ENABLED			TRUE
-#define TRAQPAQ_HW_EBI_ENABLED			TRUE
-#define TRAQPAQ_HW_GPS_ENABLED			FALSE
-#define TRAQPAQ_HW_SPI_ENABLED			FALSE
-#define TRAQPAQ_HW_TWI_ENABLED			FALSE
-#define TRAQPAQ_HW_EXINT_ENABLED		FALSE
-#define TRAQPAQ_HW_USB_ENABLED			FALSE
-#define TRAQPAQ_HW_DEBUG_ENABLED		FALSE
-#define TRAQPAQ_HW_PLL_ENABLED			FALSE
-#define TRAQPAQ_HW_WDT_ENABLED			FALSE
-#define TRAQPAQ_HW_ADC_ENABLED			FALSE
-#define TRAQPAQ_HW_CHARGE_ENABLED		FALSE
+void adc_task_init( void ){
+	xTaskCreate(adc_task, configTSK_ADC_TASK_NAME, configTSK_ADC_TASK_STACK_SIZE, NULL, configTSK_ADC_TASK_PRIORITY, configTSK_ADC_TASK_HANDLE);
+}
 
-#define TRAQPAQ_HW_USB_FASTCHG_ENABLED	FALSE
-
-#endif // CONF_BOARD_H
+// ADC Task
+void adc_task( void *pvParameters ){
+	struct tADCvalues adcValues;
+	
+	while(TRUE){
+		// Turn on ADC VREF and allow it to settle
+		gpio_set_gpio_pin(ADC_VREF_EN);
+		vTaskDelay( (portTickType)TASK_DELAY_MS(ADC_VREF_SETTLE_TIME) );
+	
+		// Start conversions
+		adc_start(ADC);
+		
+		adcValues.main	= adc_get_value(ADC, ADC_3V3_CHANNEL);
+		adcValues.vcc	= adc_get_value(ADC, ADC_VCC_CHANNEL);
+		adcValues.vee	= adc_get_value(ADC, ADC_VEE_CHANNEL);
+		
+		// Turn off reference
+		gpio_clr_gpio_pin(ADC_VREF_EN);
+		
+		// Sleep!
+		vTaskDelay( (portTickType)TASK_DELAY_MS(ADC_SLEEP_TIME) );
+	}
+	
+}	

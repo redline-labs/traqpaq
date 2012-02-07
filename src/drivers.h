@@ -9,6 +9,9 @@
 #ifndef DRIVERS_H_
 #define DRIVERS_H_
 
+// Debug
+#include "adc/adc.h"
+
 // Fuel Gauge
 #include "fuel/fuel.h"
 

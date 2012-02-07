@@ -241,5 +241,12 @@ to exclude the API function. */
 #define configTSK_BUTTONS_TASK_PERIOD		20
 #define configTSK_BUTTONS_TASK_HANDLE		NULL
 
+/* ADC Task */
+#define configTSK_ADC_TASK_NAME				((const signed portCHAR *)"Analog")
+#define configTSK_ADC_TASK_STACK_SIZE		256
+#define configTSK_ADC_TASK_PRIORITY			(tskIDLE_PRIORITY + 1)
+#define configTSK_ADC_TASK_PERIOD			20
+#define configTSK_ADC_TASK_HANDLE			NULL
+
 
 #endif /* FREERTOS_CONFIG_H */
