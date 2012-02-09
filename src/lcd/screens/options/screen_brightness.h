@@ -29,11 +29,11 @@
 
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
-	menu_addItem(&mainMenu, "100%",	pwmFadeTable[255]);
-	menu_addItem(&mainMenu,  "80%",	pwmFadeTable[204]);
-	menu_addItem(&mainMenu,  "60%",	pwmFadeTable[153]);
-	menu_addItem(&mainMenu,  "40%",	pwmFadeTable[102]);
-	menu_addItem(&mainMenu,  "20%",	pwmFadeTable[ 51]);
+	menu_addItem(&mainMenu, "100%",	255);
+	menu_addItem(&mainMenu,  "80%",	70);
+	menu_addItem(&mainMenu,  "60%",	46);
+	menu_addItem(&mainMenu,  "40%",	26);
+	menu_addItem(&mainMenu,  "20%",	10);
 	
 	lcd_redraw_complete();
 }
@@ -53,7 +53,7 @@ if( xQueueReceive(queueLCDmenu, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_SELECT):
-			lcd_updateBacklightDuty( menu_readCallback(&mainMenu) );
+			pwm_updateBacklightDuty( menu_readCallback(&mainMenu) );
 			lcd_force_redraw();
 			lcd_change_screens( LCDFSM_DISPLAY );
 			break;

@@ -95,6 +95,11 @@ extern struct tLCDTopBar topBar;
 #define LCD_ANTENNA_X_POS			55		// X Position, leftmost part of icon, inside of the top bar
 #define LCD_ANTENNA_Y_POS			15		// Y Position, bottommost part of icon, inside of the top bar
 
+#define LCD_CHARGE_WIDTH			10
+#define LCD_CHARGE_HEIGHT			10
+#define LCD_CHARGE_X_POS			75
+#define LCD_CHARGE_Y_POS			15
+
 
 #define LCD_BATTERY_BARCOLOR		COLOR_GREEN
 #define LCD_BATTERY_FRAMECOLOR		COLOR_WHITE
@@ -268,9 +273,6 @@ void lcd_task_init(void);
 void lcd_gui_task( void *pvParameters );
 void lcd_reset( void );
 void lcd_init( void );
-void lcd_fadeBacklightOut(void);
-void lcd_fadeBacklightIn(void);
-void lcd_updateBacklightDuty(unsigned char duty);
 
 void lcd_setCur(unsigned int x, unsigned int y);
 
@@ -295,6 +297,8 @@ void lcd_updateBattery(struct tLCDTopBar *topBar, unsigned char percent);
 void lcd_updateTopBarText(unsigned char *string);
 
 void lcd_scrollDisplay(unsigned short numLines);
+
+void lcd_updateCharge(struct tLCDTopBar *topBar, unsigned short state);
 
 typedef struct tLCDProgressBar {
 	unsigned short start_x;

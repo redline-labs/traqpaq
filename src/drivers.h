@@ -12,11 +12,12 @@
 // Debug
 #include "adc/adc.h"
 
-// Fuel Gauge
-#include "fuel/fuel.h"
-
 // Dataflash
 #include "dataflash/dataflash.h"
+#include "dataflash/dataflash_layout.h"
+
+// Fuel Gauge
+#include "fuel/fuel.h"
 
 // Watchdog
 #include "wdt/wdt.h"
@@ -29,6 +30,9 @@
 
 // GPS
 #include "gps/gps.h"
+
+// PWM
+#include "pwm/pwm.h"
 
 // Charge
 #include "charge/charge.h"

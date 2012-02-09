@@ -77,7 +77,22 @@ typedef struct tRecordDataPage {
 	struct tRecordData data[RECORD_DATA_PER_PAGE];
 };
 
-#define DATAFLASH_ADDR_RECORDTABLE_START		0x00000000
+
+
+
+typedef struct tUserPrefs {
+	unsigned char	screenPWMMax;		// Max Screen Brightness ( 8-bit PWM value; 0 - 255 )
+	unsigned char	screenPWMMin;		// Min Screen Brightness ( 8-bit PWM value; 0 - 255 )
+	unsigned short	screenFadeTime;		// Inactive time for module until screen fades darker
+	unsigned short	screenOffTime;		// Inactive time for module until screen turns off
+	unsigned short  crc;
+};
+
+
+#define DATAFLASH_ADDR_USERPREFS_START			0x00000000
+#define DATAFLASH_ADDR_USERPREFS_END			0x000000FF
+
+#define DATAFLASH_ADDR_RECORDTABLE_START		0x00000100
 #define DATAFLASH_ADDR_RECORDTABLE_END			0x00000FFF	// Align to 4KB sector
 
 #define DATAFLASH_ADDR_TRACKLIST_START			0x00001000

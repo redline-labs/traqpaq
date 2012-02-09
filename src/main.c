@@ -58,12 +58,16 @@ int main( void ){
 	}
 	
 	// Schedule Tasks ---------------------------------------------
+	#if( TRAQPAQ_HW_SPI_ENABLED )
+	dataflash_task_init();
+	#endif
+	
 	#if( TRAQPAQ_HW_EBI_ENABLED )
 	lcd_task_init();
 	#endif
-	
-	#if( TRAQPAQ_HW_SPI_ENABLED )
-	dataflash_task_init();
+		
+	#if( TRAQPAQ_HW_PWM_ENABLED )
+	pwm_task_init();
 	#endif
 	
 	#if( TRAQPAQ_HW_USB_ENABLED )
@@ -99,7 +103,6 @@ int main( void ){
 	#if( TRAQPAQ_HW_ADC_ENABLED )
 	adc_task_init();
 	#endif
-	
 	
 	Enable_global_interrupt();
 

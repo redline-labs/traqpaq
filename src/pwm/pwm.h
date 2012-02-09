@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Board Configuration File
+ * Charge Control
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -27,23 +27,28 @@
  *
  ******************************************************************************/
 
-#ifndef CONF_BOARD_H
-#define CONF_BOARD_H
+#ifndef PWM_H_
+#define PWM_H_
 
-// Configure/Deconfigure hardware on the module
-#define TRAQPAQ_HW_PWM_ENABLED			TRUE
-#define TRAQPAQ_HW_EBI_ENABLED			TRUE
-#define TRAQPAQ_HW_GPS_ENABLED			FALSE
-#define TRAQPAQ_HW_SPI_ENABLED			TRUE
-#define TRAQPAQ_HW_TWI_ENABLED			TRUE
-#define TRAQPAQ_HW_EXINT_ENABLED		TRUE
-#define TRAQPAQ_HW_USB_ENABLED			TRUE
-#define TRAQPAQ_HW_DEBUG_ENABLED		FALSE
-#define TRAQPAQ_HW_PLL_ENABLED			TRUE
-#define TRAQPAQ_HW_WDT_ENABLED			FALSE
-#define TRAQPAQ_HW_ADC_ENABLED			FALSE
-#define TRAQPAQ_HW_CHARGE_ENABLED		TRUE
+#define BACKLIGHT_FADE_DELAY		1
 
-#define TRAQPAQ_HW_USB_FASTCHG_ENABLED	TRUE
+#define BACKLIGHT_DEFAULT_MAX		255		// Default MAX Screen Brightness
+#define BACKLIGHT_DEFAULT_MIN		125		// Default MIN Screen Brightness
+#define BACKLIGHT_DEFAULT_FADETIME	5		// Default Inactive Time in Seconds to Fade Screen
+#define BACKLIGHT_DEFAULT_OFFTIME	30		// Default Inactive Time in Seconds to Turn Off Screen
 
-#endif // CONF_BOARD_H
+
+typedef struct tPWMDisplayStatus {
+	unsigned char displayOn;
+	unsigned char displayFaded;
+	unsigned char brightness;
+};
+
+void pwm_task_init( void );
+void pwm_task( void *pvParameters );
+
+void pwm_fadeBacklight(unsigned char endValue);
+void pwm_updateBacklightDuty(unsigned char duty);
+
+
+#endif /* PWM_H_ */

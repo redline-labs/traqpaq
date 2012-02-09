@@ -65,11 +65,9 @@ void fuel_task( void *pvParameters ){
 		if(accumulated_current < 0){
 			accumulated_current = 0;
 			fuel_updateAccumulatedCurrent(0);
-			updateAccumulator = TRUE;
 			
 		}else if(accumulated_current > batteryInfo.capacity){
 			accumulated_current = batteryInfo.capacity;
-			updateAccumulator = TRUE;
 			
 		}
 		

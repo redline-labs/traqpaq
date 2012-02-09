@@ -33,8 +33,6 @@
 #include "dataflash_manager_request.h"
 #include "usb_task.h"
 #include "usb_descriptors.h"
-#include "dataflash_layout.h"
-
 
 // Struct for holding USB serial number
 S_usb_serial_number module_serial_number;
@@ -46,6 +44,8 @@ struct tDataflashOTP dataflashOTP;
 xQueueHandle dataflashManagerQueue;
 
 struct tDataflashRequest request;
+
+struct tUserPrefs userPrefs;
 
 void dataflash_task_init( void ){
 	unsigned char i;
@@ -76,6 +76,17 @@ void dataflash_task_init( void ){
 			module_serial_number.wstring[i] = Usb_unicode('0');
 		}
 		
+	}
+	
+	// Load user preferences!
+	dataflash_ReadToBuffer(DATAFLASH_ADDR_USERPREFS_START, sizeof(userPrefs), &userPrefs);
+	if(dataflash_calculate_userPrefs_crc() != userPrefs.crc){
+		// If CRC is bad, load defaults!
+		debug_log("WARNING [DATAFLASH]: Incorrect User Preferences CRC");
+		userPrefs.screenPWMMax = BACKLIGHT_DEFAULT_MAX;
+		userPrefs.screenPWMMin = BACKLIGHT_DEFAULT_MIN;
+		userPrefs.screenFadeTime = BACKLIGHT_DEFAULT_FADETIME;
+		userPrefs.screenOffTime = BACKLIGHT_DEFAULT_OFFTIME;
 	}
 	
 	// Finally schedule the dataflash task
@@ -478,5 +489,16 @@ unsigned short dataflash_calculate_otp_crc( void ){
 	crc = update_crc_ccitt(crc, dataflashOTP.tester_id);
 	crc = update_crc_ccitt(crc, dataflashOTP.reserved);
 	
+	return crc;
+}
+
+unsigned short dataflash_calculate_userPrefs_crc( void ){
+	unsigned short crc = 0;
+
+	crc = update_crc_ccitt(crc, userPrefs.screenPWMMax);
+	crc = update_crc_ccitt(crc, userPrefs.screenPWMMin);
+	crc = update_crc_ccitt(crc, userPrefs.screenFadeTime);
+	crc = update_crc_ccitt(crc, userPrefs.screenOffTime);
+
 	return crc;
 }
