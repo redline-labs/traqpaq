@@ -82,7 +82,7 @@ void board_init(void){
 
 	gpio_enable_pin_pull_up(CHARGE_STAT1);
 	gpio_enable_pin_pull_up(CHARGE_STAT2);
-	gpio_enable_pin_pull_up(CHARGE_PG);		
+	gpio_enable_pin_pull_up(CHARGE_PG);
 	
 
 

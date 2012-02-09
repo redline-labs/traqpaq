@@ -114,20 +114,26 @@ void device_template_task(void *pvParameters){
 				case(USB_CMD_REQ_APPL_VER):
 					txBuf[data_length++] = TRAQPAQ_SW_LEVEL;
 					break;
-					
+				
+				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_CMD_REQ_HARDWARE_VER):
 					txBuf[data_length++] = dataflashOTP.pcb_rev;
 					break;
-					
+				#endif
+				
+				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_CMD_REQ_SERIAL_NUMBER):
 					for(i = 0; i < OTP_SERIAL_LENGTH; i++){
 						txBuf[data_length++] = dataflashOTP.serial[i];
 					}					
 					break;
-					
+				#endif
+				
+				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_CMD_REQ_TESTER_ID):
 					txBuf[data_length++] = dataflashOTP.tester_id;				
 					break;
+				#endif
 					
 				case(USB_CMD_REQ_BATTINFO):
 					responseU16 = fuel_read_voltage();
@@ -147,7 +153,7 @@ void device_template_task(void *pvParameters){
 					txBuf[data_length++] = (responseU16 >> 0) & 0xFF;
 					break;
 					
-
+				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_CMD_READ_OTP):
 					request.command	= DFMAN_REQUEST_READ_OTP;
 					request.length	= rxBuf[1];
@@ -158,8 +164,9 @@ void device_template_task(void *pvParameters){
 					xQueueSend(dataflashManagerQueue, &request, 20);
 					vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
 					break;
+				#endif
 
-					
+				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_CMD_READ_RECORDTABLE):
 					request.command	= DFMAN_REQUEST_READ_RECORDTABLE;
 					request.length	= rxBuf[1];
@@ -170,14 +177,18 @@ void device_template_task(void *pvParameters){
 					xQueueSend(dataflashManagerQueue, &request, 20);
 					vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
 					break;
-					
+				#endif
+				
+				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_CMD_WRITE_RECORDTABLE):
 					request.command = DFMAN_REQUEST_UPDATE_RECORDTABLE;
 					request.resume = NULL;
 					txBuf[data_length++] = TRUE;
 					xQueueSend(dataflashManagerQueue, &request, 20);
 					break;
+				#endif
 					
+				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_CMD_READ_RECORDDATA):
 					request.command	= DFMAN_REQUEST_READ_RECORDDATA;
 					request.length	= rxBuf[1];
@@ -188,7 +199,9 @@ void device_template_task(void *pvParameters){
 					xQueueSend(dataflashManagerQueue, &request, 20);
 					vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
 					break;
+				#endif
 					
+				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_CMD_WRITE_RECORDDATA):
 					for(i = 0; i < 256; i++){
 						txBuf[i] = i;
@@ -202,8 +215,9 @@ void device_template_task(void *pvParameters){
 					xQueueSend(dataflashManagerQueue, &request, 20);
 					vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
 					break;
-					
-					
+				#endif
+				
+				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_DBG_DF_SECTOR_ERASE):
 					request.command	= DFMAN_REQUEST_SECTOR_ERASE;
 					request.index = rxBuf[1];
@@ -212,7 +226,9 @@ void device_template_task(void *pvParameters){
 					data_length = 1;
 					xQueueSend(dataflashManagerQueue, &request, 20);
 					break;
-					
+				#endif
+				
+				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_DBG_DF_BUSY):
 					request.command	= DFMAN_REQUEST_BUSY;
 					request.pointer	= &txBuf;
@@ -221,8 +237,9 @@ void device_template_task(void *pvParameters){
 					xQueueSend(dataflashManagerQueue, &request, 20);
 					vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
 					break;
+				#endif
 					
-					
+				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_DBG_DF_CHIP_ERASE):
 					request.command	= DFMAN_REQUEST_CHIP_ERASE;
 					request.pointer = &txBuf;
@@ -230,8 +247,9 @@ void device_template_task(void *pvParameters){
 					data_length = 1;
 					xQueueSend(dataflashManagerQueue, &request, 20);
 					break;
+				#endif
 					
-				
+				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_DBG_DF_IS_FLASH_FULL):
 					request.command	= DFMAN_REQUEST_IS_FLASH_FULL;
 					request.pointer = &txBuf;
@@ -240,7 +258,9 @@ void device_template_task(void *pvParameters){
 					xQueueSend(dataflashManagerQueue, &request, 20);
 					vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
 					break;
+				#endif
 					
+				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_DBG_DF_USED_SPACE):
 					request.command	= DFMAN_REQUEST_USED_SPACE;
 					request.pointer = &txBuf;
@@ -250,8 +270,9 @@ void device_template_task(void *pvParameters){
 					vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
 					break;
 					
-					
+				#endif
 				
+				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_CMD_WRITE_OTP):
 					txBuf[data_length++] = 'T';
 					txBuf[data_length++] = 'R';
@@ -281,6 +302,15 @@ void device_template_task(void *pvParameters){
 					
 					dataflash_WriteOTP(0, 18, &txBuf);
 					break;
+				#endif
+					
+				#if( TRAQPAQ_HW_TWI_ENABLED )
+				case(USB_DBG_SEND_FUEL_CMD):
+					responseU16 = 0;
+					fuel_write_register(FUEL_ADDRESS_ACCUM_CURRENT_REGISTER_MSB, &responseU16, 2);
+					fuel_read_current(FUEL_CURRENT_ACCUMULATED);
+					break;
+				#endif
 					
 					
 				default:

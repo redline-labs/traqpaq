@@ -45,12 +45,16 @@ int main( void ){
 	Disable_global_exception();
 	Disable_global_interrupt();
 	
-	INTC_init_interrupts();	// Do this before Board Init!
+	INTC_init_interrupts();
 	board_init();
 	
 	// Check to see if we got reset from a watchdog timeout
 	if( wdt_triggered() ){
 		debug_log("WARNING [WDT]: Recovering from watchdog reset!");
+	}
+	
+	if( !gpio_get_pin_value(GPIO_BUTTON2) ){
+		debug_log("INFO [PM]: Powered on via USB");
 	}
 	
 	// Schedule Tasks ---------------------------------------------
@@ -73,10 +77,15 @@ int main( void ){
 	
 	#if( TRAQPAQ_HW_GPS_ENABLED )
 	gps_task_init();
+	#else
+	// Kick the GPS out of reset so we can use it for external datalogging
+	gpio_set_gpio_pin(GPS_RESET);
 	#endif
 	
 	#if( TRAQPAQ_HW_EXINT_ENABLED )
 	buttons_task_init();
+	// If switches are enabled, then keep the main power supply on!
+	gpio_set_gpio_pin(PM_ENABLE);
 	#endif
 	
 	#if( TRAQPAQ_HW_CHARGE_ENABLED )
@@ -90,6 +99,7 @@ int main( void ){
 	#if( TRAQPAQ_HW_ADC_ENABLED )
 	adc_task_init();
 	#endif
+	
 	
 	Enable_global_interrupt();
 

@@ -39,25 +39,25 @@ extern xQueueHandle queueLCDmenu;
 // ISR's
 //------------------------------
 __attribute__((__interrupt__)) static void ISR_button0(void) {
-	unsigned char button = BUTTON_UP;
+	unsigned char button = BUTTON_DOWN;
 	xQueueSendFromISR(buttonPress, &button, pdFALSE);
 	eic_clear_interrupt_line(&AVR32_EIC, EXTINT_BUTTON0);
 }  
 
 __attribute__((__interrupt__)) static void ISR_button1(void) {
-	unsigned char button = BUTTON_DOWN;
+	unsigned char button = BUTTON_UP;
 	xQueueSendFromISR(buttonPress, &button, pdFALSE);
 	eic_clear_interrupt_line(&AVR32_EIC, EXTINT_BUTTON1);
 }  
 
 __attribute__((__interrupt__)) static void ISR_button2(void) {
-	unsigned char button = BUTTON_BACK;
+	unsigned char button = BUTTON_SELECT;
 	xQueueSendFromISR(buttonPress, &button, pdFALSE);
 	eic_clear_interrupt_line(&AVR32_EIC, EXTINT_BUTTON2);
 }  
 
 __attribute__((__interrupt__)) static void ISR_button3(void) {
-	unsigned char button = BUTTON_SELECT; 
+	unsigned char button = BUTTON_BACK; 
 	xQueueSendFromISR(buttonPress, &button, pdFALSE);
 	eic_clear_interrupt_line(&AVR32_EIC, EXTINT_BUTTON3);
 }  
@@ -96,7 +96,7 @@ void buttons_task( void *pvParameters ){
 		// See how long the button is being pressed
 		while( buttonStatus ){
 			vTaskDelay( (portTickType)TASK_DELAY_MS(BUTTON_TIMER_INCREMENT) );
-			buttonStatus = gpio_get_pin_value(GPIO_BUTTON0) | gpio_get_pin_value(GPIO_BUTTON1) | gpio_get_pin_value(GPIO_BUTTON3);	// TODO: Add GPIO_BUTTON2
+			buttonStatus = gpio_get_pin_value(GPIO_BUTTON0) | gpio_get_pin_value(GPIO_BUTTON1) | gpio_get_pin_value(GPIO_BUTTON2) | gpio_get_pin_value(GPIO_BUTTON3);
 			timer++;
 		}
 			
@@ -120,7 +120,8 @@ void buttons_task( void *pvParameters ){
 					
 				case(BUTTON_SELECT):
 					button = BUTTON_LONG_SELECT;
-					xQueueSend(queueLCDmenu, &button, portMAX_DELAY);
+					//xQueueSend(queueLCDmenu, &button, portMAX_DELAY);
+					gpio_clr_gpio_pin(PM_ENABLE);
 					break;
 			}
 			

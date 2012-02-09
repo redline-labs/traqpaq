@@ -50,8 +50,7 @@ __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
 void gps_task_init( void ){
 	queueGPSrxd = xQueueCreate(GPS_QUEUE_SIZE, sizeof(int));
 
-	INTC_register_interrupt(&ISR_gps_rxd, AVR32_USART0_IRQ, AVR32_INTC_INT0);
-	GPS_USART->ier = AVR32_USART_IER_RXRDY_MASK;
+	INTC_register_interrupt(&ISR_gps_rxd, AVR32_USART3_IRQ, AVR32_INTC_INT0);
 	
 	xTaskCreate(gps_task, configTSK_GPS_TASK_NAME, configTSK_GPS_TASK_STACK_SIZE, NULL, configTSK_GPS_TASK_PRIORITY, configTSK_GPS_TASK_HANDLE);
 }
@@ -62,36 +61,40 @@ void gps_task( void *pvParameters ){
 	unsigned char rxIndex = 0;
 	unsigned char i;
 	
+	// Enable the ISR, then pull the GPS out of reset
+	GPS_USART->ier = AVR32_USART_IER_RXRDY_MASK;
 	gps_reset();
+	
 	
 	while(TRUE){
 		// Wait until we received a character
 		if( xQueueReceive(queueGPSrxd, &rxdChar, portMAX_DELAY) == pdTRUE ){
-			if( (rxdChar == GPS_MSG_END_CHAR) && gps_verify_checksum() ){
-				gps_buffer_tokenize();
+			if( rxdChar == GPS_MSG_END_CHAR ){
+				if( gps_verify_checksum() ){
+					gps_buffer_tokenize();
 				
-				//--------------------------
-				// GGA Message Received
-				//--------------------------
-				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_GGA_ID0) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_GGA_ID1) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_GGA_ID2) ){
+					//--------------------------
+					// GGA Message Received
+					//--------------------------
+					if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_GGA_ID0) &
+						(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_GGA_ID1) &
+						(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_GGA_ID2) ){
 					
-					asm("nop");
-					
-					
+						asm("nop");
 					
 					
 					
-				}else
-				//--------------------------
-				// RMC Message Received
-				//--------------------------
-				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_RMC_ID0) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_RMC_ID1) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_RMC_ID2) ){
+					
+					
+					}else
+					//--------------------------
+					// RMC Message Received
+					//--------------------------
+					if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_RMC_ID0) &
+						(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_RMC_ID1) &
+						(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_RMC_ID2) ){
 						
-					asm("nop");
+						asm("nop");
 					
 					
 					
@@ -101,20 +104,27 @@ void gps_task( void *pvParameters ){
 					
 					
 					
+					
+					}else{
+						// Unrecognized Message!
+						asm("nop");
+					
+					}
 					
 				}else{
-					// Unrecognized Message!
-					asm("nop");
-					
-				}
-				
+					// Invalid CRC!!!
+				}						
+						
 				rxIndex = 0;
 				
 			}else{
 				// Store the data in the buffer
-				if(rxBuffer < GPS_MSG_MAX_STRLEN)
-				rxBuffer[rxIndex++] = (rxdChar & 0xFF);
-			}
+				if(rxBuffer < GPS_MSG_MAX_STRLEN){
+					rxBuffer[rxIndex++] = (rxdChar & 0xFF);
+				}else{
+					// Buffer overrun!!!	
+				}
+			}				
 		}
 	}
 }

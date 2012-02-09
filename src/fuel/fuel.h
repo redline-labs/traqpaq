@@ -75,10 +75,17 @@
 #define FUEL_CURRENT_INSTANTANEOUS				0
 #define FUEL_CURRENT_ACCUMULATED				1
 
-#define FUEL_FUNCTION_MADDR						0x0FE										
-#define FUEL_FUNCTION_COMMAND_BLOCK0			0x42
-#define FUEL_FUNCTION_COMMAND_BLOCK1			0x43
-#define FUEL_FUNCTION_COMMAND_BLOCK2			0x48		
+#define FUEL_FUNCTION_MADDR						0x0FE
+
+// Copy shadow RAM to EEPROM block								
+#define FUEL_FUNCTION_FCMD_COPY_BLOCK0			0x42
+#define FUEL_FUNCTION_FCMD_COPY_BLOCK1			0x43
+#define FUEL_FUNCTION_FCMD_COPY_BLOCK2			0x48
+
+// Copy EEPROM block to shadow RAM
+#define FUEL_FUNCTION_FCMD_RCALL_BLOCK0			0xB2
+#define FUEL_FUNCTION_FCMD_RCALL_BLOCK1			0xB4
+#define FUEL_FUNCTION_FCMD_RCALL_BLOCK2			0xB8
 
 #define FUEL_MASK_PROTECT_OV					0b10000000	// Overvoltage Flag
 #define FUEL_MASK_PROTECT_UV					0b01000000	// Undervoltage Flag
@@ -89,11 +96,13 @@
 #define FUEL_MASK_PROTECT_CE					0b00000010	// Charge Enable
 #define FUEL_MASK_PROTECT_DE					0b00000001	// Discharge Enable
 #define FUEL_MASK_STATUS_PMOD					0b00100000	// Sleep Mode Enable
+
 #define FUEL_MASK_EEPROM_EEC					0b10000000	// EEPROM Copy Flag
 #define FUEL_MASK_EEPROM_LOCK					0b01000000	// EEPROM Lock Enable
 #define FUEL_MASK_EEPROM_BL2					0b00000100	// Block 2 Lock Flag
 #define FUEL_MASK_EEPROM_BL1					0b00000010	// Block 1 Lock Flag
 #define FUEL_MASK_EEPROM_BL0					0b00000001	// Block 0 Lock Flag
+
 #define FUEL_MASK_SPECIAL_PS					0b10000000	// PS Pin Latch
 #define FUEL_MASK_SPECIAL_SAWE					0b00000010	// Slave Address Write Enable
 
@@ -115,6 +124,8 @@
 #define FUEL_LIMIT_VOLTAGE_UPPER				0x035F	// 4.21 Volts
 
 #define FUEL_UPDATE_RATE						3000	// Time (milliseconds) to update run the fuel task
+
+#define FUEL_WRITE_TO_EE_TIME					10		// Time in milliseconds for worst case EE write
 
 
 typedef struct tFuelStatus{ 
@@ -158,30 +169,35 @@ typedef struct tFuelEEStatus{
 	unsigned Res0	: 1;	// Reserved bit
 };
 
-typedef struct tBatteryInfo{
-	unsigned char supplier[BATTERY_SUPPLIER_STRLEN];
-	unsigned char partNumber[BATTERY_PARTNUMBER_STRLEN];
-	unsigned short capacity;		// Capacity of Battery in mA
-	unsigned char useFastCharge;	// Allow USB Fast Charging for battery
+typedef struct __attribute__ ((packed)) tBatteryInfo{
+	unsigned short capacity;		// Capacity of Battery in counts
 	unsigned short minVoltage;		// Min Voltage Threshold
 	unsigned short chargeCycles;	// Number of Charge Cycles
-	unsigned char health;			// Health of battery - default to FF
+	unsigned short health;			// Health of battery - default to FF
+	unsigned char useFastCharge;	// Allow USB Fast Charging for battery
 	unsigned char status;			// Status of battery - default to FF
-	unsigned char reserved;			// Reserved - default to FF
 	unsigned short crc;				// CRC of tBatteryInfo
 };	// tBatteryInfo - 32 Bytes
 
 
 void fuel_task_init( void );
 void fuel_task( void *pvParameters );
-void fuel_read_register(unsigned char command, unsigned short *pointer);
+void fuel_read_register(unsigned char command, unsigned char *pointer, unsigned char length);
 unsigned short fuel_read_voltage(void);
 unsigned short fuel_read_current(unsigned char measurement);
 unsigned short fuel_read_temperature(void);
 struct tFuelStatus fuel_read_status(void);
 struct tFuelEEStatus fuel_read_EEstatus(void);
-//void fuel_write_batteryInfo(struct tBatteryInfo *battery);
-//void fuel_write_command(unsigned char fcmd);
-//void fuel_read_batteryInfo(struct tBatteryInfo *battery);
+void fuel_write_register(unsigned char command, unsigned char *pointer, unsigned char length);
+void fuel_write_command(unsigned char fcmd);
+void fuel_copyEEtoShadowRAM( void );
+void fuel_copyShadowRAMtoEE( void );
+unsigned short fuel_calculateBatteryInfoCRC( struct tBatteryInfo *batteryInfo );
+void fuel_clearEELocks( void );
+void inline fuel_writeBatteryInfo( struct tBatteryInfo *batteryInfo );
+struct tBatteryInfo fuel_readBatteryInfo( void );
+void fuel_updateAccumulatedCurrent(unsigned short value);
+void inline fuel_writeShadowRAM( void );
+
 
 #endif /* FUEL_H_ */
