@@ -60,7 +60,7 @@ void fuel_task( void *pvParameters ){
 	
 	
 	while(1){
-		accumulated_current = fuel_read_current( FUEL_CURRENT_ACCUMULATED );
+		accumulated_current = fuel_read_current( FUEL_CURRENT_ACCUMULATED ) >> 2;
 		
 		if(accumulated_current < 0){
 			accumulated_current = 0;

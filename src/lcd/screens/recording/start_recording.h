@@ -29,8 +29,12 @@
 
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
-	lcd_writeText_16x32("Press SELECT at any", FONT_LARGE_POINTER, LCD_MIN_X, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 64, COLOR_BLACK);
-	lcd_writeText_16x32("time to start!", FONT_LARGE_POINTER, LCD_MIN_X, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 96, COLOR_BLACK);
+	
+	responseU8 = TRUE;
+	xQueueSend(queueGPSrecord, &responseU8, 20);
+	
+	lcd_writeText_16x32("Recording!", FONT_LARGE_POINTER, LCD_MIN_X, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 64, COLOR_BLACK);
+	lcd_writeText_16x32("SELECT to stop!", FONT_LARGE_POINTER, LCD_MIN_X, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 96, COLOR_BLACK);
 	
 	lcd_redraw_complete();
 }
@@ -50,6 +54,14 @@ if( xQueueReceive(queueLCDmenu, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_SELECT):
+			responseU8 = FALSE;
+			xQueueSend(queueGPSrecord, &responseU8, 20);
+			
+			dataflashRequest.command = DFMAN_REQUEST_UPDATE_RECORDTABLE;
+			dataflashRequest.resume = xTaskGetCurrentTaskHandle();
+			xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
+			vTaskSuspend(NULL);
+		
 			lcd_force_redraw();
 			lcd_change_screens( LCDFSM_MAINMENU );
 			break;

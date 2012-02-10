@@ -33,9 +33,14 @@
 
 #include "asf.h"
 #include "drivers.h"
+#include "dataflash/dataflash_manager_request.h"
 
+extern unsigned char flagRecording;
 
 static xQueueHandle queueGPSrxd;
+xQueueHandle queueGPSrecord;
+extern xQueueHandle dataflashManagerQueue;
+
 unsigned char rxBuffer[GPS_MSG_MAX_STRLEN];
 unsigned char gpsTokens[MAX_SIGNALS_SENTENCE];
 
@@ -49,6 +54,7 @@ __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
 
 void gps_task_init( void ){
 	queueGPSrxd = xQueueCreate(GPS_QUEUE_SIZE, sizeof(int));
+	queueGPSrecord = xQueueCreate(1, sizeof(char));
 
 	INTC_register_interrupt(&ISR_gps_rxd, AVR32_USART3_IRQ, AVR32_INTC_INT0);
 	
@@ -59,17 +65,30 @@ void gps_task_init( void ){
 void gps_task( void *pvParameters ){
 	int rxdChar;
 	unsigned char rxIndex = 0;
-	unsigned char i;
+	unsigned char processedGGA = FALSE, processedRMC = FALSE;
+	unsigned recordIndex;
+	unsigned char flag;
 	
-	// Enable the ISR, then pull the GPS out of reset
+	struct tDataflashRequest dataflashRequest;
+	struct tRecordDataPage gpsData;
+	
+	// Pull the GPS out of reset
 	GPS_USART->ier = AVR32_USART_IER_RXRDY_MASK;
 	gps_reset();
 	
-	
 	while(TRUE){
-		// Wait until we received a character
-		if( xQueueReceive(queueGPSrxd, &rxdChar, portMAX_DELAY) == pdTRUE ){
+		// Reset the record index
+		recordIndex = 0;
+		
+		xQueueReceive(queueGPSrecord, &flag, portMAX_DELAY);
+		
+		while(flag){
+			xQueueReceive(queueGPSrecord, &flag, 0);
+			
+			// Wait until we received a character
+			xQueueReceive(queueGPSrxd, &rxdChar, portMAX_DELAY);
 			if( rxdChar == GPS_MSG_END_CHAR ){
+				
 				if( gps_verify_checksum() ){
 					gps_buffer_tokenize();
 				
@@ -80,11 +99,18 @@ void gps_task( void *pvParameters ){
 						(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_GGA_ID1) &
 						(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_GGA_ID2) ){
 					
-						asm("nop");
-					
-					
-					
-					
+						// Convert Time! Wooo!
+						gpsData.data[recordIndex].utc		= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_UTC			]]) );
+						gpsData.data[recordIndex].latitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_LATITUDE		]]) );
+						gpsData.data[recordIndex].NorS		=			rxBuffer[gpsTokens[TOKEN_GGA_NORS			]];
+						gpsData.data[recordIndex].longitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_LONGITUDE		]]) );
+						gpsData.data[recordIndex].EorW		=			rxBuffer[gpsTokens[TOKEN_GGA_EORW			]];
+						gpsData.data[recordIndex].currentMode=atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_QUALITY		]]) ) & 0xFFFF;
+						gpsData.data[recordIndex].satellites= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_NUM_SATELLITES	]]) ) & 0xFF;
+						gpsData.data[recordIndex].hdop		= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_HDOP			]]) ) & 0xFFFF;
+						gpsData.data[recordIndex].altitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_ALTITUDE		]]) ) & 0xFFFF;
+
+						processedGGA = TRUE;
 					
 					}else
 					//--------------------------
@@ -94,32 +120,42 @@ void gps_task( void *pvParameters ){
 						(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_RMC_ID1) &
 						(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_RMC_ID2) ){
 						
-						asm("nop");
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					}else{
-						// Unrecognized Message!
-						asm("nop");
+						// More Converting!! Yipee!
+						gpsData.data[recordIndex].speed		= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_SPEED	]]) ) & 0xFFFF;
+						gpsData.data[recordIndex].course	= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_TRACK	]]) ) & 0xFFFF;
+
+						processedRMC = TRUE;
 					
 					}
 					
-				}else{
-					// Invalid CRC!!!
-				}						
+					// Check if we have updated the current record with both RMC and GGA messages
+					if(processedGGA & processedGGA){
+						processedGGA = FALSE;
+						processedRMC = FALSE;
+
+						if(recordIndex < RECORD_DATA_PER_PAGE){
+							recordIndex += 1;
+						}else{
+							// Need to write data!
+							recordIndex = 0;
+								
+							dataflashRequest.command = DFMAN_REQUEST_ADD_RECORDDATA;
+							dataflashRequest.resume = xTaskGetCurrentTaskHandle();
+							dataflashRequest.pointer = &gpsData;
+							dataflashRequest.length = sizeof(gpsData);
+							xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
+							vTaskSuspend(NULL);
+								
+						}
+					}
+					
+				}		
 						
 				rxIndex = 0;
 				
 			}else{
-				// Store the data in the buffer
-				if(rxBuffer < GPS_MSG_MAX_STRLEN){
+				// Store the data in the buffer as long as it is not a period!
+				if( (rxIndex < GPS_MSG_MAX_STRLEN) && (rxdChar != GPS_PERIOD) ){
 					rxBuffer[rxIndex++] = (rxdChar & 0xFF);
 				}else{
 					// Buffer overrun!!!	
@@ -139,7 +175,7 @@ void gps_reset( void ){
 
 
 void gps_buffer_tokenize( void ){
-	unsigned char index;
+	unsigned char index = 0;
 	unsigned char signalPosIndex = 0;
 
 	// Find the start of the NMEA sentence

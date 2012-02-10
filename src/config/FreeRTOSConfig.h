@@ -194,7 +194,7 @@ to exclude the API function. */
 
 /* GUI Task */
 #define configTSK_GUI_TASK_NAME				((const signed portCHAR *)"GUI")
-#define configTSK_GUI_TASK_STACK_SIZE		512
+#define configTSK_GUI_TASK_STACK_SIZE		1024
 #define configTSK_GUI_TASK_PRIORITY			(tskIDLE_PRIORITY + 1)
 #define configTSK_GUI_TASK_PERIOD			20
 #define configTSK_GUI_TASK_HANDLE			NULL
@@ -222,7 +222,7 @@ to exclude the API function. */
 
 /* GPS Task */
 #define configTSK_GPS_TASK_NAME				((const signed portCHAR *)"GPS")
-#define configTSK_GPS_TASK_STACK_SIZE		256
+#define configTSK_GPS_TASK_STACK_SIZE		1024
 #define configTSK_GPS_TASK_PRIORITY			(tskIDLE_PRIORITY + 1)
 #define configTSK_GPS_TASK_PERIOD			20
 #define configTSK_GPS_TASK_HANDLE			NULL

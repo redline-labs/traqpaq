@@ -67,12 +67,13 @@ if( xQueueReceive(queueLCDmenu, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_SELECT):
-			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_HELP );
+			//lcd_force_redraw();
+			//lcd_change_screens( LCDFSM_HELP );
 			break;
 			
 		case(BUTTON_BACK):
-			asm("nop");
+			lcd_force_redraw();
+			lcd_change_screens( LCDFSM_HELP );
 			break;
 			
 			

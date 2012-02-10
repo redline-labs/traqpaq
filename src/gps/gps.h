@@ -93,6 +93,7 @@
 #define TOKEN_RMC_DATE				9
 #define TOKEN_RMC_MAG_VAR			10
 #define TOKEN_RMC_MAG_VAR_EORW		11
+#define TOKEN_RMC_UNKNOWN			12
 
 
 typedef struct tGPSMsgGGA {		// Raw ASCII NMEA messages

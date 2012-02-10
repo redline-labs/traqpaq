@@ -44,6 +44,7 @@ xQueueHandle queueLCDwidgets;
 xQueueHandle queueLCDmenu;
 
 extern xQueueHandle dataflashManagerQueue;
+extern xQueueHandle queueGPSrecord;
 
 // Create task for FreeRTOS
 void lcd_task_init( void ){

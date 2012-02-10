@@ -62,18 +62,26 @@ unsigned short longitude_decimal;
 
 */
 
-typedef struct tRecordData {
-	unsigned char latitude[10];
+typedef struct __attribute__ ((packed)) tRecordData {
+	unsigned long utc;
+	unsigned long latitude;
+	unsigned long longitude;
+	
 	unsigned char NorS;
-	unsigned char longitude[10];
 	unsigned char EorW;
-	unsigned char speed[5];
-	unsigned char altitude[5]
-}; // 32 bytes
+	unsigned short altitude;
+	
+	unsigned short speed;
+	unsigned short course;
+	
+	unsigned short hdop;
+	unsigned char currentMode;
+	unsigned char satellites;
+}; // 24 bytes
 
-#define RECORD_DATA_PER_PAGE	8
+#define RECORD_DATA_PER_PAGE	10
 
-typedef struct tRecordDataPage {
+typedef struct __attribute__ ((packed)) tRecordDataPage {
 	struct tRecordData data[RECORD_DATA_PER_PAGE];
 };
 

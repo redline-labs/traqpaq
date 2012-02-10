@@ -150,9 +150,6 @@ void dataflash_task( void *pvParameters ){
 			case(DFMAN_REQUEST_ADD_RECORDDATA):
 				dataflash_WriteFromBuffer(recordTable.endAddress, request.length, request.pointer);
 				recordTable.endAddress += DATAFLASH_PAGE_SIZE;
-				if(recordTable.endAddress == DATAFLASH_ADDR_RECORDDATA_END){
-					flashIsFull = TRUE;
-				}
 				break;
 				
 			case(DFMAN_REQUEST_ERASE_RECORD):
@@ -164,7 +161,7 @@ void dataflash_task( void *pvParameters ){
 				break;
 				
 			case(DFMAN_REQUEST_READ_RECORDDATA):
-				dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDDATA_START + (request.index * DATAFLASH_PAGE_SIZE), request.length, request.pointer);
+				dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDDATA_START + (request.index * DATAFLASH_PAGE_SIZE), DATAFLASH_PAGE_SIZE, request.pointer);
 				break;
 				
 			case(DFMAN_REQUEST_READ_OTP):
@@ -181,7 +178,9 @@ void dataflash_task( void *pvParameters ){
 				
 			case(DFMAN_REQUEST_CHIP_ERASE):
 				*(request.pointer) = dataflash_chipErase();
-				flashIsFull = FALSE;
+				recordTableIndex = 0;
+				recordTable.startAddress = DATAFLASH_ADDR_RECORDDATA_START;
+				recordTable.endAddress = DATAFLASH_ADDR_RECORDDATA_START;
 				break;
 				
 			case(DFMAN_REQUEST_IS_FLASH_FULL):
