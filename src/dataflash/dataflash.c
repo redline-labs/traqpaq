@@ -190,6 +190,10 @@ void dataflash_task( void *pvParameters ){
 			case(DFMAN_REQUEST_USED_SPACE):
 				*(request.pointer) = (((recordTable.endAddress - DATAFLASH_ADDR_RECORDDATA_START) * 100) / (DATAFLASH_ADDR_RECORDDATA_END - DATAFLASH_ADDR_RECORDDATA_START)) & 0xFF;
 				break;
+				
+			case(DFMAN_REQUEST_UPDATE_DATE):
+				recordTable.datestamp = request.length;
+				break;
 		}
 		
 		// Resume requesting task if it has been suspended

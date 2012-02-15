@@ -191,7 +191,7 @@ void device_template_task(void *pvParameters){
 				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_CMD_READ_RECORDDATA):
 					request.command	= DFMAN_REQUEST_READ_RECORDDATA;
-					request.length	= rxBuf[1];
+					request.length	= DATAFLASH_PAGE_SIZE;
 					request.index	= (rxBuf[2] << 8) + (rxBuf[3] << 0);
 					request.pointer	= &txBuf;
 					request.resume	= xTaskGetCurrentTaskHandle();
