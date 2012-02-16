@@ -40,11 +40,11 @@
 const unsigned char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
 // Queues
-xQueueHandle queueLCDwidgets;
-xQueueHandle queueLCDmenu;
+xQueueHandle lcdWidgetsManagerQueue;
+xQueueHandle lcdButtonsManagerQueue;
 
 extern xQueueHandle dataflashManagerQueue;
-extern xQueueHandle queueGPSrecord;
+extern xQueueHandle gpsManagerQueue;
 
 // Create task for FreeRTOS
 void lcd_task_init( void ){
@@ -60,6 +60,7 @@ void lcd_gui_task( void *pvParameters ){
 	struct tMenu mainMenu;
 	struct tLCDProgressBar progressBar;
 	struct tDataflashRequest dataflashRequest;
+	struct tGPSRequest gpsRequest;
 	
 	unsigned char responseU8;
 	unsigned short responseU16;
@@ -68,8 +69,8 @@ void lcd_gui_task( void *pvParameters ){
 	volatile unsigned short lcd_fsm = LCDFSM_MAINMENU;		// Useful for testing new screens!
 	unsigned char redraw = TRUE;
 	
-	queueLCDwidgets = xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(request));
-	queueLCDmenu	= xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(unsigned char));
+	lcdWidgetsManagerQueue = xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(request));
+	lcdButtonsManagerQueue	= xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(unsigned char));
 	
 	// Turn Boost Converter On
 	gpio_set_gpio_pin(PM_SHDN1);
@@ -91,7 +92,7 @@ void lcd_gui_task( void *pvParameters ){
 	
 	while(1){
 		// See if a widget needs to be updated
-		if( xQueueReceive(queueLCDwidgets, &request, 0) == pdTRUE ){
+		if( xQueueReceive(lcdWidgetsManagerQueue, &request, 0) == pdTRUE ){
 			switch(request.action){
 				case(LCD_REQUEST_UPDATE_BATTERY):
 					lcd_updateBattery(&topBar, request.data);

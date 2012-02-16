@@ -65,7 +65,7 @@ const unsigned char pwmFadeTable[] = {
 	239, 244, 250, 255
 };
 
-extern xQueueHandle queueLCDmenu;
+extern xQueueHandle lcdButtonsManagerQueue;
 
 struct tPWMDisplayStatus displayStatus;
 
@@ -86,7 +86,7 @@ void pwm_task( void *pvParameters ){
 	pwm_fadeBacklight(userPrefs.screenPWMMax);
 	
 	while( TRUE ){
-		if( xQueuePeek(queueLCDmenu, &temp, (portTickType)TASK_DELAY_S(userPrefs.screenFadeTime) ) == pdFALSE ){
+		if( xQueuePeek(lcdButtonsManagerQueue, &temp, (portTickType)TASK_DELAY_S(userPrefs.screenFadeTime) ) == pdFALSE ){
 			if(displayStatus.displayFaded == FALSE){
 				pwm_fadeBacklight(userPrefs.screenPWMMin);
 			}

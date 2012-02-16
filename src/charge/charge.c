@@ -32,7 +32,7 @@
 #include "drivers.h"
 
 // Allow access to the LCD Queue
-extern xQueueHandle queueLCDwidgets;
+extern xQueueHandle lcdWidgetsManagerQueue;
 
 void charge_task_init( void ){
 	xTaskCreate(charge_task, configTSK_CHARGE_TASK_NAME, configTSK_CHARGE_TASK_STACK_SIZE, NULL, configTSK_CHARGE_TASK_PRIORITY, configTSK_CHARGE_TASK_HANDLE);
@@ -46,7 +46,7 @@ void charge_task( void *pvParameters ){
 		request.data = charge_state();
 		
 		#if( TRAQPAQ_HW_EBI_ENABLED )
-		xQueueSend(queueLCDwidgets, &request, portMAX_DELAY);
+		xQueueSend(lcdWidgetsManagerQueue, &request, portMAX_DELAY);
 		#endif
 		
 		vTaskDelay( (portTickType)TASK_DELAY_MS(2500) );

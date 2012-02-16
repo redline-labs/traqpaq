@@ -182,11 +182,14 @@
 #define PM_ENABLE					AVR32_PIN_PA02
 
 #define LCD_RESET					AVR32_PIN_PA07
-#define LCD_RESET_TIME				10				// CFAF240400DT-030T Datasheet pg 10, double the min spec
 
 #define GPS_RESET					AVR32_PIN_PC05
 
 #define ADC_VREF_EN					AVR32_PIN_PA28
+
+#define DATAFLASH_WP				AVR32_PIN_PX26
+#define DATAFLASH_HOLD				AVR32_PIN_PX25
+
 
 
 // ------------------------------------------------------------

@@ -45,6 +45,8 @@ extern struct tLCDTopBar topBar;
 
 #define LCD_DEVICE_ID				0x5420
 
+#define LCD_RESET_TIME				10				// CFAF240400DT-030T Datasheet pg 10, double the min spec
+
 //-----------------------------------------------
 // Font for GUI
 // ----------------------------------------------

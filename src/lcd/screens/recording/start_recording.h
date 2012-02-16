@@ -30,8 +30,8 @@
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
 	
-	responseU8 = TRUE;
-	xQueueSend(queueGPSrecord, &responseU8, 20);
+	gpsRequest.command = GPS_REQUEST_START_RECORDING;
+	xQueueSend(gpsManagerQueue, &gpsRequest, 20);
 	
 	lcd_writeText_16x32("Recording!", FONT_LARGE_POINTER, LCD_MIN_X, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 64, COLOR_BLACK);
 	lcd_writeText_16x32("SELECT to stop!", FONT_LARGE_POINTER, LCD_MIN_X, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 96, COLOR_BLACK);
@@ -39,7 +39,7 @@ if(lcd_redraw_required()){
 	lcd_redraw_complete();
 }
 
-if( xQueueReceive(queueLCDmenu, &button, 0) == pdTRUE ){
+if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 	switch(button){
 		
 		// ---------------------------------
@@ -54,10 +54,10 @@ if( xQueueReceive(queueLCDmenu, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_SELECT):
-			responseU8 = FALSE;
-			xQueueSend(queueGPSrecord, &responseU8, 20);
+			gpsRequest.command = GPS_REQUEST_STOP_RECORDING;
+			xQueueSend(gpsManagerQueue, &gpsRequest, 20);
 			
-			dataflashRequest.command = DFMAN_REQUEST_UPDATE_RECORDTABLE;
+			dataflashRequest.command = DFMAN_REQUEST_END_CURRENT_RECORD;
 			dataflashRequest.resume = xTaskGetCurrentTaskHandle();
 			xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
 			vTaskSuspend(NULL);

@@ -33,7 +33,7 @@
 #define ADC_VREF_SETTLE_TIME			1		// Time in milliseconds for VREF to settle
 												// Testing shows VREF is settled in 200uS
 	
-#define ADC_SLEEP_TIME					1000	// Time in milliseconds for ADC task to sleep
+#define ADC_SLEEP_TIME					5000	// Time in milliseconds for ADC task to sleep
 
 typedef struct tADCvalues {
 	unsigned short main;

@@ -32,7 +32,7 @@
 #include "lcd/menu.h"
 
 static xQueueHandle buttonPress;
-extern xQueueHandle queueLCDmenu;
+extern xQueueHandle lcdButtonsManagerQueue;
 
 
 //------------------------------
@@ -105,17 +105,17 @@ void buttons_task( void *pvParameters ){
 			switch(button){
 				case(BUTTON_UP):
 					button = BUTTON_LONG_UP;
-					xQueueSend(queueLCDmenu, &button, portMAX_DELAY);
+					xQueueSend(lcdButtonsManagerQueue, &button, portMAX_DELAY);
 					break;
 					
 				case(BUTTON_DOWN):
 					button = BUTTON_LONG_DOWN;
-					xQueueSend(queueLCDmenu, &button, portMAX_DELAY);
+					xQueueSend(lcdButtonsManagerQueue, &button, portMAX_DELAY);
 					break;
 					
 				case(BUTTON_BACK):
 					button = BUTTON_LONG_BACK;
-					xQueueSend(queueLCDmenu, &button, portMAX_DELAY);
+					xQueueSend(lcdButtonsManagerQueue, &button, portMAX_DELAY);
 					break;
 					
 				case(BUTTON_SELECT):
@@ -127,7 +127,7 @@ void buttons_task( void *pvParameters ){
 			
 		}else{
 			// Normal short button press
-			xQueueSend(queueLCDmenu, &button, portMAX_DELAY);
+			xQueueSend(lcdButtonsManagerQueue, &button, portMAX_DELAY);
 		}						
 			
 		// Clear any pending EXTINT interrupts and re-enable them

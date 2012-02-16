@@ -33,6 +33,12 @@
 
 #define DATAFLASH_VERSION					"1.00"
 
+#define dataflash_clr_wp()					gpio_set_gpio_pin(DATAFLASH_WP)
+#define dataflash_set_wp()					gpio_clr_gpio_pin(DATAFLASH_WP)
+
+#define dataflash_clr_hold()				gpio_set_gpio_pin(DATAFLASH_HOLD)
+#define dataflash_set_hold()				gpio_clr_gpio_pin(DATAFLASH_HOLD)
+
 // Device IDs for AT25DF161
 #define DATAFLASH_MANUFACTURER_ID			0x1F
 #define DATAFLASH_DEVICE_ID0				0x46

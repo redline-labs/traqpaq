@@ -34,7 +34,7 @@
 
 
 // Allow access to the LCD Queue
-extern xQueueHandle queueLCDwidgets;
+extern xQueueHandle lcdWidgetsManagerQueue;
 
 void fuel_task_init( void ){
 	xTaskCreate(fuel_task, configTSK_FUEL_TASK_NAME, configTSK_FUEL_TASK_STACK_SIZE, NULL, configTSK_FUEL_TASK_PRIORITY, configTSK_FUEL_TASK_HANDLE);
@@ -75,7 +75,7 @@ void fuel_task( void *pvParameters ){
 		request.data = (accumulated_current * 100) / batteryInfo.capacity;
 		
 		#if( TRAQPAQ_HW_EBI_ENABLED )
-		xQueueSend(queueLCDwidgets, &request, portMAX_DELAY);
+		xQueueSend(lcdWidgetsManagerQueue, &request, portMAX_DELAY);
 		#endif
 		vTaskDelay( (portTickType)TASK_DELAY_MS(FUEL_UPDATE_RATE) );
 	}

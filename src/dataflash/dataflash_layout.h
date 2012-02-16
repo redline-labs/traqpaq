@@ -41,9 +41,9 @@ typedef struct __attribute__ ((packed)) tRecordsEntry {
 	unsigned char trackID;
 	unsigned char reserved1[2];
 
-	unsigned long datestamp;
-	unsigned long startAddress;
-	unsigned long endAddress;
+	unsigned int datestamp;
+	unsigned int startAddress;
+	unsigned int endAddress;
 };	// tRecordsEntry - 16 Bytes
 
 #define RECORD_ENTRY_SIZE		sizeof(tRecordsEntry)
@@ -63,9 +63,9 @@ unsigned short longitude_decimal;
 */
 
 typedef struct __attribute__ ((packed)) tRecordData {
-	unsigned long utc;
-	unsigned long latitude;
-	unsigned long longitude;
+	unsigned int utc;
+	unsigned int latitude;
+	unsigned int longitude;
 	
 	unsigned char NorS;
 	unsigned char EorW;

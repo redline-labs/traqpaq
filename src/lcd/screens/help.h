@@ -40,7 +40,7 @@ if(lcd_redraw_required()){
 	lcd_redraw_complete();
 }
 
-if( xQueueReceive(queueLCDmenu, &button, 0) == pdTRUE ){
+if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 	switch(button){
 		
 		// ---------------------------------

@@ -96,12 +96,12 @@ int main( void ){
 	charge_task_init();
 	#endif
 	
-	#if( TRAQPAQ_HW_WDT_ENABLED )
-	wdt_task_init();
-	#endif
-	
 	#if( TRAQPAQ_HW_ADC_ENABLED )
 	adc_task_init();
+	#endif
+	
+	#if( TRAQPAQ_HW_WDT_ENABLED )
+	wdt_task_init();
 	#endif
 	
 	Enable_global_interrupt();
@@ -111,8 +111,8 @@ int main( void ){
 	
 	debug_log("CRITICAL [RTOS]: Scheduler has ended");
 	
+	// Should never reach this!
 	while (true){
 		asm("nop");
-	};
-			// Should never reach this!
+	};			
 }

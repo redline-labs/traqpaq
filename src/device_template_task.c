@@ -181,7 +181,7 @@ void device_template_task(void *pvParameters){
 				
 				#if( TRAQPAQ_HW_SPI_ENABLED )
 				case(USB_CMD_WRITE_RECORDTABLE):
-					request.command = DFMAN_REQUEST_UPDATE_RECORDTABLE;
+					request.command = DFMAN_REQUEST_END_CURRENT_RECORD;
 					request.resume = NULL;
 					txBuf[data_length++] = TRUE;
 					xQueueSend(dataflashManagerQueue, &request, 20);
@@ -243,7 +243,7 @@ void device_template_task(void *pvParameters){
 				case(USB_DBG_DF_CHIP_ERASE):
 					request.command	= DFMAN_REQUEST_CHIP_ERASE;
 					request.pointer = &txBuf;
-					request.resume = NULL;
+					request.resume = xTaskGetCurrentTaskHandle();
 					data_length = 1;
 					xQueueSend(dataflashManagerQueue, &request, 20);
 					break;

@@ -43,6 +43,8 @@ struct tDataflashOTP dataflashOTP;
 // Queue for receiving requests into the dataflash manager
 xQueueHandle dataflashManagerQueue;
 
+extern xQueueHandle gpsManagerQueue;
+
 struct tDataflashRequest request;
 
 struct tUserPrefs userPrefs;
@@ -51,6 +53,9 @@ void dataflash_task_init( void ){
 	unsigned char i;
 	
 	dataflashManagerQueue = xQueueCreate(DFMAN_QUEUE_SIZE, sizeof(request));
+	
+	dataflash_clr_wp();
+	dataflash_clr_hold();
 	
 	// Check the dataflash device ID
 	if( !dataflash_checkID() ){
@@ -97,6 +102,9 @@ void dataflash_task( void *pvParameters ){
 	unsigned short i;
 	volatile unsigned char recordTableIndex = 0;	// Index of first empty record table
 	struct tRecordsEntry recordTable, prevRecordTable;
+	
+	struct tGPSRequest gpsRequest;
+	
 	unsigned char flashIsFull = FALSE;
 	
 	dataflash_GlobalUnprotect();
@@ -125,12 +133,12 @@ void dataflash_task( void *pvParameters ){
 		recordTable.endAddress = recordTable.startAddress;
 	}
 	
-	
 	while(TRUE){
 		xQueueReceive(dataflashManagerQueue, &request, portMAX_DELAY);
 		
 		switch(request.command){
-			case(DFMAN_REQUEST_UPDATE_RECORDTABLE):
+			case(DFMAN_REQUEST_END_CURRENT_RECORD):
+				
 				recordTable.recordEmpty = FALSE;
 				recordTable.trackID = 0xAA;
 				
@@ -140,7 +148,8 @@ void dataflash_task( void *pvParameters ){
 				recordTableIndex++;
 				recordTable.recordEmpty = TRUE;
 				recordTable.startAddress = recordTable.endAddress; 
-				recordTable.trackID = 0xFF;				
+				recordTable.trackID = 0xFF;
+					
 				break;
 				
 			case(DFMAN_REQUEST_UPDATE_TRACKLIST):
