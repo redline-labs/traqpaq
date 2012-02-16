@@ -1,58 +1,35 @@
-/******************************************************************************
+/*
+ * usb.c
  *
- * USB Interface
- *
- * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.2
- * - AppNote:			N/A
- *
- * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
- *
- *
- * Copyright (c) 2012 Redline Electronics LLC.
- *
- * This file is part of traq|paq.
- *
- * traq|paq is free software: you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free
- * Software Foundation, either version 3 of the License, or (at your option)
- * any later version.
- *
- * traq|paq is distributed in the hope that it will be useful, but WITHOUT ANY
- * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with traq|paq. If not, see http://www.gnu.org/licenses/.
- *
- ******************************************************************************/
+ * Created: 2/16/2012 3:44:28 PM
+ *  Author: Ryan
+ */ 
+
 #include "asf.h"
 #include "drivers.h"
+#include "usb/usb.h"
 
 static bool main_b_vendor_enable = false;
+
+
+void main_vendor_int_in_received(udd_ep_status_t status, iram_size_t nb_transfered);
+void main_vendor_int_out_received(udd_ep_status_t status, iram_size_t nb_transfered);
+void main_vendor_bulk_in_received(udd_ep_status_t status, iram_size_t nb_transfered);
+void main_vendor_bulk_out_received(udd_ep_status_t status, iram_size_t nb_transfered);
+void main_vendor_iso_in_received(udd_ep_status_t status, iram_size_t nb_transfered);
+void main_vendor_iso_out_received(udd_ep_status_t status, iram_size_t nb_transfered);
 
 /**
  * \name Buffer for loopback
  */
 //@{
 //! Size of buffer used for the loopback
-#define  MAIN_LOOPBACK_SIZE    1024
 static uint8_t main_buf_loopback[MAIN_LOOPBACK_SIZE];
 static uint8_t main_buf_iso_sel;
 //@}
 
-// check configuration
-#if UDI_VENDOR_EPS_SIZE_ISO_FS>(MAIN_LOOPBACK_SIZE/2)
-# error UDI_VENDOR_EPS_SIZE_ISO_FS must be <= MAIN_LOOPBACK_SIZE/2 in cond_usb.h
-#endif
-#ifdef USB_DEVICE_HS_SUPPORT
-# if UDI_VENDOR_EPS_SIZE_ISO_HS>(MAIN_LOOPBACK_SIZE/2)
-#   error UDI_VENDOR_EPS_SIZE_ISO_HS must be <= MAIN_LOOPBACK_SIZE/2 in cond_usb.h
-# endif
-#endif
-		
-
-void main_vbus_action(bool b_high) {
+void main_vbus_action(bool b_high)
+{
 	if (b_high) {
 		// Attach USB Device
 		udc_attach();
@@ -62,21 +39,25 @@ void main_vbus_action(bool b_high) {
 	}
 }
 
-void main_suspend_action(void) {
+void main_suspend_action(void)
+{
 	asm("nop");
 }
 
-void main_resume_action(void) {
+void main_resume_action(void)
+{
 	asm("nop");
 }
 
-void main_sof_action(void) {
+void main_sof_action(void)
+{
 	if (!main_b_vendor_enable)
 		return;
 	asm("nop");
 }
 
-bool main_vendor_enable(void) {
+bool main_vendor_enable(void)
+{
 	main_b_vendor_enable = true;
 	// Start data reception on OUT endpoints
 	main_vendor_int_in_received(UDD_EP_TRANSFER_OK, 0);
@@ -86,11 +67,13 @@ bool main_vendor_enable(void) {
 	return true;
 }
 
-void main_vendor_disable(void) {
+void main_vendor_disable(void)
+{
 	main_b_vendor_enable = false;
 }
 
-bool main_setup_out_received(void) {
+bool main_setup_out_received(void)
+{
 	asm("nop");
 	udd_g_ctrlreq.payload = main_buf_loopback;
 	udd_g_ctrlreq.payload_size = min(
@@ -99,7 +82,8 @@ bool main_setup_out_received(void) {
 	return true;
 }
 
-bool main_setup_in_received(void) {
+bool main_setup_in_received(void)
+{
 	asm("nop");
 	udd_g_ctrlreq.payload = main_buf_loopback;
 	udd_g_ctrlreq.payload_size =
@@ -108,7 +92,9 @@ bool main_setup_in_received(void) {
 	return true;
 }
 
-void main_vendor_int_in_received(udd_ep_status_t status, iram_size_t nb_transfered) {
+void main_vendor_int_in_received(udd_ep_status_t status,
+		iram_size_t nb_transfered)
+{
 	if (UDD_EP_TRANSFER_OK != status) {
 		return; // Tranfert aborted, then stop loopback
 	}
@@ -120,7 +106,9 @@ void main_vendor_int_in_received(udd_ep_status_t status, iram_size_t nb_transfer
 			main_vendor_int_out_received);
 }
 
-void main_vendor_int_out_received(udd_ep_status_t status, iram_size_t nb_transfered) {
+void main_vendor_int_out_received(udd_ep_status_t status,
+		iram_size_t nb_transfered)
+{
 	if (UDD_EP_TRANSFER_OK != status) {
 		return; // Tranfert aborted, then stop loopback
 	}
@@ -132,7 +120,9 @@ void main_vendor_int_out_received(udd_ep_status_t status, iram_size_t nb_transfe
 			main_vendor_int_in_received);
 }
 
-void main_vendor_bulk_in_received(udd_ep_status_t status, iram_size_t nb_transfered) {
+void main_vendor_bulk_in_received(udd_ep_status_t status,
+		iram_size_t nb_transfered)
+{
 	if (UDD_EP_TRANSFER_OK != status) {
 		return; // Tranfert aborted, then stop loopback
 	}
@@ -144,7 +134,9 @@ void main_vendor_bulk_in_received(udd_ep_status_t status, iram_size_t nb_transfe
 			main_vendor_bulk_out_received);
 }
 
-void main_vendor_bulk_out_received(udd_ep_status_t status, iram_size_t nb_transfered) {
+void main_vendor_bulk_out_received(udd_ep_status_t status,
+		iram_size_t nb_transfered)
+{
 	if (UDD_EP_TRANSFER_OK != status) {
 		return; // Tranfert aborted, then stop loopback
 	}
@@ -156,11 +148,15 @@ void main_vendor_bulk_out_received(udd_ep_status_t status, iram_size_t nb_transf
 			main_vendor_bulk_in_received);
 }
 
-void main_vendor_iso_in_received(udd_ep_status_t status, iram_size_t nb_transfered) {
+void main_vendor_iso_in_received(udd_ep_status_t status,
+		iram_size_t nb_transfered)
+{
 	asm("nop");
 }
 
-void main_vendor_iso_out_received(udd_ep_status_t status, iram_size_t nb_transfered) {
+void main_vendor_iso_out_received(udd_ep_status_t status,
+		iram_size_t nb_transfered)
+{
 	uint8_t *buf_ptr;
 
 	if (UDD_EP_TRANSFER_OK != status) {

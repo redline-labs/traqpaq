@@ -45,6 +45,7 @@
 #include "udd.h"
 #include "usbb_otg.h"
 #include "usbb_device.h"
+#include "usb/usb.h"
 #include <string.h>
 
 // Fix the fact that, for some IAR header files, the AVR32_USBB_IRQ_GROUP define

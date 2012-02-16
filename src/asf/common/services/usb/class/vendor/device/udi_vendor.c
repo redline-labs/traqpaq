@@ -44,6 +44,7 @@
 #include "udd.h"
 #include "udc.h"
 #include "udi_vendor.h"
+#include "usb/usb.h"
 #include <string.h>
 
 // Configuration check
