@@ -42,7 +42,7 @@
 #define _CONF_USB_H_
 
 #include "compiler.h"
-#include "main.h"
+#include "usb/usb.h"
 
 /**
  * USB Device Configuration
