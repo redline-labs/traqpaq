@@ -1,9 +1,9 @@
 /**
  * \file
  *
- * \brief Chip-specific sleep manager configuration
+ * \brief USB Vendor class protocol definitions.
  *
- * Copyright (c) 2010 Atmel Corporation. All rights reserved.
+ * Copyright (c) 2011 Atmel Corporation. All rights reserved.
  *
  * \asf_license_start
  *
@@ -37,10 +37,27 @@
  * \asf_license_stop
  *
  */
-#ifndef CONF_SLEEPMGR_H
-#define CONF_SLEEPMGR_H
 
-// Sleep manager options
-#define CONFIG_SLEEPMGR_ENABLE
+#ifndef _USB_PROTOCOL_VENDOR_H_
+#define _USB_PROTOCOL_VENDOR_H_
 
-#endif /* CONF_SLEEPMGR_H */
+/**
+ * \ingroup usb_protocol_group
+ * \defgroup usb_vendor_protocol USB Vendor Class definitions
+ *
+ * @{
+ */
+
+/**
+ * \name Vendor class values
+ */
+//@{
+#define  VENDOR_CLASS                  0xFF
+#define  VENDOR_SUBCLASS               0xFF
+#define  VENDOR_PROTOCOL               0xFF
+//@}
+
+
+//@}
+
+#endif // _USB_PROTOCOL_VENDOR_H_

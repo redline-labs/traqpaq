@@ -51,6 +51,7 @@
           <option id="avr32.drivers.eic" value="Add" config="" content-id="Atmel.ASF" />
           <option id="avr32.drivers.gpio" value="Add" config="" content-id="Atmel.ASF" />
           <option id="avr32.drivers.intc" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="avr32.drivers.pdca" value="Add" config="" content-id="Atmel.ASF" />
           <option id="avr32.drivers.pm" value="Add" config="" content-id="Atmel.ASF" />
           <option id="avr32.drivers.pwm" value="Add" config="" content-id="Atmel.ASF" />
           <option id="avr32.drivers.spi" value="Add" config="" content-id="Atmel.ASF" />
@@ -59,7 +60,7 @@
           <option id="avr32.drivers.wdt" value="Add" config="" content-id="Atmel.ASF" />
           <option id="common.boards" value="Add" config="" content-id="Atmel.ASF" />
           <option id="common.services.basic.sleepmgr" value="Add" config="" content-id="Atmel.ASF" />
-          <option id="avr32.drivers.pdca" value="Add" config="" content-id="Atmel.ASF" />
+          <option id="common.services.usb.class.vendor.device.single" value="Add" config="" content-id="Atmel.ASF" />
         </options>
         <files>
           <file path="src/enum_example.c" framework="com.atmel.avr32.sf.uc3a" version="2.8.1-23114" source="avr32/drivers/usbb/_asf_v1/examples/enum_example.c" changed="False" content-id="Atmel.ASF" />
@@ -88,7 +89,7 @@
           <file path="src/asf/thirdparty/freertos/source/include/list.h" framework="com.atmel.avr32.sf.uc3a" version="2.8.1-23114" source="thirdparty/freertos/source/include/list.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/avr32/boards/evk1100/led.c" framework="com.atmel.avr32.sf.uc3a" version="2.8.1-23114" source="avr32/boards/evk1100/led.c" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/avr32/utils/linker_scripts/at32uc3a/0512/gcc/link_uc3a0512.lds" framework="com.atmel.avr32.sf.uc3a" version="2.8.1-23114" source="avr32/utils/linker_scripts/at32uc3a/0512/gcc/link_uc3a0512.lds" changed="False" content-id="Atmel.ASF" />
-          <file path="src/config/conf_usb.h" framework="com.atmel.avr32.sf.uc3a" version="2.8.1-23114" source="avr32/drivers/usbb/_asf_v1/examples/enum/conf_usb.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/config/conf_usb.h" framework="" version="" source="common\services\usb\class\vendor\device\module_config\conf_usb.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/thirdparty/freertos/source/list.c" framework="com.atmel.avr32.sf.uc3a" version="2.8.1-23114" source="thirdparty/freertos/source/list.c" changed="False" content-id="Atmel.ASF" />
           <file path="src/usb_specific_request.c" framework="com.atmel.avr32.sf.uc3a" version="2.8.1-23114" source="avr32/drivers/usbb/_asf_v1/examples/enum/device/usb_specific_request.c" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/avr32/boards/evk1100/evk1100.h" framework="com.atmel.avr32.sf.uc3a" version="2.8.1-23114" source="avr32/boards/evk1100/evk1100.h" changed="False" content-id="Atmel.ASF" />
@@ -138,6 +139,8 @@
           <file path="src/asf/avr32/drivers/gpio/gpio.h" framework="" version="" source="avr32\drivers\gpio\gpio.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/avr32/drivers/intc/intc.c" framework="" version="" source="avr32\drivers\intc\intc.c" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/avr32/drivers/intc/intc.h" framework="" version="" source="avr32\drivers\intc\intc.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/avr32/drivers/pdca/pdca.c" framework="" version="" source="avr32\drivers\pdca\pdca.c" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/avr32/drivers/pdca/pdca.h" framework="" version="" source="avr32\drivers\pdca\pdca.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/avr32/drivers/spi/spi.c" framework="" version="" source="avr32\drivers\spi\spi.c" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/avr32/drivers/spi/spi.h" framework="" version="" source="avr32\drivers\spi\spi.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/avr32/drivers/twi/twi.c" framework="" version="" source="avr32\drivers\twi\twi.c" changed="False" content-id="Atmel.ASF" />
@@ -183,13 +186,26 @@
           <file path="src/config/conf_sleepmgr.h" framework="" version="" source="common\services\sleepmgr\uc3\module_config\conf_sleepmgr.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/common/utils/interrupt/interrupt_avr32.h" framework="" version="" source="common\utils\interrupt\interrupt_avr32.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/common/utils/interrupt.h" framework="" version="" source="common\utils\interrupt.h" changed="False" content-id="Atmel.ASF" />
-          <file path="src/asf/avr32/drivers/pdca/pdca.c" framework="" version="" source="avr32\drivers\pdca\pdca.c" changed="False" content-id="Atmel.ASF" />
-          <file path="src/asf/avr32/drivers/pdca/pdca.h" framework="" version="" source="avr32\drivers\pdca\pdca.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/usb/class/vendor/device/udi_vendor.c" framework="" version="" source="common\services\usb\class\vendor\device\udi_vendor.c" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/usb/class/vendor/device/udi_vendor_desc.c" framework="" version="" source="common\services\usb\class\vendor\device\udi_vendor_desc.c" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/usb/class/vendor/device/udi_vendor.h" framework="" version="" source="common\services\usb\class\vendor\device\udi_vendor.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/usb/class/vendor/device/udi_vendor_conf.h" framework="" version="" source="common\services\usb\class\vendor\device\udi_vendor_conf.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/avr32/drivers/usbb/usbb_device.c" framework="" version="" source="avr32\drivers\usbb\usbb_device.c" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/avr32/drivers/usbb/usbb_otg.h" framework="" version="" source="avr32\drivers\usbb\usbb_otg.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/avr32/drivers/usbb/usbb_device.h" framework="" version="" source="avr32\drivers\usbb\usbb_device.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/usb/usb_atmel.h" framework="" version="" source="common\services\usb\usb_atmel.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/usb/usb_protocol.h" framework="" version="" source="common\services\usb\usb_protocol.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/usb/class/vendor/usb_protocol_vendor.h" framework="" version="" source="common\services\usb\class\vendor\usb_protocol_vendor.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/usb/udc/udc.c" framework="" version="" source="common\services\usb\udc\udc.c" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/usb/udc/udc.h" framework="" version="" source="common\services\usb\udc\udc.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/usb/udc/udd.h" framework="" version="" source="common\services\usb\udc\udd.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/usb/udc/udc_desc.h" framework="" version="" source="common\services\usb\udc\udc_desc.h" changed="False" content-id="Atmel.ASF" />
+          <file path="src/asf/common/services/usb/udc/udi.h" framework="" version="" source="common\services\usb\udc\udi.h" changed="False" content-id="Atmel.ASF" />
         </files>
         <documentation help="http://asf.atmel.com/docs/2.8.1/avr32/drivers/usbb/_asf_v1/examples/enum_example_freertos/at32uc3a0512_evk1100/doxygen/html/" />
       </framework-data>
     </AsfFrameworkConfig>
-    <AsfVersion>2.10.0</AsfVersion>
+    <AsfVersion>2.11.1</AsfVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
@@ -198,6 +214,7 @@
           <ListValues>
             <Value>BOARD=EVK1100</Value>
             <Value>FREERTOS_USED</Value>
+            <Value>UDD_ENABLE</Value>
           </ListValues>
         </avr32gcc.compiler.symbols.DefSymbols>
         <avr32gcc.compiler.directories.IncludePaths>
@@ -226,6 +243,7 @@
             <Value>../src/asf/avr32/drivers/flashc</Value>
             <Value>../src/asf/avr32/drivers/gpio</Value>
             <Value>../src/asf/avr32/drivers/intc</Value>
+            <Value>../src/asf/avr32/drivers/pdca</Value>
             <Value>../src/asf/avr32/drivers/spi</Value>
             <Value>../src/asf/avr32/drivers/twi</Value>
             <Value>../src/asf/avr32/drivers/usart</Value>
@@ -239,7 +257,11 @@
             <Value>../src/asf/common/services/sleepmgr</Value>
             <Value>../src/asf/common/services/sleepmgr/uc3</Value>
             <Value>../src/asf/common/utils</Value>
-            <Value>../src/asf/avr32/drivers/pdca</Value>
+            <Value>../src/asf/common/services/usb/class/vendor/device</Value>
+            <Value>../src/asf/avr32/drivers/usbb</Value>
+            <Value>../src/asf/common/services/usb</Value>
+            <Value>../src/asf/common/services/usb/class/vendor</Value>
+            <Value>../src/asf/common/services/usb/udc</Value>
           </ListValues>
         </avr32gcc.compiler.directories.IncludePaths>
         <avr32gcc.compiler.optimization.level>Optimize for size (-Os)</avr32gcc.compiler.optimization.level>
@@ -278,6 +300,7 @@
             <Value>../src/asf/avr32/drivers/flashc</Value>
             <Value>../src/asf/avr32/drivers/gpio</Value>
             <Value>../src/asf/avr32/drivers/intc</Value>
+            <Value>../src/asf/avr32/drivers/pdca</Value>
             <Value>../src/asf/avr32/drivers/spi</Value>
             <Value>../src/asf/avr32/drivers/twi</Value>
             <Value>../src/asf/avr32/drivers/usart</Value>
@@ -291,10 +314,14 @@
             <Value>../src/asf/common/services/sleepmgr</Value>
             <Value>../src/asf/common/services/sleepmgr/uc3</Value>
             <Value>../src/asf/common/utils</Value>
-            <Value>../src/asf/avr32/drivers/pdca</Value>
+            <Value>../src/asf/common/services/usb/class/vendor/device</Value>
+            <Value>../src/asf/avr32/drivers/usbb</Value>
+            <Value>../src/asf/common/services/usb</Value>
+            <Value>../src/asf/common/services/usb/class/vendor</Value>
+            <Value>../src/asf/common/services/usb/udc</Value>
           </ListValues>
         </avr32gcc.assembler.general.IncludePaths>
-        <avr32gcc.preprocessingassembler.general.AssemblerFlags>-mrelax -DFREERTOS_USED -DBOARD=EVK1100</avr32gcc.preprocessingassembler.general.AssemblerFlags>
+        <avr32gcc.preprocessingassembler.general.AssemblerFlags>-mrelax -DFREERTOS_USED -DBOARD=EVK1100 -DUDD_ENABLE</avr32gcc.preprocessingassembler.general.AssemblerFlags>
         <avr32gcc.preprocessingassembler.general.IncludePaths>
           <ListValues>
             <Value>../src</Value>
@@ -321,6 +348,7 @@
             <Value>../src/asf/avr32/drivers/flashc</Value>
             <Value>../src/asf/avr32/drivers/gpio</Value>
             <Value>../src/asf/avr32/drivers/intc</Value>
+            <Value>../src/asf/avr32/drivers/pdca</Value>
             <Value>../src/asf/avr32/drivers/spi</Value>
             <Value>../src/asf/avr32/drivers/twi</Value>
             <Value>../src/asf/avr32/drivers/usart</Value>
@@ -334,7 +362,11 @@
             <Value>../src/asf/common/services/sleepmgr</Value>
             <Value>../src/asf/common/services/sleepmgr/uc3</Value>
             <Value>../src/asf/common/utils</Value>
-            <Value>../src/asf/avr32/drivers/pdca</Value>
+            <Value>../src/asf/common/services/usb/class/vendor/device</Value>
+            <Value>../src/asf/avr32/drivers/usbb</Value>
+            <Value>../src/asf/common/services/usb</Value>
+            <Value>../src/asf/common/services/usb/class/vendor</Value>
+            <Value>../src/asf/common/services/usb/udc</Value>
           </ListValues>
         </avr32gcc.preprocessingassembler.general.IncludePaths>
       </Avr32Gcc>
@@ -349,6 +381,7 @@
           <ListValues>
             <Value>FREERTOS_USED</Value>
             <Value>BOARD=TRAQPAQ</Value>
+            <Value>UDD_ENABLE</Value>
           </ListValues>
         </avr32gcc.compiler.symbols.DefSymbols>
         <avr32gcc.compiler.directories.IncludePaths>
@@ -376,6 +409,7 @@
             <Value>../src/asf/avr32/drivers/flashc</Value>
             <Value>../src/asf/avr32/drivers/gpio</Value>
             <Value>../src/asf/avr32/drivers/intc</Value>
+            <Value>../src/asf/avr32/drivers/pdca</Value>
             <Value>../src/asf/avr32/drivers/spi</Value>
             <Value>../src/asf/avr32/drivers/twi</Value>
             <Value>../src/asf/avr32/drivers/usart</Value>
@@ -389,7 +423,11 @@
             <Value>../src/asf/common/services/sleepmgr</Value>
             <Value>../src/asf/common/services/sleepmgr/uc3</Value>
             <Value>../src/asf/common/utils</Value>
-            <Value>../src/asf/avr32/drivers/pdca</Value>
+            <Value>../src/asf/common/services/usb/class/vendor/device</Value>
+            <Value>../src/asf/avr32/drivers/usbb</Value>
+            <Value>../src/asf/common/services/usb</Value>
+            <Value>../src/asf/common/services/usb/class/vendor</Value>
+            <Value>../src/asf/common/services/usb/udc</Value>
           </ListValues>
         </avr32gcc.compiler.directories.IncludePaths>
         <avr32gcc.compiler.optimization.level>Optimize more (-O2)</avr32gcc.compiler.optimization.level>
@@ -427,6 +465,7 @@
             <Value>../src/asf/avr32/drivers/flashc</Value>
             <Value>../src/asf/avr32/drivers/gpio</Value>
             <Value>../src/asf/avr32/drivers/intc</Value>
+            <Value>../src/asf/avr32/drivers/pdca</Value>
             <Value>../src/asf/avr32/drivers/spi</Value>
             <Value>../src/asf/avr32/drivers/twi</Value>
             <Value>../src/asf/avr32/drivers/usart</Value>
@@ -440,10 +479,14 @@
             <Value>../src/asf/common/services/sleepmgr</Value>
             <Value>../src/asf/common/services/sleepmgr/uc3</Value>
             <Value>../src/asf/common/utils</Value>
-            <Value>../src/asf/avr32/drivers/pdca</Value>
+            <Value>../src/asf/common/services/usb/class/vendor/device</Value>
+            <Value>../src/asf/avr32/drivers/usbb</Value>
+            <Value>../src/asf/common/services/usb</Value>
+            <Value>../src/asf/common/services/usb/class/vendor</Value>
+            <Value>../src/asf/common/services/usb/udc</Value>
           </ListValues>
         </avr32gcc.assembler.general.IncludePaths>
-        <avr32gcc.preprocessingassembler.general.AssemblerFlags>-mrelax -DFREERTOS_USED -DBOARD=TRAQPAQ</avr32gcc.preprocessingassembler.general.AssemblerFlags>
+        <avr32gcc.preprocessingassembler.general.AssemblerFlags>-mrelax -DFREERTOS_USED -DBOARD=TRAQPAQ -DUDD_ENABLE</avr32gcc.preprocessingassembler.general.AssemblerFlags>
         <avr32gcc.preprocessingassembler.general.IncludePaths>
           <ListValues>
             <Value>../src</Value>
@@ -470,6 +513,7 @@
             <Value>../src/asf/avr32/drivers/flashc</Value>
             <Value>../src/asf/avr32/drivers/gpio</Value>
             <Value>../src/asf/avr32/drivers/intc</Value>
+            <Value>../src/asf/avr32/drivers/pdca</Value>
             <Value>../src/asf/avr32/drivers/spi</Value>
             <Value>../src/asf/avr32/drivers/twi</Value>
             <Value>../src/asf/avr32/drivers/usart</Value>
@@ -483,7 +527,11 @@
             <Value>../src/asf/common/services/sleepmgr</Value>
             <Value>../src/asf/common/services/sleepmgr/uc3</Value>
             <Value>../src/asf/common/utils</Value>
-            <Value>../src/asf/avr32/drivers/pdca</Value>
+            <Value>../src/asf/common/services/usb/class/vendor/device</Value>
+            <Value>../src/asf/avr32/drivers/usbb</Value>
+            <Value>../src/asf/common/services/usb</Value>
+            <Value>../src/asf/common/services/usb/class/vendor</Value>
+            <Value>../src/asf/common/services/usb/udc</Value>
           </ListValues>
         </avr32gcc.preprocessingassembler.general.IncludePaths>
       </Avr32Gcc>
@@ -603,6 +651,15 @@
     <None Include="src\asf\common\boards\board.h">
       <SubType>compile</SubType>
     </None>
+    <Compile Include="src\asf\avr32\drivers\usbb\usbb_device.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="src\asf\avr32\drivers\usbb\usbb_otg.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\avr32\drivers\usbb\usbb_device.h">
+      <SubType>compile</SubType>
+    </None>
     <Compile Include="src\asf\avr32\drivers\wdt\wdt.c">
       <SubType>compile</SubType>
     </Compile>
@@ -684,6 +741,42 @@
     <None Include="src\asf\common\utils\interrupt.h">
       <SubType>compile</SubType>
     </None>
+    <Compile Include="src\asf\common\services\usb\class\vendor\device\udi_vendor.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="src\asf\common\services\usb\class\vendor\device\udi_vendor.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\common\services\usb\class\vendor\device\udi_vendor_conf.h">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="src\asf\common\services\usb\class\vendor\device\udi_vendor_desc.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="src\asf\common\services\usb\usb_atmel.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\common\services\usb\usb_protocol.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\common\services\usb\class\vendor\usb_protocol_vendor.h">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="src\asf\common\services\usb\udc\udc.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="src\asf\common\services\usb\udc\udc.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\common\services\usb\udc\udd.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\common\services\usb\udc\udc_desc.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\asf\common\services\usb\udc\udi.h">
+      <SubType>compile</SubType>
+    </None>
     <Compile Include="src\button\button.c">
       <SubType>compile</SubType>
     </Compile>
@@ -703,6 +796,9 @@
       <SubType>compile</SubType>
     </None>
     <None Include="src\config\conf_sleepmgr.h">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="src\config\conf_usb.h">
       <SubType>compile</SubType>
     </None>
     <Compile Include="src\crc\crc.c">
@@ -831,6 +927,9 @@
     <Compile Include="src\lcd\screens\unknown_menu.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\main.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\pwm\pwm.c">
       <SubType>compile</SubType>
     </Compile>
@@ -850,36 +949,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\asf\avr32\drivers\tc\tc.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\asf\avr32\drivers\usbb\_asf_v1\enum\device\usb_device_task.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\asf\avr32\drivers\usbb\_asf_v1\enum\device\usb_device_task.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\asf\avr32\drivers\usbb\_asf_v1\enum\device\usb_standard_request.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\asf\avr32\drivers\usbb\_asf_v1\enum\device\usb_standard_request.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\asf\avr32\drivers\usbb\_asf_v1\enum\usb_task.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\asf\avr32\drivers\usbb\_asf_v1\enum\usb_task.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\asf\avr32\drivers\usbb\_asf_v1\usb_drv.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\asf\avr32\drivers\usbb\_asf_v1\usb_drv.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\asf\avr32\drivers\usbb\_asf_v1\usbb.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\asf\avr32\services\usb\_asf_v1\usb_ids.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\asf\avr32\utils\linker_scripts\at32uc3a\0512\gcc\link_uc3a0512.lds">
@@ -963,9 +1032,6 @@
     <Compile Include="src\config\FreeRTOSConfig.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\config\conf_usb.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\dataflash\dataflash.c">
       <SubType>compile</SubType>
     </Compile>
@@ -973,12 +1039,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\dataflash\dataflash_layout.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\device_template_task.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\device_template_task.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\font\Console8X16.c">
@@ -994,18 +1054,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\main.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\usb_descriptors.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\usb_descriptors.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\usb_specific_request.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\usb_specific_request.h">
       <SubType>compile</SubType>
     </Compile>
     <None Include="src\asf\thirdparty\freertos\ATMEL-disclaimer.txt">
@@ -1039,13 +1087,8 @@
     <Folder Include="src\asf\avr32\drivers\twi\" />
     <Folder Include="src\asf\avr32\drivers\usart\" />
     <Folder Include="src\asf\avr32\drivers\usbb\" />
-    <Folder Include="src\asf\avr32\drivers\usbb\_asf_v1\" />
-    <Folder Include="src\asf\avr32\drivers\usbb\_asf_v1\enum\" />
-    <Folder Include="src\asf\avr32\drivers\usbb\_asf_v1\enum\device\" />
     <Folder Include="src\asf\avr32\drivers\wdt\" />
     <Folder Include="src\asf\avr32\services\" />
-    <Folder Include="src\asf\avr32\services\usb\" />
-    <Folder Include="src\asf\avr32\services\usb\_asf_v1\" />
     <Folder Include="src\asf\avr32\utils\" />
     <Folder Include="src\asf\avr32\utils\header_files\" />
     <Folder Include="src\asf\avr32\utils\linker_scripts\" />
@@ -1062,6 +1105,11 @@
     <Folder Include="src\asf\common\services\sleepmgr\" />
     <Folder Include="src\asf\common\services\sleepmgr\uc3\" />
     <Folder Include="src\asf\common\services\spi\" />
+    <Folder Include="src\asf\common\services\usb\" />
+    <Folder Include="src\asf\common\services\usb\class\" />
+    <Folder Include="src\asf\common\services\usb\class\vendor\" />
+    <Folder Include="src\asf\common\services\usb\class\vendor\device\" />
+    <Folder Include="src\asf\common\services\usb\udc\" />
     <Folder Include="src\asf\common\utils\" />
     <Folder Include="src\asf\common\utils\interrupt\" />
     <Folder Include="src\asf\thirdparty\" />

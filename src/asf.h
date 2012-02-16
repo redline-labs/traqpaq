@@ -55,6 +55,9 @@
 // From module: CPU - Cycle Counter
 #include <cycle_counter.h>
 
+// From module: CPU - EIC - External Interrupt Controller
+#include <eic.h>
+
 // From module: CPU - INTC - Interrupt Controller
 #include <intc.h>
 
@@ -73,9 +76,6 @@
 
 // From module: MEMORY - EBI Static Memory Controller
 #include <smc.h>
-
-// From module: MEMORY - EIC - External Interrupt Controller
-#include <eic.h>
 
 // From module: MEMORY - FLASHC - Flash Controller
 #include <flashc.h>
@@ -101,6 +101,16 @@
 
 // From module: USART - Universal Synchronous/Asynchronous Receiver/Transmitter
 #include <usart.h>
+
+// From module: USB Device Stack Core
+#include <udc.h>
+#include <udd.h>
+
+// From module: USB Vendor Protocol
+#include <usb_protocol_vendor.h>
+
+// From module: USB vendor class (Single Interface Device)
+#include <udi_vendor.h>
 
 // From module: UTILITY - Compiler abstraction layer and code utilities
 #include <compiler.h>
