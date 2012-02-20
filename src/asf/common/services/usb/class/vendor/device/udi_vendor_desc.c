@@ -83,7 +83,11 @@ UDC_DESC_STORAGE usb_dev_desc_t udc_device_desc = {
 #ifdef USB_DEVICE_SERIAL_NAME
 	.iSerialNumber             = 3,
 #else
-	.iSerialNumber             = 0,  // No serial string
+	#ifdef USB_DEVICE_GET_SERIAL_NAME_POINTER
+		.iSerialNumber             = 3,
+	#else
+		.iSerialNumber             = 0,  // No serial string
+	#endif
 #endif
 	.bNumConfigurations        = 1
 };

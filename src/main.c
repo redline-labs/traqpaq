@@ -67,7 +67,7 @@ int main( void ){
 	#endif
 	
 	#if( TRAQPAQ_HW_USB_ENABLED )
-	udc_start();
+	usb_task_init();
 	#endif
 	
 	#if( TRAQPAQ_HW_TWI_ENABLED )

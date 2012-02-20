@@ -39,7 +39,8 @@
 // ------------------------------------------------------------
 // Versions
 // ------------------------------------------------------------
-#define TRAQPAQ_SW_LEVEL			0x0100
+#define TRAQPAQ_SW_LEVEL_MAJOR		1
+#define TRAQPAQ_SW_LEVEL_MINOR		0
 #define TRAQPAQ_SW_LEVEL_ASCII		"1.00"
 #define TRAQPAQ_SW_BUILD_DATE		__DATE__
 #define TRAQPAQ_SW_SUPPORT_VER		__VERSION__
@@ -189,6 +190,11 @@
 
 #define DATAFLASH_WP				AVR32_PIN_PX26
 #define DATAFLASH_HOLD				AVR32_PIN_PX25
+
+#if (TRAQPAQ_HW_DEBUG_ENABLED == FALSE)
+	#define GPIO_DEBUG0		AVR32_PIN_PB30
+	#define GPIO_DEBUG1		AVR32_PIN_PB31
+#endif
 
 
 

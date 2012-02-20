@@ -36,7 +36,6 @@
 #include "dataflash/dataflash_manager_request.h"
 
 xQueueHandle gpsRxdQueue;
-xQueueHandle gpsManagerQueue;
 extern xQueueHandle dataflashManagerQueue;
 extern xQueueHandle lcdWidgetsManagerQueue;
 
@@ -45,6 +44,8 @@ struct tGPSRequest gpsRequest;
 
 unsigned char rxBuffer[GPS_MSG_MAX_STRLEN];
 unsigned char gpsTokens[MAX_SIGNALS_SENTENCE];
+
+unsigned char recordFlag = FALSE;
 
 
 __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
@@ -56,7 +57,6 @@ __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
 
 void gps_task_init( void ){
 	gpsRxdQueue		= xQueueCreate(GPS_RXD_QUEUE_SIZE, sizeof(int));
-	gpsManagerQueue	= xQueueCreate(GPS_MANAGER_QUEUE_SIZE, sizeof(gpsRequest));
 	
 	INTC_register_interrupt(&ISR_gps_rxd, AVR32_USART3_IRQ, AVR32_INTC_INT0);
 	
@@ -67,10 +67,11 @@ void gps_task_init( void ){
 void gps_task( void *pvParameters ){
 	int rxdChar;
 	unsigned char rxIndex = 0;	// Receive Character Index
-	unsigned char processedGGA = FALSE, processedRMC = FALSE;
+	unsigned char processedRMC = FALSE, processedGGA = FALSE;
 	unsigned char recordIndex = 0;
-	unsigned char recordFlag = FALSE;
 	unsigned int datestamp;		// Received Datestamp
+	
+	unsigned int oldtime = 0;
 	
 	struct tDataflashRequest dataflashRequest;
 	struct tRecordDataPage gpsData;
@@ -81,106 +82,86 @@ void gps_task( void *pvParameters ){
 	
 	while(TRUE){
 		
-		// Check to see if we have any pending requests to service
-		if( xQueueReceive(gpsManagerQueue, &gpsRequest, pdFALSE) == pdTRUE ){
-			switch(gpsRequest.command){
-				case(GPS_REQUEST_DATE):
-					*(gpsRequest.pointer) = datestamp;
-					break;
-					
-				case(GPS_REQUEST_START_RECORDING):
-					recordFlag = TRUE;
-					break;
-					
-				case(GPS_REQUEST_STOP_RECORDING):
-					recordFlag = FALSE;
-					break;
-			}
-			
-		}
+		xQueueReceive(gpsRxdQueue, &rxdChar, portMAX_DELAY);
 		
-		
-			
-		// Check to see if we received another character!
-		if( xQueueReceive(gpsRxdQueue, &rxdChar, portMAX_DELAY) == pdTRUE){
-			if( rxdChar == GPS_MSG_END_CHAR ){
-				if( gps_verify_checksum() ){
+		if( rxdChar == GPS_MSG_END_CHAR ){
+			if( gps_verify_checksum() ){
 					
-					gps_buffer_tokenize();
+				gps_buffer_tokenize();
 				
-					//--------------------------
-					// GGA Message Received
-					//--------------------------
-					if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_GGA_ID0) &
-						(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_GGA_ID1) &
-						(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_GGA_ID2) ){
+				//--------------------------
+				// GGA Message Received
+				//--------------------------
+				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_GGA_ID0) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_GGA_ID1) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_GGA_ID2) ){
 					
-						// Convert Time! Wooo!
-						gpsData.data[recordIndex].utc		= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_UTC			]]) );
-						gpsData.data[recordIndex].latitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_LATITUDE		]]) );
-						gpsData.data[recordIndex].NorS		=			rxBuffer[gpsTokens[TOKEN_GGA_NORS			]];
-						gpsData.data[recordIndex].longitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_LONGITUDE		]]) );
-						gpsData.data[recordIndex].EorW		=			rxBuffer[gpsTokens[TOKEN_GGA_EORW			]];
-						gpsData.data[recordIndex].currentMode=atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_QUALITY		]]) ) & 0xFFFF;
-						gpsData.data[recordIndex].satellites= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_NUM_SATELLITES	]]) ) & 0xFF;
-						gpsData.data[recordIndex].hdop		= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_HDOP			]]) ) & 0xFFFF;
-						gpsData.data[recordIndex].altitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_ALTITUDE		]]) ) & 0xFFFF;
+					// Convert Time! Wooo!
+					gpsData.data[recordIndex].latitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_LATITUDE		]]) );
+					gpsData.data[recordIndex].NorS		=			rxBuffer[gpsTokens[TOKEN_GGA_NORS			]];
+					gpsData.data[recordIndex].longitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_LONGITUDE		]]) );
+					gpsData.data[recordIndex].EorW		=			rxBuffer[gpsTokens[TOKEN_GGA_EORW			]];
+					gpsData.data[recordIndex].currentMode=atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_QUALITY		]]) ) & 0xFFFF;
+					gpsData.data[recordIndex].satellites= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_NUM_SATELLITES	]]) ) & 0xFF;
+					gpsData.data[recordIndex].hdop		= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_HDOP			]]) ) & 0xFFFF;
+					gpsData.data[recordIndex].altitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_ALTITUDE		]]) ) & 0xFFFF;
+						
+					processedGGA = TRUE;
+					
+				}else
+				//--------------------------
+				// RMC Message Received
+				//--------------------------
+				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_RMC_ID0) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_RMC_ID1) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_RMC_ID2) ){
+						
+					// More Converting!!
+					gpsData.data[recordIndex].utc		= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_UTC	]]) );
+					gpsData.data[recordIndex].speed		= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_SPEED	]]) ) & 0xFFFF;
+					gpsData.data[recordIndex].course	= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_TRACK	]]) ) & 0xFFFF;
+						
+					// Lets grab the datestamp while we are at it
+					datestamp							= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_DATE	]]) );
 
-						processedGGA = TRUE;
+					processedRMC = TRUE;
 					
-					}else
-					//--------------------------
-					// RMC Message Received
-					//--------------------------
-					if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_RMC_ID0) &
-						(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_RMC_ID1) &
-						(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_RMC_ID2) ){
-						
-						// More Converting!!
-						gpsData.data[recordIndex].speed		= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_SPEED	]]) ) & 0xFFFF;
-						gpsData.data[recordIndex].course	= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_TRACK	]]) ) & 0xFFFF;
-						
-						// Lets grab the datestamp while we are at it
-						datestamp							= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_DATE	]]) );
-
-						processedRMC = TRUE;
-					
-					}
-					
-					// Check if we have updated the current record with both RMC and GGA messages
-					if(processedGGA && processedRMC){
-						processedGGA = FALSE;
-						processedRMC = FALSE;
-						
-						if(recordFlag){
-							if(recordIndex < RECORD_DATA_PER_PAGE){
-								recordIndex += 1;
-							}else{
-								// Need to write data!
-								recordIndex = 0;							
-								
-								dataflashRequest.command = DFMAN_REQUEST_ADD_RECORDDATA;
-								dataflashRequest.resume = xTaskGetCurrentTaskHandle();
-								dataflashRequest.pointer = &gpsData;
-								dataflashRequest.length = sizeof(gpsData);
-								xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
-								vTaskSuspend(NULL);
-							}  // recordIndex < RECORD_DATA_PER_PAGE	
-						}	
-					}
-				}		
-						
-				rxIndex = 0;
-
-			}else{
-				// Store the data in the buffer as long as it is not a period!
-				if( (rxIndex < GPS_MSG_MAX_STRLEN) && (rxdChar != GPS_PERIOD) ){
-					rxBuffer[rxIndex++] = (rxdChar & 0xFF);
-				}else{
-					// Buffer overrun!!!	
 				}
-			}
+				
+				
+				if(processedGGA && processedRMC){
+					processedGGA = FALSE;
+					processedRMC = FALSE;
+						
+					if(recordFlag){
+						recordIndex++;
+				
+						if(recordIndex == RECORD_DATA_PER_PAGE){
+							// Need to write data!							
+							dataflashRequest.command = DFMAN_REQUEST_ADD_RECORDDATA;
+							dataflashRequest.pointer = &gpsData;
+							dataflashRequest.length = sizeof(gpsData);
+							dataflashRequest.resume = xTaskGetCurrentTaskHandle();
+							xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
+							vTaskSuspend(NULL);						
+
+							recordIndex = 0;
+						}
+						
+					}else{
+						recordIndex = 0;
+					}
+				}  // ProcessedGGA and ProcessedRMC
+				
+			}	// GPS Verify Checksum
+						
+			rxIndex = 0;
+
+		}else if( (rxIndex < GPS_MSG_MAX_STRLEN) && (rxdChar != GPS_PERIOD) ){
+				rxBuffer[rxIndex++] = (rxdChar & 0xFF);
 		}
+						
+	
 	}		
 }
 
@@ -250,6 +231,6 @@ unsigned char gps_verify_checksum( void ){
 	if( crcReceived == crcCalculated ){
 		return TRUE;
 	}
-
+	
 	return FALSE;
 }

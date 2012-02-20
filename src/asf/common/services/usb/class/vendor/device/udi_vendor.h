@@ -150,6 +150,7 @@ extern "C" {
 # define UDI_VENDOR_EPS_BULK_DESC_HS
 #endif
 
+
 #if UDI_VENDOR_EPS_SIZE_ISO_FS
 # define UDI_VENDOR_EPS_ISO_DESC \
 	.ep_iso_in.bLength                 = sizeof(usb_ep_desc_t),\

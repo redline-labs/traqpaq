@@ -42,7 +42,7 @@
 #define _CONF_USB_H_
 
 #include "compiler.h"
-#include "usb/usb.h"
+#include "drivers.h"
 
 /**
  * USB Device Configuration
@@ -52,16 +52,18 @@
 //! Device definition (mandatory)
 #define  USB_DEVICE_VENDOR_ID             0xAAAA
 #define  USB_DEVICE_PRODUCT_ID            0x1000
-#define  USB_DEVICE_MAJOR_VERSION         1
-#define  USB_DEVICE_MINOR_VERSION         0
+#define  USB_DEVICE_MAJOR_VERSION         TRAQPAQ_SW_LEVEL_MAJOR
+#define  USB_DEVICE_MINOR_VERSION         TRAQPAQ_SW_LEVEL_MINOR
 #define  USB_DEVICE_POWER                 500 // Consumption on Vbus line (mA)
 #define  USB_DEVICE_ATTR                  USB_CONFIG_ATTR_SELF_POWERED
 
 
 //! USB Device string definitions (Optional)
-#define  USB_DEVICE_MANUFACTURE_NAME      "Redline Electronics"
-#define  USB_DEVICE_PRODUCT_NAME          "traq|paq"
-// #define  USB_DEVICE_SERIAL_NAME           "12...EF"
+#define  USB_DEVICE_MANUFACTURE_NAME			"Redline Electronics"
+#define  USB_DEVICE_PRODUCT_NAME				"traq|paq"
+#define	 USB_DEVICE_GET_SERIAL_NAME_POINTER		dataflashOTP.serial
+#define  USB_DEVICE_GET_SERIAL_NAME_LENGTH		OTP_SERIAL_LENGTH
+
 
 /**
  * Device speeds support
@@ -113,7 +115,7 @@
 //! Note: Disable the enpoints of a type, if size equal 0
 #define UDI_VENDOR_EPS_SIZE_INT_FS    64
 #define UDI_VENDOR_EPS_SIZE_BULK_FS   64
-#define UDI_VENDOR_EPS_SIZE_ISO_FS   256
+#define UDI_VENDOR_EPS_SIZE_ISO_FS   64
 
 //! Enpoints size for high speed
 #define UDI_VENDOR_EPS_SIZE_INT_HS    64

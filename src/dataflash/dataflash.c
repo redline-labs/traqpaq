@@ -32,9 +32,6 @@
 #include "dataflash_otp_layout.h"
 #include "dataflash_manager_request.h"
 
-// Struct for holding USB serial number
-//S_usb_serial_number module_serial_number;
-
 // Struct for holding serial number, HW Version, and Tester ID;
 struct tDataflashOTP dataflashOTP;
 
@@ -63,22 +60,9 @@ void dataflash_task_init( void ){
 	// Read out the OTP registers
 	dataflash_ReadOTP(OTP_START_INDEX, OTP_LENGTH, &dataflashOTP);
 	
-	//module_serial_number.bLength = sizeof(module_serial_number);
-	//module_serial_number.bDescriptorType = STRING_DESCRIPTOR;
-	
 	// Check validity of OTP
 	if( dataflash_calculate_otp_crc() == dataflashOTP.crc ){
-		// Copy OTP serial number to USB Descriptor
-		for(i = 0; i < OTP_SERIAL_LENGTH; i++){
-			//module_serial_number.wstring[i] = Usb_unicode( dataflashOTP.serial[i] );
-		}
-		
-	}else{	// CRC verification failed
-		// Copy null serial number to USB descriptor
-		for(i = 0; i < OTP_SERIAL_LENGTH; i++){
-			//module_serial_number.wstring[i] = Usb_unicode('0');
-		}
-		
+		debug_log("WARNING [DATAFLASH]: Invalid CRC for OTP");
 	}
 	
 	// Load user preferences!

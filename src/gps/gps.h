@@ -32,16 +32,16 @@
 
 #define GPS_VERSION					"1.00"
 
-#define GPS_RESET_TIME				100		// Time in milliseconds
-#define GPS_RXD_QUEUE_SIZE			20		// Number of items to buffer in Receive Queue
-#define GPS_MANAGER_QUEUE_SIZE		5		// Number of items to buffer in Request Queue
+#define GPS_RESET_TIME				100						// Time in milliseconds
+#define GPS_RXD_QUEUE_SIZE			GPS_MSG_MAX_STRLEN		// Number of items to buffer in Receive Queue
+#define GPS_MANAGER_QUEUE_SIZE		5						// Number of items to buffer in Request Queue
 
-#define GPS_WAIT_RXD_TIME			20		// Time (milliseconds) to wait for a received character
+#define GPS_WAIT_RXD_TIME			20						// Time (milliseconds) to wait for a received character
 
 #define GPS_MSG_START_CHAR			'$'		
-#define GPS_MSG_END_CHAR			0x0A	// ASCII for LF
+#define GPS_MSG_END_CHAR			0x0A					// ASCII for LF
 #define GPS_MSG_CR					0x0D
-#define GPS_MSG_MAX_STRLEN			82		// Each message is limited to 82 characters max, including '$', CR, and LF
+#define GPS_MSG_MAX_STRLEN			82						// Each message is limited to 82 characters max, including '$', CR, and LF
 #define GPS_DELIMITER_CHAR			','
 #define GPS_CHECKSUM_CHAR			'*'
 #define GPS_PERIOD					'.'

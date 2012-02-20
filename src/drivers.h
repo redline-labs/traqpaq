@@ -43,6 +43,9 @@
 // Debug
 #include "debug/debug.h"
 
+// USB
+#include "usb/usb.h"
+
 // FreeRTOS
 #include "FreeRTOS.h"
 #include "task.h"
