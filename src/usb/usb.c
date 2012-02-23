@@ -242,9 +242,8 @@ void usb_task( void *pvParameters ){
 					
 
 			case(USB_DBG_SEND_FUEL_CMD):
-				responseU16 = 0;
+				responseU16 = 2800;
 				fuel_write_register(FUEL_ADDRESS_ACCUM_CURRENT_REGISTER_MSB, &responseU16, 2);
-				fuel_read_current(FUEL_CURRENT_ACCUMULATED);
 				break;
 
 

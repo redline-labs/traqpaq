@@ -64,11 +64,11 @@ unsigned short longitude_decimal;
 
 typedef struct __attribute__ ((packed)) tRecordData {
 	unsigned int utc;
-	unsigned int latitude;
-	unsigned int longitude;
+	signed int latitude;
+	signed int longitude;
 	
-	unsigned char NorS;
-	unsigned char EorW;
+	unsigned char lapDetected;
+	unsigned char reserved;
 	unsigned short altitude;
 	
 	unsigned short speed;

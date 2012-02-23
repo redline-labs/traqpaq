@@ -63,7 +63,6 @@ void lcd_gui_task( void *pvParameters ){
 	struct tGPSRequest gpsRequest;
 	
 	unsigned char responseU8;
-	unsigned short responseU16;
 	
 	unsigned char button;
 	volatile unsigned short lcd_fsm = LCDFSM_MAINMENU;		// Useful for testing new screens!

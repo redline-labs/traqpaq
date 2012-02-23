@@ -33,7 +33,7 @@
 #define BACKLIGHT_FADE_DELAY		1
 
 #define BACKLIGHT_DEFAULT_MAX		255		// Default MAX Screen Brightness
-#define BACKLIGHT_DEFAULT_MIN		125		// Default MIN Screen Brightness
+#define BACKLIGHT_DEFAULT_MIN		175		// Default MIN Screen Brightness
 #define BACKLIGHT_DEFAULT_FADETIME	5		// Default Inactive Time in Seconds to Fade Screen
 #define BACKLIGHT_DEFAULT_OFFTIME	30		// Default Inactive Time in Seconds to Turn Off Screen
 

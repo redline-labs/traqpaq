@@ -33,7 +33,7 @@
 #define GPS_VERSION					"1.00"
 
 #define GPS_RESET_TIME				100						// Time in milliseconds
-#define GPS_RXD_QUEUE_SIZE			GPS_MSG_MAX_STRLEN		// Number of items to buffer in Receive Queue
+#define GPS_RXD_QUEUE_SIZE			GPS_MSG_MAX_STRLEN	// Number of items to buffer in Receive Queue
 #define GPS_MANAGER_QUEUE_SIZE		5						// Number of items to buffer in Request Queue
 
 #define GPS_WAIT_RXD_TIME			20						// Time (milliseconds) to wait for a received character
@@ -48,7 +48,18 @@
 
 #define GPS_NULL					0
 
+#define GPS_NORTH					'N'
+#define GPS_SOUTH					'S'
 
+#define GPS_EAST					'E'
+#define GPS_WEST					'W'
+
+
+#define THRESHOLD_DISTANCE_FEET		15			// Threshold (+/-) in feet for finish line gate
+#define EARTH_RADIUS_FEET			20891000	// Approximate radius of earth in feet;
+#define THRESHOLD_DISTANCE			THRESHOLD_DISTANCE_FEET / EARTH_RADIUS_FEET // Do not modify, instead modify 'THRESHOLD_DISTANCE_FEET'
+
+#define RADIANS_CONVERSION			0.0174532925	// Value of (Pi / 180)
 
 // Indices for pointing areas of each message
 #define MAX_SIGNALS_SENTENCE		20
@@ -106,14 +117,36 @@ typedef struct tGPSRequest {
 #define GPS_REQUEST_STOP_RECORDING	2
 
 
-// Prototypes
-//void gps_processMsg(struct tGPSRXDBuffer *GPSRXDBuffer, unsigned char index, struct tGPSMsgGGA *GPSMsgGGA, struct tGPSMsgGSV *GPSMsgGSV);
+typedef struct tGPSSetPoint {
+	signed int latitude;
+	signed int longitude;
+	unsigned short heading;
+};
 
+typedef struct tGPSSetLine {
+	unsigned short heading;
+	
+	signed int startLatitude;
+	signed int startLongitude;
+	
+	signed int endLatitude;
+	signed int endLongitude;
+};
+
+
+#define deg2rad(x)			((x) * RADIANS_CONVERSION)
+#define rad2deg(x)			((x) / RADIANS_CONVERSION)
+
+// Prototypes
 void gps_task_init( void );
 void gps_task( void *pvParameters );
 void gps_reset( void );
 
 void gps_buffer_tokenize( void );
 unsigned char gps_verify_checksum( void );
+
+unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, signed int y2, signed int x3, signed int y3, signed int x4, signed int y4);
+signed int gps_convert_to_decimal_degrees(signed int coordinate);
+struct tGPSSetLine gps_find_finish_line(struct tGPSSetPoint point);
 
 #endif /* GPS_H_ */

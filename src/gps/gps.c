@@ -30,10 +30,10 @@
 // Green = RXD on FT232
 // Blue = TXD on FT232
 
-
 #include "asf.h"
 #include "drivers.h"
 #include "dataflash/dataflash_manager_request.h"
+#include "math.h"
 
 xQueueHandle gpsRxdQueue;
 extern xQueueHandle dataflashManagerQueue;
@@ -65,16 +65,25 @@ void gps_task_init( void ){
 
 
 void gps_task( void *pvParameters ){
-	int rxdChar;
+	unsigned int rxdChar;
 	unsigned char rxIndex = 0;	// Receive Character Index
 	unsigned char processedRMC = FALSE, processedGGA = FALSE;
 	unsigned char recordIndex = 0;
-	unsigned int datestamp;		// Received Datestamp
 	
-	unsigned int oldtime = 0;
-	
+	signed int oldLatitude = 0;
+	signed int oldLongitude = 0;
+
 	struct tDataflashRequest dataflashRequest;
 	struct tRecordDataPage gpsData;
+	struct tGPSSetLine finishLine;
+	struct tGPSSetPoint finishPoint;
+	
+	// Test finish line
+	finishPoint.heading = 2666;
+	finishPoint.longitude = -83453003;
+	finishPoint.latitude = 42570383;
+	
+	finishLine = gps_find_finish_line(finishPoint);
 
 	// Pull the GPS out of reset
 	GPS_USART->ier = AVR32_USART_IER_RXRDY_MASK;
@@ -98,13 +107,32 @@ void gps_task( void *pvParameters ){
 					
 					// Convert Time! Wooo!
 					gpsData.data[recordIndex].latitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_LATITUDE		]]) );
-					gpsData.data[recordIndex].NorS		=			rxBuffer[gpsTokens[TOKEN_GGA_NORS			]];
+					gpsData.data[recordIndex].latitude = gps_convert_to_decimal_degrees(gpsData.data[recordIndex].latitude);
+					
+					if( rxBuffer[gpsTokens[TOKEN_GGA_NORS]] == GPS_SOUTH){
+						gpsData.data[recordIndex].latitude *= -1;
+					}
+					
 					gpsData.data[recordIndex].longitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_LONGITUDE		]]) );
-					gpsData.data[recordIndex].EorW		=			rxBuffer[gpsTokens[TOKEN_GGA_EORW			]];
+					gpsData.data[recordIndex].longitude = gps_convert_to_decimal_degrees(gpsData.data[recordIndex].longitude);
+					
+					if( rxBuffer[gpsTokens[TOKEN_GGA_EORW]] == GPS_WEST){
+						gpsData.data[recordIndex].longitude *= -1;
+					}
+					
 					gpsData.data[recordIndex].currentMode=atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_QUALITY		]]) ) & 0xFFFF;
 					gpsData.data[recordIndex].satellites= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_NUM_SATELLITES	]]) ) & 0xFF;
 					gpsData.data[recordIndex].hdop		= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_HDOP			]]) ) & 0xFFFF;
 					gpsData.data[recordIndex].altitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_ALTITUDE		]]) ) & 0xFFFF;
+					
+					gpsData.data[recordIndex].lapDetected = gps_intersection(oldLongitude,							oldLatitude,
+																			 gpsData.data[recordIndex].longitude,   gpsData.data[recordIndex].latitude,
+																			 finishLine.startLongitude,				finishLine.startLatitude,
+																			 finishLine.endLongitude,				finishLine.endLatitude);
+					
+					// Save the last coordinates for detecting the intersection
+					oldLongitude = gpsData.data[recordIndex].longitude;
+					oldLatitude = gpsData.data[recordIndex].latitude;
 						
 					processedGGA = TRUE;
 					
@@ -120,9 +148,6 @@ void gps_task( void *pvParameters ){
 					gpsData.data[recordIndex].utc		= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_UTC	]]) );
 					gpsData.data[recordIndex].speed		= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_SPEED	]]) ) & 0xFFFF;
 					gpsData.data[recordIndex].course	= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_TRACK	]]) ) & 0xFFFF;
-						
-					// Lets grab the datestamp while we are at it
-					datestamp							= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_DATE	]]) );
 
 					processedRMC = TRUE;
 					
@@ -233,4 +258,70 @@ unsigned char gps_verify_checksum( void ){
 	}
 	
 	return FALSE;
+}
+
+
+unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, signed int y2, signed int x3, signed int y3, signed int x4, signed int y4){
+	// (x1, y1) and (x2, y2) are points for line along traveled path
+    // (x3, y3) and (y4, x3) are points for the threshold line
+	
+	// Temporary storage
+	float ua, ub, denominator;
+	
+	// Calculate the denominator
+    denominator = (x2 - x1)*(y4 - y3) - (y2 - y1)*(x4 - x3);
+    
+    ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denominator;
+    ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denominator;
+
+    // Calulate the point of intersection
+    //long = x1+ua*(x2 - x1);
+    //lat = y1+ua*(y2 - y1);
+	
+	if( (ua >= 0) && (ua <= 1) && (ub >= 0) && (ub <= 1) ){
+		return true;
+	}
+	
+	return false;
+}
+
+signed int gps_convert_to_decimal_degrees(signed int coordinate){
+	unsigned int minutes;
+	signed int degrees;
+	
+	minutes = (coordinate % 1000000);
+	degrees = coordinate - minutes;
+	
+	degrees += ((minutes * 10) / 6);
+	
+	return degrees;
+}
+
+struct tGPSSetLine gps_find_finish_line(struct tGPSSetPoint point){
+	// Storage for perpendicular angles to point heading
+	float right, left;
+	int vect;
+	
+	struct tGPSSetLine finish;
+	
+	right = deg2rad(((point.heading + 900) % 3600) / 10);
+	left = deg2rad(((point.heading - 900) % 3600) / 10);
+	
+	finish.heading = point.heading;
+	
+	// Start Points
+	vect = sin(right) * THRESHOLD_DISTANCE * 60 * 1000000;
+	finish.startLongitude = vect + point.longitude;
+	
+	vect = cos(right) * THRESHOLD_DISTANCE * 60 * 1000000;
+	finish.startLatitude = vect + point.latitude;
+	
+	// End Points
+	vect = sin(left) * THRESHOLD_DISTANCE * 60 * 1000000;
+	finish.endLongitude = vect + point.longitude;
+	
+	vect = cos(left) * THRESHOLD_DISTANCE * 60 * 1000000;
+	finish.endLatitude = vect + point.latitude;
+	
+	return finish;
 }

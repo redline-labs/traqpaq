@@ -87,7 +87,7 @@ void board_init(void){
 
 
 	// ------------------------------------------------------------
-	// GPS Initialization (USART)
+	// GPS Initialization (USART3)
 	// ------------------------------------------------------------
 	#if(TRAQPAQ_HW_GPS_ENABLED)
 		const gpio_map_t GPS_USART_GPIO_MAP = {
@@ -95,7 +95,7 @@ void board_init(void){
 			{GPS_RXD, GPS_RXD_FUNCTION}
 		};
 
-		// Options for USART0 Hardware
+		// Options for USART3 Hardware
 		const usart_options_t GPS_USART_OPTIONS = {
 			.baudrate     = GPS_USART_BAUD,
 			.charlength   = 8,
@@ -110,7 +110,7 @@ void board_init(void){
 
 
 	// ------------------------------------------------------------
-	// GPS Initialization (USART)
+	// Debug Initialization (USART0)
 	// ------------------------------------------------------------
 	#if(TRAQPAQ_HW_DEBUG_ENABLED)
 		const gpio_map_t DEBUG_USART_GPIO_MAP = {

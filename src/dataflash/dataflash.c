@@ -84,6 +84,7 @@ void dataflash_task( void *pvParameters ){
 	unsigned short i;
 	volatile unsigned char recordTableIndex = 0;	// Index of first empty record table
 	struct tRecordsEntry recordTable, prevRecordTable;
+	unsigned int tempU32;
 	
 	struct tGPSRequest gpsRequest;
 	
@@ -178,8 +179,8 @@ void dataflash_task( void *pvParameters ){
 				*(request.pointer) = flashIsFull;
 				break;
 				
-			case(DFMAN_REQUEST_USED_SPACE):
-				*(request.pointer) = (((recordTable.endAddress - DATAFLASH_ADDR_RECORDDATA_START) * 100) / (DATAFLASH_ADDR_RECORDDATA_END - DATAFLASH_ADDR_RECORDDATA_START)) & 0xFF;
+			case(DFMAN_REQUEST_USED_SPACE):				
+				*(request.pointer) = (((recordTable.endAddress - DATAFLASH_ADDR_RECORDDATA_START) * 100) / (DATAFLASH_ADDR_RECORDDATA_END - DATAFLASH_ADDR_RECORDDATA_START));
 				break;
 				
 			case(DFMAN_REQUEST_UPDATE_DATE):
