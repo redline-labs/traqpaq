@@ -61,6 +61,7 @@
 //! USB Device string definitions (Optional)
 #define  USB_DEVICE_MANUFACTURE_NAME			"Redline Electronics"
 #define  USB_DEVICE_PRODUCT_NAME				"traq|paq"
+#define  USB_DEVICE_SERIAL_NAME					// Leave Empty
 #define	 USB_DEVICE_GET_SERIAL_NAME_POINTER		dataflashOTP.serial
 #define  USB_DEVICE_GET_SERIAL_NAME_LENGTH		OTP_SERIAL_LENGTH
 

@@ -42,6 +42,8 @@ void charge_task( void *pvParameters ){
 	struct tLCDRequest request;
 	request.action = LCD_REQUEST_UPDATE_CHARGE;
 	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_CHARGE, "Task Started");
+	
 	while( TRUE ){
 		request.data = charge_state();
 		

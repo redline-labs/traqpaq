@@ -54,7 +54,7 @@ void dataflash_task_init( void ){
 	
 	// Check the dataflash device ID
 	if( !dataflash_checkID() ){
-		debug_log("WARNING [DATAFLASH]: Incorrect device ID");
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Incorrect Device ID");
 	}
 	
 	// Read out the OTP registers
@@ -62,14 +62,14 @@ void dataflash_task_init( void ){
 	
 	// Check validity of OTP
 	if( dataflash_calculate_otp_crc() == dataflashOTP.crc ){
-		debug_log("WARNING [DATAFLASH]: Invalid CRC for OTP");
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Invalid OTP CRC");
 	}
 	
 	// Load user preferences!
 	dataflash_ReadToBuffer(DATAFLASH_ADDR_USERPREFS_START, sizeof(userPrefs), &userPrefs);
 	if(dataflash_calculate_userPrefs_crc() != userPrefs.crc){
 		// If CRC is bad, load defaults!
-		debug_log("WARNING [DATAFLASH]: Incorrect User Preferences CRC");
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Invalid User Prefs CRC");
 		userPrefs.screenPWMMax = BACKLIGHT_DEFAULT_MAX;
 		userPrefs.screenPWMMin = BACKLIGHT_DEFAULT_MIN;
 		userPrefs.screenFadeTime = BACKLIGHT_DEFAULT_FADETIME;
@@ -90,11 +90,13 @@ void dataflash_task( void *pvParameters ){
 	
 	unsigned char flashIsFull = FALSE;
 	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_DATAFLASH, "Task Started");
+	
 	dataflash_GlobalUnprotect();
 	dataflash_WriteEnable();
 	
 	if( dataflash_is_busy() ){
-		debug_log("WARNING [DATAFLASH]: Busy response received");
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Device is busy");
 	}
 	
 	// Find the first empty record table entry

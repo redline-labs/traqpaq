@@ -83,6 +83,8 @@ void buttons_task( void *pvParameters ){
 	unsigned short timer;			// Timer for how long a button was pressed
 	unsigned char buttonStatus;		// Storage for status of the buttons
 	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Task Started");
+	
 	while(1){
 		timer = 0;
 		buttonStatus = 1;

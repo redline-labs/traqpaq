@@ -26,10 +26,6 @@
  * with traq|paq. If not, see http://www.gnu.org/licenses/.
  *
  ******************************************************************************/
-
-// Green = RXD on FT232
-// Blue = TXD on FT232
-
 #include "asf.h"
 #include "drivers.h"
 #include "dataflash/dataflash_manager_request.h"
@@ -40,7 +36,6 @@ extern xQueueHandle dataflashManagerQueue;
 extern xQueueHandle lcdWidgetsManagerQueue;
 
 struct tLCDRequest lcdRequest;
-struct tGPSRequest gpsRequest;
 
 unsigned char rxBuffer[GPS_MSG_MAX_STRLEN];
 unsigned char gpsTokens[MAX_SIGNALS_SENTENCE];
@@ -65,28 +60,35 @@ void gps_task_init( void ){
 
 
 void gps_task( void *pvParameters ){
-	unsigned int rxdChar;
-	unsigned char rxIndex = 0;	// Receive Character Index
-	unsigned char processedRMC = FALSE, processedGGA = FALSE;
-	unsigned char recordIndex = 0;
+	unsigned int rxdChar;										// Temporary storage for received character queue
+	unsigned char rxIndex = 0;									// Index in received character buffer
 	
-	signed int oldLatitude = 0;
+	unsigned char processedRMC = FALSE, processedGGA = FALSE;	// Flags for processed NMEA messages
+	
+	unsigned char processChecksum = FALSE;
+	unsigned short calculatedChecksum = 0;
+	
+	unsigned char recordIndex = 0;								// Index in formatted data struct
+	
+	signed int oldLatitude = 0;									// Previous position update latitude and longitude
 	signed int oldLongitude = 0;
 
-	struct tDataflashRequest dataflashRequest;
-	struct tRecordDataPage gpsData;
-	struct tGPSSetLine finishLine;
-	struct tGPSSetPoint finishPoint;
+	struct tDataflashRequest dataflashRequest;					// Formatted request for dataflash manager
+	struct tRecordDataPage gpsData;								// Formatted GPS Data
+	struct tGPSSetLine finishLine;								// Formatted coordinate pairs for "finish line"
+	struct tGPSSetPoint finishPoint;							// Formatted coordinate pair for "finish point"
 	
 	// Test finish line
 	finishPoint.heading = 2666;
 	finishPoint.longitude = -83453003;
 	finishPoint.latitude = 42570383;
 	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Task Started");
+	
 	finishLine = gps_find_finish_line(finishPoint);
 
-	// Pull the GPS out of reset
-	GPS_USART->ier = AVR32_USART_IER_RXRDY_MASK;
+	// Pull the GPS out of reset and enable the ISR
+	gps_enable_interrupts();
 	gps_reset();
 	
 	while(TRUE){
@@ -94,7 +96,7 @@ void gps_task( void *pvParameters ){
 		xQueueReceive(gpsRxdQueue, &rxdChar, portMAX_DELAY);
 		
 		if( rxdChar == GPS_MSG_END_CHAR ){
-			if( gps_verify_checksum() ){
+			if( gps_received_checksum() == calculatedChecksum ){
 					
 				gps_buffer_tokenize();
 				
@@ -105,7 +107,7 @@ void gps_task( void *pvParameters ){
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_GGA_ID1) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_GGA_ID2) ){
 					
-					// Convert Time! Wooo!
+					// Convert Time!
 					gpsData.data[recordIndex].latitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_LATITUDE		]]) );
 					gpsData.data[recordIndex].latitude = gps_convert_to_decimal_degrees(gpsData.data[recordIndex].latitude);
 					
@@ -125,6 +127,7 @@ void gps_task( void *pvParameters ){
 					gpsData.data[recordIndex].hdop		= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_HDOP			]]) ) & 0xFFFF;
 					gpsData.data[recordIndex].altitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_ALTITUDE		]]) ) & 0xFFFF;
 					
+					// Determing if a lap was detected!
 					gpsData.data[recordIndex].lapDetected = gps_intersection(oldLongitude,							oldLatitude,
 																			 gpsData.data[recordIndex].longitude,   gpsData.data[recordIndex].latitude,
 																			 finishLine.startLongitude,				finishLine.startLatitude,
@@ -178,14 +181,40 @@ void gps_task( void *pvParameters ){
 					}
 				}  // ProcessedGGA and ProcessedRMC
 				
-			}	// GPS Verify Checksum
-						
+			}else{
+				// Invalid CRC received!
+				debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Invalid Checksum Received");
+			}				
+			
+			// Reset the buffer and checksum
 			rxIndex = 0;
+			calculatedChecksum = 0;
 
-		}else if( (rxIndex < GPS_MSG_MAX_STRLEN) && (rxdChar != GPS_PERIOD) ){
+		}else{
+			
+			//--------------------------
+			// Keep a running CRC calculation
+			//--------------------------
+			if( rxdChar == GPS_CHECKSUM_CHAR ){
+				processChecksum = FALSE;
+			}
+			
+			if( processChecksum ){
+				calculatedChecksum ^= rxdChar;
+			}
+			
+			if( rxdChar == GPS_MSG_START_CHAR ){
+				processChecksum = TRUE;
+			}
+			
+			//--------------------------
+			// Store the received character (skip periods!)
+			//--------------------------
+			if( (rxIndex < GPS_MSG_MAX_STRLEN) && (rxdChar != GPS_PERIOD) ){
 				rxBuffer[rxIndex++] = (rxdChar & 0xFF);
-		}
+			}
 						
+		}			
 	
 	}		
 }
@@ -221,17 +250,12 @@ void gps_buffer_tokenize( void ){
 }
 
 
-unsigned char gps_verify_checksum( void ){
+unsigned short gps_received_checksum( void ){
 	unsigned char index = 0;
-	unsigned char crcCalculated = 0;	// Seed the CRC with zero
-	unsigned char crcReceived;
 	
-	// Find the start of the NMEA sentence
-	while( (index < GPS_MSG_MAX_STRLEN) && (rxBuffer[index++] != GPS_MSG_START_CHAR) );
-	
-	// Start calculating the checksum
+	// Find the start of the NMEA checksum
 	while( (index < GPS_MSG_MAX_STRLEN) && (rxBuffer[index] != GPS_CHECKSUM_CHAR) ){
-			crcCalculated ^= rxBuffer[index++];
+		index++;
 	}
 	
 	// Skip the GPS_CHECKSUM_CHAR
@@ -250,14 +274,7 @@ unsigned char gps_verify_checksum( void ){
 		rxBuffer[index+1] -= '0';
 	}
 				
-	crcReceived = ((rxBuffer[index] & 0xF) << 4) + (rxBuffer[index+1] & 0xF);
-				
-	// Compare!
-	if( crcReceived == crcCalculated ){
-		return TRUE;
-	}
-	
-	return FALSE;
+	return ((rxBuffer[index] & 0xF) << 4) + (rxBuffer[index+1] & 0xF);
 }
 
 
@@ -298,30 +315,26 @@ signed int gps_convert_to_decimal_degrees(signed int coordinate){
 }
 
 struct tGPSSetLine gps_find_finish_line(struct tGPSSetPoint point){
-	// Storage for perpendicular angles to point heading
-	float right, left;
-	int vect;
+	float angle;
+	int	vect;
 	
 	struct tGPSSetLine finish;
 	
-	right = deg2rad(((point.heading + 900) % 3600) / 10);
-	left = deg2rad(((point.heading - 900) % 3600) / 10);
+	// Add 90 degrees to heading, make sure it is between 0 and 360,
+	// and finally shift the decimal back in
+	angle = deg2rad(((point.heading + 900) % 3600) / 10);
 	
+	// Copy the heading on the point to the heading for the line
 	finish.heading = point.heading;
 	
-	// Start Points
-	vect = sin(right) * THRESHOLD_DISTANCE * 60 * 1000000;
-	finish.startLongitude = vect + point.longitude;
+	// Project the THRESHOLD_DISTANCE along the perpendicular angle
+	vect = sin(angle) * THRESHOLD_DISTANCE * 60 * 1000000;
+	finish.startLongitude	= point.longitude + vect;
+	finish.endLongitude		= point.longitude - vect;
 	
-	vect = cos(right) * THRESHOLD_DISTANCE * 60 * 1000000;
-	finish.startLatitude = vect + point.latitude;
-	
-	// End Points
-	vect = sin(left) * THRESHOLD_DISTANCE * 60 * 1000000;
-	finish.endLongitude = vect + point.longitude;
-	
-	vect = cos(left) * THRESHOLD_DISTANCE * 60 * 1000000;
-	finish.endLatitude = vect + point.latitude;
+	vect = cos(angle) * THRESHOLD_DISTANCE * 60 * 1000000;
+	finish.startLatitude	= point.latitude + vect;
+	finish.endLatitude		= point.latitude - vect;
 	
 	return finish;
 }

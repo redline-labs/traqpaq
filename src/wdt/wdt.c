@@ -42,6 +42,8 @@ void wdt_task( void *pvParameters ){
 
 	xLastWakeTime = xTaskGetTickCount();
 	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_WDT, "Task Started");
+	
 	wdt_enable(&wdt_options);
 	
 	while(1){

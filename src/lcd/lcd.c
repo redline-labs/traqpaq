@@ -71,13 +71,15 @@ void lcd_gui_task( void *pvParameters ){
 	lcdWidgetsManagerQueue = xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(request));
 	lcdButtonsManagerQueue	= xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(unsigned char));
 	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_LCD, "Task Started");
+	
 	// Turn Boost Converter On
 	gpio_set_gpio_pin(PM_SHDN1);
 	
 	lcd_reset();
 	
 	if( lcd_readID() != LCD_DEVICE_ID){
-		debug_log("WARNING [LCD]: Incorrect device ID");
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_LCD, "Invalid Device ID");
 	}
 	
 	lcd_init();

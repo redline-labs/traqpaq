@@ -83,6 +83,8 @@ void pwm_task( void *pvParameters ){
 	displayStatus.displayOn = FALSE;
 	displayStatus.displayFaded = FALSE;
 	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_PWM, "Task Started");
+	
 	pwm_fadeBacklight(userPrefs.screenPWMMax);
 	
 	while( TRUE ){

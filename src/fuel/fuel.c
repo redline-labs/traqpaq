@@ -51,11 +51,13 @@ void fuel_task( void *pvParameters ){
 	struct tLCDRequest request;
 	request.action = LCD_REQUEST_UPDATE_BATTERY;
 	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Task Started");
+	
 	batteryInfo = fuel_readBatteryInfo();
 	
 	if( batteryInfo.crc != fuel_calculateBatteryInfoCRC(&batteryInfo) ){
 		batteryInfo.capacity = BATTERY_CAPACITY_COUNTS;
-		debug_log("WARNING [FUEL]: Battery Info CRC verification failed");
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FUEL, "Battery Info CRC failed");
 	}
 	
 	

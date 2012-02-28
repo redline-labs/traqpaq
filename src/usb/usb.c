@@ -68,6 +68,8 @@ void usb_task( void *pvParameters ){
 	
 	struct tDataflashRequest dataflashRequest;
 	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_USB, "Task Started");
+	
 	while(TRUE){
 		xQueueReceive(usbManagerQueue, &flag, portMAX_DELAY);
 		
@@ -249,7 +251,7 @@ void usb_task( void *pvParameters ){
 
 			default:
 				// Unknown command!
-				debug_log("ERROR [USB]: Unknown command received");	
+				debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_USB, "Invalid Command Received");
 				break;
 		}
 		

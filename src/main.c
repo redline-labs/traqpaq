@@ -32,9 +32,7 @@
 // ------------------------------------------------------------
 // Main
 // ------------------------------------------------------------
-int main( void ){
-	unsigned short temp = 0;
-	
+int main( void ){	
 	wdt_disable();
 	
 	// Initialization ---------------------------------------------
@@ -44,13 +42,17 @@ int main( void ){
 	INTC_init_interrupts();
 	board_init();
 	
+	#if( TRAQPAQ_HW_DEBUG_ENABLED )
+	debug_task_init();
+	#endif
+	
 	// Check to see if we got reset from a watchdog timeout
 	if( wdt_triggered() ){
-		debug_log("WARNING [WDT]: Recovering from watchdog reset!");
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_WDT, "Recovering from WDT reset");
 	}
 	
 	if( !gpio_get_pin_value(GPIO_BUTTON2) ){
-		debug_log("INFO [PM]: Powered on via USB");
+		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Powered on via USB");
 	}
 	
 	// Schedule Tasks ---------------------------------------------
@@ -104,10 +106,8 @@ int main( void ){
 	// Start the scheduler! ---------------------------------------
 	vTaskStartScheduler();
 	
-	debug_log("CRITICAL [RTOS]: Scheduler has ended");
+	debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_WDT, "Scheduler Failed");
 	
 	// Should never reach this!
-	while (true){
-		asm("nop");
-	};			
+	while (TRUE);	
 }

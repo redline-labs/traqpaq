@@ -38,6 +38,8 @@ void adc_task_init( void ){
 void adc_task( void *pvParameters ){
 	struct tADCvalues adcValues;
 	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_ADC, "Task Started");
+	
 	while(TRUE){
 		// Turn on ADC VREF and allow it to settle
 		gpio_set_gpio_pin(ADC_VREF_EN);

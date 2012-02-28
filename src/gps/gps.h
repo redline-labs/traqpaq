@@ -32,6 +32,9 @@
 
 #define GPS_VERSION					"1.00"
 
+#define gps_enable_interrupts()		GPS_USART->ier |= AVR32_USART_IER_RXRDY_MASK
+#define gps_disable_interrupts()	GPS_USART->idr |= AVR32_USART_IER_RXRDY_MASK
+
 #define GPS_RESET_TIME				100						// Time in milliseconds
 #define GPS_RXD_QUEUE_SIZE			GPS_MSG_MAX_STRLEN	// Number of items to buffer in Receive Queue
 #define GPS_MANAGER_QUEUE_SIZE		5						// Number of items to buffer in Request Queue
@@ -55,7 +58,7 @@
 #define GPS_WEST					'W'
 
 
-#define THRESHOLD_DISTANCE_FEET		15			// Threshold (+/-) in feet for finish line gate
+#define THRESHOLD_DISTANCE_FEET		20			// Threshold (+/-) in feet for finish line gate
 #define EARTH_RADIUS_FEET			20891000	// Approximate radius of earth in feet;
 #define THRESHOLD_DISTANCE			THRESHOLD_DISTANCE_FEET / EARTH_RADIUS_FEET // Do not modify, instead modify 'THRESHOLD_DISTANCE_FEET'
 
@@ -143,7 +146,7 @@ void gps_task( void *pvParameters );
 void gps_reset( void );
 
 void gps_buffer_tokenize( void );
-unsigned char gps_verify_checksum( void );
+unsigned short gps_received_checksum( void );
 
 unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, signed int y2, signed int x3, signed int y3, signed int x4, signed int y4);
 signed int gps_convert_to_decimal_degrees(signed int coordinate);

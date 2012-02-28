@@ -68,6 +68,10 @@ void board_init(void){
 		smc_init(APPL_CPU_SPEED);
 	#endif
 
+	// ------------------------------------------------------------
+	// CRC Initialization
+	// ------------------------------------------------------------
+	//init_crcccitt_tab();
 
 	// ------------------------------------------------------------
 	// GPIO Initialization
@@ -118,7 +122,7 @@ void board_init(void){
 			{DEBUG_RXD, DEBUG_RXD_FUNCTION}
 		};
 
-		// Options for USART1 Hardware
+		// Options for USART2 Hardware
 		const usart_options_t DEBUG_USART_OPTIONS = {
 			.baudrate     = DEBUG_USART_BAUD,
 			.charlength   = 8,

@@ -223,5 +223,12 @@ to exclude the API function. */
 #define configTSK_PWM_TASK_PERIOD			20
 #define configTSK_PWM_TASK_HANDLE			NULL
 
+/* Debug Task */
+#define configTSK_DEBUG_TASK_NAME			((const signed portCHAR *)"Debug")
+#define configTSK_DEBUG_TASK_STACK_SIZE		512
+#define configTSK_DEBUG_TASK_PRIORITY		TASK_PRIORITY_LOW
+#define configTSK_DEBUG_TASK_PERIOD			20
+#define configTSK_DEBUG_TASK_HANDLE			NULL
+
 
 #endif /* FREERTOS_CONFIG_H */
