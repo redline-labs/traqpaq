@@ -35,6 +35,8 @@ if(lcd_redraw_required()){
 	menu_addItem(&mainMenu, "Settings",				LCDFSM_OPTIONS);
 	menu_addItem(&mainMenu, "Help",					LCDFSM_HELP);
 	
+	lcd_drawPeripheralBox(COLOR_GREEN);
+	
 	lcd_redraw_complete();
 }
 

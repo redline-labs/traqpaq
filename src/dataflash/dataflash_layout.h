@@ -69,21 +69,25 @@ typedef struct __attribute__ ((packed)) tRecordData {
 	
 	unsigned char lapDetected;
 	unsigned char reserved;
-	unsigned short altitude;
+	unsigned short altitude; 
 	
 	unsigned short speed;
 	unsigned short course;
+}; // 20 bytes
+
+#define RECORD_DATA_PER_PAGE	12
+
+typedef struct __attribute__ ((packed)) tRecordDataPage {
+	unsigned int date;
 	
 	unsigned short hdop;
 	unsigned char currentMode;
 	unsigned char satellites;
-}; // 24 bytes
-
-#define RECORD_DATA_PER_PAGE	10
-
-typedef struct __attribute__ ((packed)) tRecordDataPage {
+	
+	unsigned char reserved[8];
+	
 	struct tRecordData data[RECORD_DATA_PER_PAGE];
-};
+}; // 256 bytes
 
 
 

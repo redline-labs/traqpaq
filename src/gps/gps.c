@@ -35,8 +35,6 @@ xQueueHandle gpsRxdQueue;
 extern xQueueHandle dataflashManagerQueue;
 extern xQueueHandle lcdWidgetsManagerQueue;
 
-struct tLCDRequest lcdRequest;
-
 unsigned char rxBuffer[GPS_MSG_MAX_STRLEN];
 unsigned char gpsTokens[MAX_SIGNALS_SENTENCE];
 
@@ -72,8 +70,12 @@ void gps_task( void *pvParameters ){
 	
 	signed int oldLatitude = 0;									// Previous position update latitude and longitude
 	signed int oldLongitude = 0;
+	
+	unsigned char oldMode = 0;
 
 	struct tDataflashRequest dataflashRequest;					// Formatted request for dataflash manager
+	struct tLCDRequest lcdRequest;
+	
 	struct tRecordDataPage gpsData;								// Formatted GPS Data
 	struct tGPSSetLine finishLine;								// Formatted coordinate pairs for "finish line"
 	struct tGPSSetPoint finishPoint;							// Formatted coordinate pair for "finish point"
@@ -109,7 +111,7 @@ void gps_task( void *pvParameters ){
 					
 					// Convert Time!
 					gpsData.data[recordIndex].latitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_LATITUDE		]]) );
-					gpsData.data[recordIndex].latitude = gps_convert_to_decimal_degrees(gpsData.data[recordIndex].latitude);
+					gpsData.data[recordIndex].latitude	= gps_convert_to_decimal_degrees(gpsData.data[recordIndex].latitude);
 					
 					if( rxBuffer[gpsTokens[TOKEN_GGA_NORS]] == GPS_SOUTH){
 						gpsData.data[recordIndex].latitude *= -1;
@@ -122,16 +124,24 @@ void gps_task( void *pvParameters ){
 						gpsData.data[recordIndex].longitude *= -1;
 					}
 					
-					gpsData.data[recordIndex].currentMode=atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_QUALITY		]]) ) & 0xFFFF;
-					gpsData.data[recordIndex].satellites= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_NUM_SATELLITES	]]) ) & 0xFF;
-					gpsData.data[recordIndex].hdop		= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_HDOP			]]) ) & 0xFFFF;
+					gpsData.currentMode					= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_QUALITY		]]) ) & 0xFFFF;
+					gpsData.satellites					= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_NUM_SATELLITES	]]) ) & 0xFF;
+					gpsData.hdop						= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_HDOP			]]) ) & 0xFFFF;
 					gpsData.data[recordIndex].altitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_ALTITUDE		]]) ) & 0xFFFF;
 					
-					// Determing if a lap was detected!
+					// Determine if a lap was detected!
 					gpsData.data[recordIndex].lapDetected = gps_intersection(oldLongitude,							oldLatitude,
 																			 gpsData.data[recordIndex].longitude,   gpsData.data[recordIndex].latitude,
 																			 finishLine.startLongitude,				finishLine.startLatitude,
 																			 finishLine.endLongitude,				finishLine.endLatitude);
+					
+					// Update the antenna widget
+					if(oldMode != gpsData.currentMode){
+						lcdRequest.action = LCD_REQUEST_UPDATE_ANTENNA;
+						lcdRequest.data = gpsData.currentMode;
+						xQueueSend(lcdWidgetsManagerQueue, &lcdRequest, pdFALSE);
+						oldMode = gpsData.currentMode;
+					}
 					
 					// Save the last coordinates for detecting the intersection
 					oldLongitude = gpsData.data[recordIndex].longitude;
@@ -151,6 +161,8 @@ void gps_task( void *pvParameters ){
 					gpsData.data[recordIndex].utc		= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_UTC	]]) );
 					gpsData.data[recordIndex].speed		= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_SPEED	]]) ) & 0xFFFF;
 					gpsData.data[recordIndex].course	= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_TRACK	]]) ) & 0xFFFF;
+					
+					gpsData.date						= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_DATE	]]) );
 
 					processedRMC = TRUE;
 					

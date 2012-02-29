@@ -114,6 +114,16 @@ extern struct tLCDTopBar topBar;
 #define LCD_ANTENNA_ERRORCOLOR		COLOR_RED
 
 
+#define LCD_PERIPHERIAL_THICKNESS		20			// Line thickness in px
+#define LCD_PERIPHERIAL_SLOWER			0
+#define LCD_PERIPHERIAL_SAME			1
+#define LCD_PERIPHERIAL_FASTER			2
+#define LCD_PERIPHERIAL_SLOWER_COLOR	COLOR_RED
+#define LCD_PERIPHERIAL_SAME_COLOR		COLOR_GREY
+#define LCD_PERIPHERIAL_FASTER_COLOR	COLOR_GREEN
+
+
+
 // Color Definitions
 // Bits: 15 14 13 12 11 10 9  8  7  6  5  4  3  2  1  0
 //       B  B  B  B  B  G  G  G  G  G  G  R  R  R  R  R
@@ -302,6 +312,8 @@ void lcd_scrollDisplay(unsigned short numLines);
 
 void lcd_updateCharge(struct tLCDTopBar *topBar, unsigned short state);
 
+void lcd_drawPeripheralBox(unsigned short color);
+
 typedef struct tLCDProgressBar {
 	unsigned short start_x;
 	unsigned short start_y;
@@ -358,6 +370,7 @@ typedef struct tLCDTopBar {
 #define LCD_REQUEST_UPDATE_CHARGE		1
 #define LCD_REQUEST_UPDATE_USB			2
 #define LCD_REQUEST_UPDATE_ANTENNA		3
+#define LCD_REQUEST_UPDATE_PERIPHERIAL	4
 
 
 typedef struct tLCDRequest {

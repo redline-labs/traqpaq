@@ -60,7 +60,6 @@ void fuel_task( void *pvParameters ){
 		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FUEL, "Battery Info CRC failed");
 	}
 	
-	
 	while(1){
 		accumulated_current = fuel_read_current( FUEL_CURRENT_ACCUMULATED ) >> 2;
 		

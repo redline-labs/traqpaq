@@ -93,14 +93,27 @@ void lcd_gui_task( void *pvParameters ){
 	
 	while(1){
 		// See if a widget needs to be updated
-		if( xQueueReceive(lcdWidgetsManagerQueue, &request, 0) == pdTRUE ){
+		if( xQueueReceive(lcdWidgetsManagerQueue, &request, pdFALSE) == pdTRUE ){
 			switch(request.action){
 				case(LCD_REQUEST_UPDATE_BATTERY):
 					lcd_updateBattery(&topBar, request.data);
 					break;
 					
 				case(LCD_REQUEST_UPDATE_ANTENNA):
-					lcd_updateAntenna(&topBar, request.data);
+					switch(request.data){
+						case(GPS_MODE_NO_FIX):
+							lcd_updateAntenna(&topBar, 0);
+							break;
+							
+						case(GPS_MODE_2D_FIX):
+							lcd_updateAntenna(&topBar, 2);
+							break;
+							
+						case(GPS_MODE_3D_FIX):
+							lcd_updateAntenna(&topBar, 4);
+							break;
+					}
+					
 					break;
 					
 				case(LCD_REQUEST_UPDATE_CHARGE):
@@ -122,6 +135,22 @@ void lcd_gui_task( void *pvParameters ){
 							break;
 					}
 					break;
+					
+				case(LCD_REQUEST_UPDATE_PERIPHERIAL):
+					switch(request.data){
+						case(LCD_PERIPHERIAL_SLOWER):
+							lcd_drawPeripheralBox(LCD_PERIPHERIAL_SLOWER_COLOR);
+							break;
+						
+						case(LCD_PERIPHERIAL_SAME):
+							lcd_drawPeripheralBox(LCD_PERIPHERIAL_SAME_COLOR);
+							break;
+							
+						case(LCD_PERIPHERIAL_FASTER):
+							lcd_drawPeripheralBox(LCD_PERIPHERIAL_FASTER_COLOR);
+							break;
+					}
+					break;						
 			}
 		}
 		
@@ -873,5 +902,36 @@ void lcd_updateCharge(struct tLCDTopBar *topBar, unsigned short state){
 							LCD_MAX_Y - LCD_CHARGE_Y_POS + LCD_CHARGE_HEIGHT,
 							LCD_MAX_X - LCD_CHARGE_X_POS + LCD_CHARGE_WIDTH,
 							LCD_MAX_Y - LCD_CHARGE_Y_POS,
-							state);	// Insides of battery
+							state);
+}
+
+void lcd_drawPeripheralBox(unsigned short color){
+	// Vertical left most line
+	lcd_drawFilledRectangle(LCD_MIN_X,
+							LCD_MAX_Y - LCD_TOPBAR_THICKNESS,
+							LCD_MIN_X + LCD_PERIPHERIAL_THICKNESS,
+							LCD_MIN_Y,
+							color);
+							
+	// Vertical right most line
+	lcd_drawFilledRectangle(LCD_MAX_X - LCD_PERIPHERIAL_THICKNESS,
+							LCD_MAX_Y - LCD_TOPBAR_THICKNESS,
+							LCD_MAX_X,
+							LCD_MIN_Y,
+							color);
+							
+	// Horizontal top most line
+	lcd_drawFilledRectangle(LCD_MIN_X,
+							LCD_MAX_Y - LCD_TOPBAR_THICKNESS,
+							LCD_MAX_X,
+							LCD_MAX_Y - LCD_TOPBAR_THICKNESS - LCD_PERIPHERIAL_THICKNESS,
+							color);
+							
+	// Horizontal bottom most line
+	lcd_drawFilledRectangle(LCD_MIN_X,
+							LCD_MIN_Y + LCD_PERIPHERIAL_THICKNESS,
+							LCD_MAX_X,
+							LCD_MIN_Y,
+							color);
+	
 }

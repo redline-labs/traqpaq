@@ -58,7 +58,7 @@
 #define GPS_WEST					'W'
 
 
-#define THRESHOLD_DISTANCE_FEET		20			// Threshold (+/-) in feet for finish line gate
+#define THRESHOLD_DISTANCE_FEET		25			// Threshold (+/-) in feet for finish line gate
 #define EARTH_RADIUS_FEET			20891000	// Approximate radius of earth in feet;
 #define THRESHOLD_DISTANCE			THRESHOLD_DISTANCE_FEET / EARTH_RADIUS_FEET // Do not modify, instead modify 'THRESHOLD_DISTANCE_FEET'
 
@@ -139,6 +139,11 @@ typedef struct tGPSSetLine {
 
 #define deg2rad(x)			((x) * RADIANS_CONVERSION)
 #define rad2deg(x)			((x) / RADIANS_CONVERSION)
+
+
+#define GPS_MODE_NO_FIX				0
+#define GPS_MODE_2D_FIX				1
+#define GPS_MODE_3D_FIX				2
 
 // Prototypes
 void gps_task_init( void );
