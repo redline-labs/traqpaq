@@ -55,7 +55,8 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_BACK):
-			asm("nop");
+			lcd_force_redraw();
+			lcd_change_screens( LCDFSM_MAINMENU );
 			break;
 			
 			

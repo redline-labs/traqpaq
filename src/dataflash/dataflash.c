@@ -81,12 +81,8 @@ void dataflash_task_init( void ){
 }
 
 void dataflash_task( void *pvParameters ){
-	unsigned short i;
 	volatile unsigned char recordTableIndex = 0;	// Index of first empty record table
 	struct tRecordsEntry recordTable, prevRecordTable;
-	unsigned int tempU32;
-	
-	struct tGPSRequest gpsRequest;
 	
 	unsigned char flashIsFull = FALSE;
 	
@@ -94,10 +90,6 @@ void dataflash_task( void *pvParameters ){
 	
 	dataflash_GlobalUnprotect();
 	dataflash_WriteEnable();
-	
-	if( dataflash_is_busy() ){
-		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Device is busy");
-	}
 	
 	// Find the first empty record table entry
 	while( recordTableIndex < RECORDS_TOTAL_POSSIBLE ){
@@ -114,7 +106,7 @@ void dataflash_task( void *pvParameters ){
 	}else{
 		// Peek at the last available record
 		dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(prevRecordTable) * (recordTableIndex - 1)), sizeof(prevRecordTable), &prevRecordTable);
-		recordTable.startAddress = (prevRecordTable.endAddress + 1) & 0xFFFFFF00;	// Align to page
+		recordTable.startAddress = (prevRecordTable.endAddress + 1);
 		recordTable.endAddress = recordTable.startAddress;
 	}
 	
@@ -346,6 +338,10 @@ unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned short 
 unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){
 	unsigned char i;
 	
+	while( dataflash_is_busy() ){
+		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
+	}
+	
 	dataflash_WriteEnable();
 	
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
@@ -395,6 +391,10 @@ unsigned char dataflash_ReadOTP(unsigned char startAddress, unsigned char length
 unsigned char dataflash_WriteOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer){
 	unsigned char i;
 	
+	while( dataflash_is_busy() ){
+		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
+	}
+	
 	dataflash_WriteEnable();
 
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
@@ -414,6 +414,11 @@ unsigned char dataflash_WriteOTP(unsigned char startAddress, unsigned char lengt
 
 unsigned char dataflash_eraseBlock(unsigned char blockSize, unsigned long startAddress){
 	if( (blockSize == DATAFLASH_CMD_BLOCK_ERASE_4KB) | (blockSize == DATAFLASH_CMD_BLOCK_ERASE_32KB) | (blockSize == DATAFLASH_CMD_BLOCK_ERASE_64KB) ){
+		
+		while( dataflash_is_busy() ){
+			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
+		}
+		
 		dataflash_WriteEnable();
 		
 		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
@@ -434,6 +439,10 @@ unsigned char dataflash_eraseBlock(unsigned char blockSize, unsigned long startA
 }
 
 unsigned char dataflash_chipErase( void ){
+		while( dataflash_is_busy() ){
+			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
+		}
+	
 		dataflash_WriteEnable();
 	
 		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
@@ -444,6 +453,9 @@ unsigned char dataflash_chipErase( void ){
 }
 
 unsigned char dataflash_powerDown( void ){
+		while( dataflash_is_busy() ){
+			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
+		}
 		
 		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 		spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DEEP_POWER_DOWN);
@@ -453,6 +465,10 @@ unsigned char dataflash_powerDown( void ){
 }
 
 unsigned char dataflash_wakeUp( void ){
+	
+		while( dataflash_is_busy() ){
+			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
+		}
 		
 		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 		spi_write(DATAFLASH_SPI, DATAFLASH_CMD_WAKEUP);

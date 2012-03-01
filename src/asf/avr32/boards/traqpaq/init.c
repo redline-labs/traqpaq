@@ -213,9 +213,6 @@ void board_init(void){
 			.modfdis	 = SPI_FAULT_DETECT, 
 		};
 
-		//spi_master_init(DATAFLASH_SPI);
-		//spi_master_setup_device(DATAFLASH_SPI, &DATAFLASH_CS1, SPI_MODE_0, SPI_BAUDRATE, 0);
-		
 		spi_initMaster(DATAFLASH_SPI, &dataflashOptions);
 		spi_selectionMode(DATAFLASH_SPI, SPI_VARIABLE_PS, SPI_PCS_DECODE, SPI_SCLK_DELAY);
 		spi_enable(DATAFLASH_SPI);

@@ -161,7 +161,7 @@
 
 #define DATAFLASH_PDCA_CHECK_TIME			5	// Time in milliseconds to suspend task before checking PDCA status again
 #define DATAFLASH_STATUS_CHECK_TIME			10	// Time in milliseconds to suspend task before checking status register again
-#define DATAFLASH_PROGRAM_TIME				4
+#define DATAFLASH_PROGRAM_TIME				2
 #define DATAFLASH_ERASE_TIME				20
 
 typedef struct tDataflashStatusRegisters{

@@ -48,7 +48,7 @@ __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
 
 void gps_task_init( void ){
 	gpsRxdQueue		= xQueueCreate(GPS_RXD_QUEUE_SIZE, sizeof(int));
-	
+
 	INTC_register_interrupt(&ISR_gps_rxd, AVR32_USART3_IRQ, AVR32_INTC_INT0);
 	
 	xTaskCreate(gps_task, configTSK_GPS_TASK_NAME, configTSK_GPS_TASK_STACK_SIZE, NULL, configTSK_GPS_TASK_PRIORITY, configTSK_GPS_TASK_HANDLE);
@@ -95,7 +95,7 @@ void gps_task( void *pvParameters ){
 	while(TRUE){
 		
 		if( gps_did_time_expire(GPS_RMC_TIMEOUT) ){
-			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Message Timer Expired");
+			debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "Message Timer Expired");
 			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Setting Message Rate");
 			gps_set_messaging_rate(GPS_MESSAGING_100MS);
 			gps_resetTimer();
@@ -201,7 +201,7 @@ void gps_task( void *pvParameters ){
 							break;
 							
 						case(PMTK001_VALID_CMD):
-							debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Command Succeeded");
+							debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Command Succeeded");
 							break;
 					}
 					
@@ -409,6 +409,7 @@ void gps_set_messaging_rate(unsigned char rate){
 }
 
 void gps_set_messages( void ){
+	// Enable GGA and RMC messages only
 	usart_write_line(GPS_USART, "$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28");
 	usart_putchar(GPS_USART, GPS_MSG_CR);
 	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
