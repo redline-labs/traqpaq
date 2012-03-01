@@ -68,7 +68,7 @@ extern struct tLCDTopBar topBar;
 // Defines
 //-----------------------------------------------
 // Delays for Init
-#define LCD_SETUP_DELAY				10
+#define LCD_SETUP_DELAY				2
 
 // GUI Elements
 #define LCD_PROGRESSBAR_PADDING		3
@@ -121,6 +121,8 @@ extern struct tLCDTopBar topBar;
 #define LCD_PERIPHERIAL_SLOWER_COLOR	COLOR_RED
 #define LCD_PERIPHERIAL_SAME_COLOR		COLOR_GREY
 #define LCD_PERIPHERIAL_FASTER_COLOR	COLOR_GREEN
+
+#define LCD_PERIPHERIAL_FADE_TIME		10			// Seconds for the peripherial ring to display
 
 
 
@@ -278,11 +280,15 @@ extern struct tLCDTopBar topBar;
 
 #define lcd_change_screens(screen)	lcd_fsm = screen
 
+#define lcd_resetTimer()			LastUpdateTime = xTaskGetTickCount()
+#define lcd_did_time_expire(seconds) ((xTaskGetTickCount() - LastUpdateTime) >= (seconds * configTICK_RATE_HZ))			// Check to see if timer expired
+
 #define LCD_TASK_SLEEP_TIME			20
 
 unsigned short lcd_readID(void);
-void lcd_task_init(void);
-void lcd_gui_task( void *pvParameters );
+void lcd_task_init( unsigned char mode );
+void lcd_gui_task_normal( void *pvParameters );
+void lcd_gui_task_usb( void *pvParameters );
 void lcd_reset( void );
 void lcd_init( void );
 
@@ -313,6 +319,9 @@ void lcd_scrollDisplay(unsigned short numLines);
 void lcd_updateCharge(struct tLCDTopBar *topBar, unsigned short state);
 
 void lcd_drawPeripheralBox(unsigned short color);
+
+unsigned char lcd_sendWidgetRequest(unsigned char action, unsigned char data, unsigned char delay);
+unsigned char lcd_sendButtonRequest(unsigned char button);
 
 typedef struct tLCDProgressBar {
 	unsigned short start_x;

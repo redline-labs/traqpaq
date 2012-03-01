@@ -32,8 +32,6 @@
 #include "lcd/menu.h"
 
 static xQueueHandle buttonPress;
-extern xQueueHandle lcdButtonsManagerQueue;
-
 
 //------------------------------
 // ISR's
@@ -66,7 +64,7 @@ __attribute__((__interrupt__)) static void ISR_button3(void) {
 //------------------------------
 // Functions
 //------------------------------
-void buttons_task_init( void ){
+void buttons_task_init( unsigned char mode ){
 	buttonPress = xQueueCreate(1, sizeof(unsigned char));
 	
 	INTC_register_interrupt(&ISR_button0, EXTINT_BUTTON0_IRQ, EXTINT_BUTTON0); 
@@ -74,11 +72,15 @@ void buttons_task_init( void ){
 	INTC_register_interrupt(&ISR_button2, EXTINT_BUTTON2_IRQ, EXTINT_BUTTON2); 
 	INTC_register_interrupt(&ISR_button3, EXTINT_BUTTON3_IRQ, EXTINT_BUTTON3); 
 	
-	xTaskCreate(buttons_task, configTSK_BUTTONS_TASK_NAME, configTSK_BUTTONS_TASK_STACK_SIZE, NULL, configTSK_BUTTONS_TASK_PRIORITY, configTSK_BUTTONS_TASK_HANDLE);
+	if(mode == TASK_MODE_NORMAL){
+		xTaskCreate(buttons_task_normal, configTSK_BUTTONS_TASK_NAME, configTSK_BUTTONS_TASK_STACK_SIZE, NULL, configTSK_BUTTONS_TASK_PRIORITY, configTSK_BUTTONS_TASK_HANDLE);
+	}else{
+		xTaskCreate(buttons_task_usb, configTSK_BUTTONS_TASK_NAME, configTSK_BUTTONS_TASK_STACK_SIZE, NULL, configTSK_BUTTONS_TASK_PRIORITY, configTSK_BUTTONS_TASK_HANDLE);
+	}		
 }
 
 
-void buttons_task( void *pvParameters ){
+void buttons_task_normal( void *pvParameters ){
 	unsigned char button;			// Storage for queue - Holds the ID of the button pressed
 	unsigned short timer;			// Timer for how long a button was pressed
 	unsigned char buttonStatus;		// Storage for status of the buttons
@@ -103,34 +105,49 @@ void buttons_task( void *pvParameters ){
 		}
 			
 		if(timer >= BUTTON_LONG_PRESS_TIMER_VALUE){
-			// Qualified a long button press
-			switch(button){
-				case(BUTTON_UP):
-					button = BUTTON_LONG_UP;
-					xQueueSend(lcdButtonsManagerQueue, &button, portMAX_DELAY);
-					break;
-					
-				case(BUTTON_DOWN):
-					button = BUTTON_LONG_DOWN;
-					xQueueSend(lcdButtonsManagerQueue, &button, portMAX_DELAY);
-					break;
-					
-				case(BUTTON_BACK):
-					button = BUTTON_LONG_BACK;
-					xQueueSend(lcdButtonsManagerQueue, &button, portMAX_DELAY);
-					break;
-					
-				case(BUTTON_SELECT):
-					button = BUTTON_LONG_SELECT;
-					//xQueueSend(queueLCDmenu, &button, portMAX_DELAY);
-					gpio_clr_gpio_pin(PM_ENABLE);
-					break;
-			}
+			button |= BUTTON_LONG_PRESS_MASK;
+		}
+		
+		// Power Off Condition
+		if(button == BUTTON_LONG_SELECT){
+			gpio_clr_gpio_pin(PM_ENABLE);
+		}
+		
+		// Send button press and request the backlight on!
+		lcd_sendButtonRequest(button);
+		pwm_send_request();
 			
-		}else{
-			// Normal short button press
-			xQueueSend(lcdButtonsManagerQueue, &button, portMAX_DELAY);
-		}						
+		// Clear any pending EXTINT interrupts and re-enable them
+		eic_clear_interrupt_lines(&AVR32_EIC, (1<<EXTINT_BUTTON0) | (1<<EXTINT_BUTTON1) | (1<<EXTINT_BUTTON2) | (1<<EXTINT_BUTTON3));
+		eic_enable_interrupt_lines(&AVR32_EIC, (1<<EXTINT_BUTTON0) | (1<<EXTINT_BUTTON1) | (1<<EXTINT_BUTTON2) | (1<<EXTINT_BUTTON3));
+	}			
+			
+}
+
+
+void buttons_task_usb( void *pvParameters ){
+	unsigned char button;			// Storage for queue - Holds the ID of the button pressed
+	unsigned char buttonStatus;		// Storage for status of the buttons
+	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Task Started");
+	
+	while(1){
+		buttonStatus = 1;
+		
+		// Wait for button press - suspends task
+		xQueueReceive(buttonPress, &button, portMAX_DELAY);
+		
+		// Disable EXTINT interrupts until we are ready to process them again
+		eic_disable_interrupt_lines(&AVR32_EIC, (1<<EXTINT_BUTTON0) | (1<<EXTINT_BUTTON1) | (1<<EXTINT_BUTTON2) | (1<<EXTINT_BUTTON3));
+
+		// See how long the button is being pressed
+		while( buttonStatus ){
+			vTaskDelay( (portTickType)TASK_DELAY_MS(BUTTON_TIMER_INCREMENT) );
+			buttonStatus = gpio_get_pin_value(GPIO_BUTTON0) | gpio_get_pin_value(GPIO_BUTTON1) | gpio_get_pin_value(GPIO_BUTTON2) | gpio_get_pin_value(GPIO_BUTTON3);
+		}
+		
+		// Request the backlight to be on!
+		pwm_send_request();
 			
 		// Clear any pending EXTINT interrupts and re-enable them
 		eic_clear_interrupt_lines(&AVR32_EIC, (1<<EXTINT_BUTTON0) | (1<<EXTINT_BUTTON1) | (1<<EXTINT_BUTTON2) | (1<<EXTINT_BUTTON3));

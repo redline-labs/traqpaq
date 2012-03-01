@@ -31,26 +31,16 @@
 #include "asf.h"
 #include "drivers.h"
 
-// Allow access to the LCD Queue
-extern xQueueHandle lcdWidgetsManagerQueue;
-
 void charge_task_init( void ){
 	xTaskCreate(charge_task, configTSK_CHARGE_TASK_NAME, configTSK_CHARGE_TASK_STACK_SIZE, NULL, configTSK_CHARGE_TASK_PRIORITY, configTSK_CHARGE_TASK_HANDLE);
 }
 
 void charge_task( void *pvParameters ){
-	struct tLCDRequest request;
-	request.action = LCD_REQUEST_UPDATE_CHARGE;
-	
+
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_CHARGE, "Task Started");
 	
 	while( TRUE ){
-		request.data = charge_state();
-		
-		#if( TRAQPAQ_HW_EBI_ENABLED )
-		xQueueSend(lcdWidgetsManagerQueue, &request, portMAX_DELAY);
-		#endif
-		
+		lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_CHARGE, charge_state(), pdFALSE);
 		vTaskDelay( (portTickType)TASK_DELAY_MS(2500) );
 	}
 }

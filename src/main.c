@@ -51,54 +51,98 @@ int main( void ){
 		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_WDT, "Recovering from WDT reset");
 	}
 	
+	#if( TRAQPAQ_NORMAL_MODE_ON_USB == FALSE )
+	// Enter special mode if powered on by USB
 	if( !gpio_get_pin_value(GPIO_BUTTON2) ){
 		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Powered on via USB");
-	}
+		
+		#if( TRAQPAQ_HW_SPI_ENABLED )
+		dataflash_task_init();
+		#endif
+		
+		#if( TRAQPAQ_HW_EBI_ENABLED )
+		lcd_task_init(TASK_MODE_USB);
+		#endif
+		
+		#if( TRAQPAQ_HW_PWM_ENABLED )
+		pwm_task_init(TASK_MODE_USB);
+		#endif
 	
-	// Schedule Tasks ---------------------------------------------
-	#if( TRAQPAQ_HW_SPI_ENABLED )
-	dataflash_task_init();
-	#endif
-	
-	#if( TRAQPAQ_HW_EBI_ENABLED )
-	lcd_task_init();
+		#if( TRAQPAQ_HW_USB_ENABLED )
+		usb_task_init();
+		#endif
+		
+		#if( TRAQPAQ_HW_TWI_ENABLED )
+		fuel_task_init();
+		#endif
+		
+		#if( TRAQPAQ_HW_CHARGE_ENABLED )
+		charge_task_init();
+		#endif
+		
+		#if( TRAQPAQ_HW_EXINT_ENABLED )
+		buttons_task_init(TASK_MODE_USB);
+		// If switches are enabled, then keep the main power supply on!
+		//gpio_set_gpio_pin(PM_ENABLE);
+		#endif
+		
+	}else{
 	#endif
 		
-	#if( TRAQPAQ_HW_PWM_ENABLED )
-	pwm_task_init();
-	#endif
+		#if( TRAQPAQ_NORMAL_MODE_ON_USB )
+		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Forcing normal mode on USB powerup");
+		#else
+		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Powered on via button");
+		#endif
+		
+		// Schedule Tasks ---------------------------------------------
+		#if( TRAQPAQ_HW_SPI_ENABLED )
+		dataflash_task_init();
+		#endif
 	
-	#if( TRAQPAQ_HW_USB_ENABLED )
-	usb_task_init();
-	#endif
+		#if( TRAQPAQ_HW_EBI_ENABLED )
+		lcd_task_init(TASK_MODE_NORMAL);
+		#endif
+		
+		#if( TRAQPAQ_HW_PWM_ENABLED )
+		pwm_task_init(TASK_MODE_NORMAL);
+		#endif
 	
-	#if( TRAQPAQ_HW_TWI_ENABLED )
-	fuel_task_init();
-	#endif
+		#if( TRAQPAQ_HW_USB_ENABLED )
+		usb_task_init();
+		#endif
 	
-	#if( TRAQPAQ_HW_GPS_ENABLED )
-	gps_task_init();
-	#else
-	// Kick the GPS out of reset so we can use it for external datalogging
-	gpio_set_gpio_pin(GPS_RESET);
-	#endif
+		#if( TRAQPAQ_HW_TWI_ENABLED )
+		fuel_task_init();
+		#endif
 	
-	#if( TRAQPAQ_HW_EXINT_ENABLED )
-	buttons_task_init();
-	// If switches are enabled, then keep the main power supply on!
-	gpio_set_gpio_pin(PM_ENABLE);
-	#endif
+		#if( TRAQPAQ_HW_GPS_ENABLED )
+		gps_task_init();
+		#else
+		// Kick the GPS out of reset so we can use it for external datalogging
+		gpio_set_gpio_pin(GPS_RESET);
+		#endif
 	
-	#if( TRAQPAQ_HW_CHARGE_ENABLED )
-	charge_task_init();
-	#endif
+		#if( TRAQPAQ_HW_EXINT_ENABLED )
+		buttons_task_init(TASK_MODE_NORMAL);
+		// If switches are enabled, then keep the main power supply on!
+		gpio_set_gpio_pin(PM_ENABLE);
+		#endif
 	
-	#if( TRAQPAQ_HW_ADC_ENABLED )
-	adc_task_init();
-	#endif
+		#if( TRAQPAQ_HW_CHARGE_ENABLED )
+		charge_task_init();
+		#endif
 	
-	#if( TRAQPAQ_HW_WDT_ENABLED )
-	wdt_task_init();
+		#if( TRAQPAQ_HW_ADC_ENABLED )
+		adc_task_init();
+		#endif
+	
+		#if( TRAQPAQ_HW_WDT_ENABLED )
+		wdt_task_init();
+		#endif
+		
+	#if( TRAQPAQ_NORMAL_MODE_ON_USB == FALSE )
+	}
 	#endif
 	
 	Enable_global_interrupt();

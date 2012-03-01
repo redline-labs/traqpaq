@@ -9,6 +9,10 @@
 #ifndef DRIVERS_H_
 #define DRIVERS_H_
 
+#define TASK_MODE_NORMAL		0
+#define TASK_MODE_USB			1
+
+
 // Debug
 #include "adc/adc.h"
 

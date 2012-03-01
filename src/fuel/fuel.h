@@ -125,10 +125,10 @@
 
 #define FUEL_UPDATE_RATE						3000	// Time (milliseconds) to update run the fuel task
 
-#define FUEL_WRITE_TO_EE_TIME					10		// Time in milliseconds for worst case EE write
+#define FUEL_WRITE_TO_EE_TIME					2		// Time in milliseconds to recheck EE status
 
 
-typedef struct tFuelStatus{ 
+typedef struct __attribute__ ((packed)) tFuelStatus{ 
 	// Protection Register - 8 bits
     unsigned OV		: 1;	// Overvoltage Flag
 	unsigned UV		: 1;	// Undervoltage Flag
@@ -145,7 +145,7 @@ typedef struct tFuelStatus{
 	unsigned Res0	: 5;	// Reserved bits
 };
 
-typedef struct tFuelBatteryStatus{
+typedef struct __attribute__ ((packed)) tFuelBatteryStatus{
 	unsigned short accumCurrent;
 	unsigned short voltage;
 	unsigned short instCurrent;
@@ -153,7 +153,7 @@ typedef struct tFuelBatteryStatus{
 };
 
 
-typedef struct tFuelEEStatus{
+typedef struct __attribute__ ((packed)) tFuelEEStatus{
 	// EEPROM Register
 	unsigned EEC	: 1;	// EEPROM Copy Flag
 	unsigned LOCK	: 1;	// EEPROM Lock Enable
@@ -163,21 +163,18 @@ typedef struct tFuelEEStatus{
 	unsigned BL0	: 1;	// EEPROM Block 0 Lock Flag
 	
 	// Special Feature Register
-	unsigned PS		: 1;	// PS Pin Latch (Active Low)
-	unsigned Res1	: 5;	// Reserved bits
-	unsigned SAWE	: 1;	// Slave Address Write Enable
-	unsigned Res0	: 1;	// Reserved bit
+	//unsigned PS		: 1;	// PS Pin Latch (Active Low)
+	//unsigned Res1	: 5;	// Reserved bits
+	//unsigned SAWE	: 1;	// Slave Address Write Enable
+	//unsigned Res0	: 1;	// Reserved bit
 };
 
 typedef struct __attribute__ ((packed)) tBatteryInfo{
 	unsigned short capacity;		// Capacity of Battery in counts
-	unsigned short minVoltage;		// Min Voltage Threshold
 	unsigned short chargeCycles;	// Number of Charge Cycles
 	unsigned short health;			// Health of battery - default to FF
-	unsigned char useFastCharge;	// Allow USB Fast Charging for battery
-	unsigned char status;			// Status of battery - default to FF
 	unsigned short crc;				// CRC of tBatteryInfo
-};	// tBatteryInfo - 32 Bytes
+};	// tBatteryInfo - 16 Bytes
 
 
 void fuel_task_init( void );
@@ -194,10 +191,11 @@ void fuel_copyEEtoShadowRAM( void );
 void fuel_copyShadowRAMtoEE( void );
 unsigned short fuel_calculateBatteryInfoCRC( struct tBatteryInfo *batteryInfo );
 void fuel_clearEELocks( void );
-void inline fuel_writeBatteryInfo( struct tBatteryInfo *batteryInfo );
+unsigned char fuel_writeBatteryInfo(unsigned short capacity, unsigned short chargeCycles, unsigned short health);
 struct tBatteryInfo fuel_readBatteryInfo( void );
 void fuel_updateAccumulatedCurrent(unsigned short value);
 void inline fuel_writeShadowRAM( void );
+unsigned char fuel_isBusy( void );
 
 
 #endif /* FUEL_H_ */

@@ -36,21 +36,24 @@
 #define BUTTON_LONG_PRESS_TIMER_VALUE	BUTTON_LONG_PRESS_TIME/BUTTON_TIMER_INCREMENT
 
 
-// Assign these by bits so we can use masks in the LCD task (ie, BUTTON_UP | BUTTON_LONG_UP )
+// Assign these by bits so we can use masks in the LCD task
 #define BUTTON_UP					0b00000001
 #define BUTTON_DOWN					0b00000010
 #define BUTTON_SELECT				0b00000100
 #define BUTTON_BACK					0b00001000
 
-#define BUTTON_LONG_UP				0b00010000
-#define BUTTON_LONG_DOWN			0b00100000
-#define BUTTON_LONG_SELECT			0b01000000
-#define BUTTON_LONG_BACK			0b10000000
+#define BUTTON_LONG_PRESS_MASK		0b10000000
+
+#define BUTTON_LONG_UP				(BUTTON_UP		| BUTTON_LONG_PRESS_MASK)
+#define BUTTON_LONG_DOWN			(BUTTON_DOWN	| BUTTON_LONG_PRESS_MASK)
+#define BUTTON_LONG_SELECT			(BUTTON_SELECT	| BUTTON_LONG_PRESS_MASK)
+#define BUTTON_LONG_BACK			(BUTTON_BACK	| BUTTON_LONG_PRESS_MASK)
 
 
 
-void buttons_task_init( void );
-void buttons_task( void *pvParameters );
+void buttons_task_init( unsigned char mode );
+void buttons_task_normal( void *pvParameters );
+void buttons_task_usb( void *pvParameters );
 
 
 

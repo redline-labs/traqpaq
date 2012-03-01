@@ -32,8 +32,6 @@
 #include "math.h"
 
 xQueueHandle gpsRxdQueue;
-extern xQueueHandle dataflashManagerQueue;
-extern xQueueHandle lcdWidgetsManagerQueue;
 
 unsigned char rxBuffer[GPS_MSG_MAX_STRLEN];
 unsigned char gpsTokens[MAX_SIGNALS_SENTENCE];
@@ -72,9 +70,6 @@ void gps_task( void *pvParameters ){
 	signed int oldLongitude = 0;
 	
 	unsigned char oldMode = 0;
-
-	struct tDataflashRequest dataflashRequest;					// Formatted request for dataflash manager
-	struct tLCDRequest lcdRequest;
 	
 	struct tRecordDataPage gpsData;								// Formatted GPS Data
 	struct tGPSSetLine finishLine;								// Formatted coordinate pairs for "finish line"
@@ -134,12 +129,14 @@ void gps_task( void *pvParameters ){
 																			 gpsData.data[recordIndex].longitude,   gpsData.data[recordIndex].latitude,
 																			 finishLine.startLongitude,				finishLine.startLatitude,
 																			 finishLine.endLongitude,				finishLine.endLatitude);
+																			 
+					if( gpsData.data[recordIndex].lapDetected ){
+						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_PERIPHERIAL, LCD_PERIPHERIAL_SLOWER, pdFALSE);
+					}
 					
 					// Update the antenna widget
 					if(oldMode != gpsData.currentMode){
-						lcdRequest.action = LCD_REQUEST_UPDATE_ANTENNA;
-						lcdRequest.data = gpsData.currentMode;
-						xQueueSend(lcdWidgetsManagerQueue, &lcdRequest, pdFALSE);
+						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_ANTENNA, gpsData.currentMode, pdFALSE);
 						oldMode = gpsData.currentMode;
 					}
 					
@@ -177,14 +174,7 @@ void gps_task( void *pvParameters ){
 						recordIndex++;
 				
 						if(recordIndex == RECORD_DATA_PER_PAGE){
-							// Need to write data!							
-							dataflashRequest.command = DFMAN_REQUEST_ADD_RECORDDATA;
-							dataflashRequest.pointer = &gpsData;
-							dataflashRequest.length = sizeof(gpsData);
-							dataflashRequest.resume = xTaskGetCurrentTaskHandle();
-							xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
-							vTaskSuspend(NULL);						
-
+							dataflash_send_request(DFMAN_REQUEST_ADD_RECORDDATA, &gpsData, sizeof(gpsData), NULL, TRUE, 20);
 							recordIndex = 0;
 						}
 						

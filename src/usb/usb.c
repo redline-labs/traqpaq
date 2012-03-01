@@ -33,11 +33,6 @@
 #include "dataflash/dataflash_otp_layout.h"
 
 void main_vendor_bulk_in_received(udd_ep_status_t status, iram_size_t nb_transfered);
-//void main_vendor_bulk_out_received(udd_ep_status_t status, iram_size_t nb_transfered);
-//void main_vendor_int_in_received(udd_ep_status_t status, iram_size_t nb_transfered);
-//void main_vendor_int_out_received(udd_ep_status_t status, iram_size_t nb_transfered);
-//void main_vendor_iso_in_received(udd_ep_status_t status, iram_size_t nb_transfered);
-//void main_vendor_iso_out_received(udd_ep_status_t status, iram_size_t nb_transfered);
 void main_vendor_read_callback(udd_ep_status_t status, iram_size_t nb_transfered);
 
 
@@ -46,7 +41,6 @@ static uint8_t usbRxBuffer[USB_RX_BUFFER_SIZE];
 static uint8_t usbTxBuffer[USB_TX_BUFFER_SIZE];
 
 xQueueHandle usbManagerQueue;
-extern xQueueHandle dataflashManagerQueue;
 
 extern struct tDataflashOTP dataflashOTP;
 
@@ -65,8 +59,6 @@ void usb_task( void *pvParameters ){
 	unsigned char responseU8;
 	unsigned short responseU16;
 	unsigned short i;
-	
-	struct tDataflashRequest dataflashRequest;
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_USB, "Task Started");
 	
@@ -114,102 +106,44 @@ void usb_task( void *pvParameters ){
 				break;
 					
 			case(USB_CMD_READ_OTP):
-				dataflashRequest.command	= DFMAN_REQUEST_READ_OTP;
-				dataflashRequest.length	= usbRxBuffer[1];
-				dataflashRequest.index	= usbRxBuffer[2];
-				dataflashRequest.pointer	= &usbTxBuffer;
-				dataflashRequest.resume	= xTaskGetCurrentTaskHandle();
 				data_length = usbRxBuffer[1];
-				xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
-				vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
+				dataflash_send_request(DFMAN_REQUEST_READ_OTP, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
 				break;
 
 			case(USB_CMD_READ_RECORDTABLE):
-				dataflashRequest.command	= DFMAN_REQUEST_READ_RECORDTABLE;
-				dataflashRequest.length	= usbRxBuffer[1];
-				dataflashRequest.index	= usbRxBuffer[2];
-				dataflashRequest.pointer	= &usbTxBuffer;
-				dataflashRequest.resume	= xTaskGetCurrentTaskHandle();
 				data_length = usbRxBuffer[1];
-				xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
-				vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
-				break;
-				
-			case(USB_CMD_WRITE_RECORDTABLE):
-				dataflashRequest.command = DFMAN_REQUEST_END_CURRENT_RECORD;
-				dataflashRequest.resume = NULL;
-				usbTxBuffer[data_length++] = TRUE;
-				xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
+				dataflash_send_request(DFMAN_REQUEST_READ_RECORDTABLE, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
 				break;
 					
 			case(USB_CMD_READ_RECORDDATA):
-				dataflashRequest.command	= DFMAN_REQUEST_READ_RECORDDATA;
-				dataflashRequest.length	= DATAFLASH_PAGE_SIZE;
-				dataflashRequest.index	= (usbRxBuffer[2] << 8) + (usbRxBuffer[3] << 0);
-				dataflashRequest.pointer	= &usbTxBuffer;
-				dataflashRequest.resume	= xTaskGetCurrentTaskHandle();
-				data_length = usbRxBuffer[1];
-				xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
-				vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
-				break;
-					
-			case(USB_CMD_WRITE_RECORDDATA):
-				for(i = 0; i < 256; i++){
-					usbTxBuffer[i] = i;
-				}
-
-				dataflashRequest.command	= DFMAN_REQUEST_ADD_RECORDDATA;
-				dataflashRequest.length	= usbRxBuffer[1];
-				dataflashRequest.pointer	= &usbTxBuffer;
-				dataflashRequest.resume	= xTaskGetCurrentTaskHandle();
-				data_length = 1;
-				xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
-				vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
+				data_length = DATAFLASH_PAGE_SIZE;
+				dataflash_send_request(DFMAN_REQUEST_READ_RECORDDATA, &usbTxBuffer, DATAFLASH_PAGE_SIZE, (usbRxBuffer[2] << 8) + (usbRxBuffer[3] << 0), TRUE, pdFALSE);
 				break;
 				
 			case(USB_DBG_DF_SECTOR_ERASE):
-				dataflashRequest.command	= DFMAN_REQUEST_SECTOR_ERASE;
-				dataflashRequest.index = usbRxBuffer[1];
-				dataflashRequest.resume = NULL;
 				usbTxBuffer[0] = TRUE;
 				data_length = 1;
-				xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
+				dataflash_send_request(DFMAN_REQUEST_SECTOR_ERASE, NULL, NULL, usbRxBuffer[1], FALSE, pdFALSE);
 				break;
 				
 			case(USB_DBG_DF_BUSY):
-				dataflashRequest.command	= DFMAN_REQUEST_BUSY;
-				dataflashRequest.pointer	= &usbTxBuffer;
-				dataflashRequest.resume	= xTaskGetCurrentTaskHandle();
 				data_length = 1;
-				xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
-				vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
+				dataflash_send_request(DFMAN_REQUEST_BUSY, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
 				break;
 					
 			case(USB_DBG_DF_CHIP_ERASE):
-				dataflashRequest.command	= DFMAN_REQUEST_CHIP_ERASE;
-				dataflashRequest.pointer = &usbTxBuffer;
-				dataflashRequest.resume = xTaskGetCurrentTaskHandle();
 				data_length = 1;
-				xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
-				vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
+				dataflash_send_request(DFMAN_REQUEST_CHIP_ERASE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
 				break;
 					
 			case(USB_DBG_DF_IS_FLASH_FULL):
-				dataflashRequest.command	= DFMAN_REQUEST_IS_FLASH_FULL;
-				dataflashRequest.pointer = &usbTxBuffer;
-				dataflashRequest.resume	= xTaskGetCurrentTaskHandle();
 				data_length = 1;
-				xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
-				vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
+				dataflash_send_request(DFMAN_REQUEST_IS_FLASH_FULL, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
 				break;
 					
 			case(USB_DBG_DF_USED_SPACE):
-				dataflashRequest.command	= DFMAN_REQUEST_USED_SPACE;
-				dataflashRequest.pointer = &usbTxBuffer;
-				dataflashRequest.resume	= xTaskGetCurrentTaskHandle();
 				data_length = 1;
-				xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
-				vTaskSuspend(NULL);		// Wait until the dataflash manager is completed processing request
+				dataflash_send_request(DFMAN_REQUEST_USED_SPACE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
 				break;
 				
 			case(USB_CMD_WRITE_OTP):

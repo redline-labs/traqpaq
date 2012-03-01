@@ -32,10 +32,6 @@
 #include "drivers.h"
 #include "battery.h"
 
-
-// Allow access to the LCD Queue
-extern xQueueHandle lcdWidgetsManagerQueue;
-
 void fuel_task_init( void ){
 	xTaskCreate(fuel_task, configTSK_FUEL_TASK_NAME, configTSK_FUEL_TASK_STACK_SIZE, NULL, configTSK_FUEL_TASK_PRIORITY, configTSK_FUEL_TASK_HANDLE);
 }
@@ -44,14 +40,20 @@ void fuel_task_init( void ){
 void fuel_task( void *pvParameters ){
 	unsigned short percent;
 	signed short accumulated_current;
-	unsigned short updateAccumulator = FALSE;
 	
 	struct tBatteryInfo batteryInfo;
-	
-	struct tLCDRequest request;
-	request.action = LCD_REQUEST_UPDATE_BATTERY;
+	struct tFuelStatus fuelStatus;
+	struct tFuelEEStatus fuelEEStatus;
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Task Started");
+	
+	// Check the Status Registers
+	fuel_read_register(FUEL_ADDRESS_PROTECTION_REGISTER, &fuelStatus, sizeof(fuelStatus));
+	if( fuelStatus.COC ) debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FUEL, "Charge Overcurrent Detected");
+	if( fuelStatus.DOC ) debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FUEL, "Discharge Overcurrent Detected");
+	if( fuelStatus.OV ) debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FUEL, "Overvoltage Detected");
+	if( fuelStatus.UV ) debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FUEL, "Undervoltage Detected");
+
 	
 	batteryInfo = fuel_readBatteryInfo();
 	
@@ -73,11 +75,8 @@ void fuel_task( void *pvParameters ){
 		}
 		
 		// Format the data in percentage
-		request.data = (accumulated_current * 100) / batteryInfo.capacity;
+		lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_BATTERY, (accumulated_current * 100) / batteryInfo.capacity, pdFALSE);
 		
-		#if( TRAQPAQ_HW_EBI_ENABLED )
-		xQueueSend(lcdWidgetsManagerQueue, &request, portMAX_DELAY);
-		#endif
 		vTaskDelay( (portTickType)TASK_DELAY_MS(FUEL_UPDATE_RATE) );
 	}
 }
@@ -158,18 +157,11 @@ unsigned short fuel_calculateBatteryInfoCRC( struct tBatteryInfo *batteryInfo ){
 	crc = update_crc_ccitt(crc, (batteryInfo->capacity >> 8) & 0xFF);
 	crc = update_crc_ccitt(crc, (batteryInfo->capacity >> 0) & 0xFF);
 	
-	crc = update_crc_ccitt(crc, (batteryInfo->minVoltage >> 8) & 0xFF);
-	crc = update_crc_ccitt(crc, (batteryInfo->minVoltage >> 0) & 0xFF);
-	
 	crc = update_crc_ccitt(crc, (batteryInfo->chargeCycles >> 8) & 0xFF);
 	crc = update_crc_ccitt(crc, (batteryInfo->chargeCycles >> 0) & 0xFF);
 	
 	crc = update_crc_ccitt(crc, (batteryInfo->health >> 8) & 0xFF);
 	crc = update_crc_ccitt(crc, (batteryInfo->health >> 0) & 0xFF);
-	
-	crc = update_crc_ccitt(crc, batteryInfo->useFastCharge);
-	
-	crc = update_crc_ccitt(crc, batteryInfo->status);
 	
 	return crc;
 }
@@ -182,18 +174,23 @@ void fuel_copyEEtoShadowRAM( void ){
 
 void fuel_copyShadowRAMtoEE( void ){
 	fuel_write_command(FUEL_FUNCTION_FCMD_COPY_BLOCK0);
-	vTaskDelay( (portTickType)TASK_DELAY_MS(FUEL_WRITE_TO_EE_TIME) );
+	while( fuel_isBusy() ){
+		vTaskDelay( (portTickType)TASK_DELAY_MS(FUEL_WRITE_TO_EE_TIME) );
+	}
+	
 	fuel_write_command(FUEL_FUNCTION_FCMD_COPY_BLOCK1);
-	vTaskDelay( (portTickType)TASK_DELAY_MS(FUEL_WRITE_TO_EE_TIME) );
+	while( fuel_isBusy() ){
+		vTaskDelay( (portTickType)TASK_DELAY_MS(FUEL_WRITE_TO_EE_TIME) );
+	}
+	
 	fuel_write_command(FUEL_FUNCTION_FCMD_COPY_BLOCK2);
-	vTaskDelay( (portTickType)TASK_DELAY_MS(FUEL_WRITE_TO_EE_TIME) );
+	while( fuel_isBusy() ){
+		vTaskDelay( (portTickType)TASK_DELAY_MS(FUEL_WRITE_TO_EE_TIME) );
+	}
 }
 
 void fuel_clearEELocks( void ){
-	unsigned char flags;
-	
-	flags = 0;
-	
+	unsigned char flags = 0;
 	fuel_write_register(FUEL_ADDRESS_EEPROM_REGISTER, &flags, sizeof(flags));
 }
 
@@ -206,11 +203,7 @@ struct tBatteryInfo fuel_readBatteryInfo( void ){
 	return tempInfo;
 }
 
-void inline fuel_writeBatteryInfo( struct tBatteryInfo *batteryInfo ){
-	fuel_write_register(FUEL_ADDRESS_EEPROM_BLOCK0_START, batteryInfo, sizeof(batteryInfo) );
-}
-
-void inline fuel_writeShadowRAM( void ){
+void fuel_writeShadowRAM( void ){
 	fuel_clearEELocks();
 	fuel_copyShadowRAMtoEE();
 }	
@@ -218,4 +211,26 @@ void inline fuel_writeShadowRAM( void ){
 
 void fuel_updateAccumulatedCurrent(unsigned short value){
 	fuel_write_register(FUEL_ADDRESS_ACCUM_CURRENT_REGISTER_MSB, &value, sizeof(value) );
+}
+
+
+unsigned char fuel_writeBatteryInfo(unsigned short capacity, unsigned short chargeCycles, unsigned short health){
+	struct tBatteryInfo batteryInfo;
+	
+	batteryInfo.capacity = capacity;
+	batteryInfo.chargeCycles = chargeCycles;
+	batteryInfo.health = health;
+	batteryInfo.crc = fuel_calculateBatteryInfoCRC(&batteryInfo);
+
+	fuel_write_register(FUEL_ADDRESS_EEPROM_BLOCK0_START, &batteryInfo, sizeof(batteryInfo) );
+	fuel_writeShadowRAM();
+	fuel_copyEEtoShadowRAM();
+}
+
+unsigned char fuel_isBusy( void ){
+	struct tFuelEEStatus fuelEEStatus;
+	
+	fuel_read_register(FUEL_ADDRESS_EEPROM_REGISTER, &fuelEEStatus, sizeof(fuelEEStatus) );
+	
+	return fuelEEStatus.EEC;
 }

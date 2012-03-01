@@ -31,6 +31,8 @@
 #ifndef DATAFLASH_H_
 #define DATAFLASH_H_
 
+#include "drivers.h"
+
 #define DATAFLASH_VERSION					"1.00"
 
 #define dataflash_clr_wp()					gpio_set_gpio_pin(DATAFLASH_WP)
@@ -205,6 +207,7 @@ unsigned char dataflash_wakeUp( void );
 unsigned char dataflash_is_busy( void );
 unsigned short dataflash_calculate_otp_crc( void );
 unsigned short dataflash_calculate_userPrefs_crc( void );
+unsigned char dataflash_send_request(unsigned char command, unsigned char *pointer, unsigned short length, unsigned long index, unsigned char resume, unsigned char delay);
 
 
 #endif /* DATAFLASH_H_ */

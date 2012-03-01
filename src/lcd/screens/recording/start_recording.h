@@ -38,7 +38,13 @@ if(lcd_redraw_required()){
 	lcd_redraw_complete();
 }
 
-if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
+if( peripherialBoxDrawn && lcd_did_time_expire(LCD_PERIPHERIAL_FADE_TIME) ){
+	lcd_resetTimer();
+	peripherialBoxDrawn = FALSE;
+	lcd_drawPeripheralBox(COLOR_WHITE);
+}
+
+if( xQueueReceive(lcdButtonsManagerQueue, &button, pdFALSE) == pdTRUE ){
 	switch(button){
 		
 		// ---------------------------------
@@ -54,12 +60,9 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			
 		case(BUTTON_SELECT):
 			recordFlag = FALSE;
-			
-			dataflashRequest.command = DFMAN_REQUEST_END_CURRENT_RECORD;
-			dataflashRequest.resume = xTaskGetCurrentTaskHandle();
-			xQueueSend(dataflashManagerQueue, &dataflashRequest, 20);
-			vTaskSuspend(NULL);
-		
+
+			dataflash_send_request(DFMAN_REQUEST_END_CURRENT_RECORD, NULL, NULL, NULL, TRUE, 20);
+
 			lcd_force_redraw();
 			lcd_change_screens( LCDFSM_MAINMENU );
 			break;

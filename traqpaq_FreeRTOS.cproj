@@ -2,7 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
   <PropertyGroup>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectVersion>5.1</ProjectVersion>
+    <ProjectVersion>6.0</ProjectVersion>
     <ProjectGuid>5e06e9a0-fb29-11e0-9773-000c2967fa5f</ProjectGuid>
     <avrdevice>AT32UC3A0512</avrdevice>
     <avrdeviceseries>uc3a</avrdeviceseries>
@@ -218,10 +218,16 @@
         <ssl>False</ssl>
       </Channel>
     </com_atmel_avrdbg_tool_simulator>
+    <KeepTimersRunning>true</KeepTimersRunning>
+    <OverrideVtor>false</OverrideVtor>
+    <OverrideVtorValue />
+    <eraseonlaunchrule>0</eraseonlaunchrule>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputFileName>traqpaq_FreeRTOS</OutputFileName>
+    <OutputFileExtension>.elf</OutputFileExtension>
     <ToolchainSettings>
-      <Avr32Gcc>
+      <Avr32Gcc xmlns="">
         <avr32gcc.compiler.symbols.DefSymbols>
           <ListValues>
             <Value>BOARD=EVK1100</Value>
@@ -388,10 +394,10 @@
         </avr32gcc.preprocessingassembler.general.IncludePaths>
       </Avr32Gcc>
     </ToolchainSettings>
-    <OutputFileName>traqpaq_FreeRTOS</OutputFileName>
-    <OutputFileExtension>.elf</OutputFileExtension>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputFileName>traqpaq_FreeRTOS</OutputFileName>
+    <OutputFileExtension>.elf</OutputFileExtension>
     <ToolchainSettings>
       <Avr32Gcc>
   <avr32gcc.compiler.symbols.DefSymbols>
@@ -447,7 +453,6 @@
       <Value>../src/asf/common/services/usb/udc</Value>
     </ListValues>
   </avr32gcc.compiler.directories.IncludePaths>
-  <avr32gcc.compiler.optimization.level>Optimize more (-O2)</avr32gcc.compiler.optimization.level>
   <avr32gcc.compiler.optimization.OtherFlags>-fdata-sections</avr32gcc.compiler.optimization.OtherFlags>
   <avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
   <avr32gcc.compiler.optimization.DebugLevel>Maximum (-g3)</avr32gcc.compiler.optimization.DebugLevel>
@@ -558,8 +563,6 @@
   </avr32gcc.preprocessingassembler.general.IncludePaths>
 </Avr32Gcc>
     </ToolchainSettings>
-    <OutputFileName>traqpaq_FreeRTOS</OutputFileName>
-    <OutputFileExtension>.elf</OutputFileExtension>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="src\adc\adc.c">

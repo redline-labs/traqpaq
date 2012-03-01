@@ -61,7 +61,7 @@ void dataflash_task_init( void ){
 	dataflash_ReadOTP(OTP_START_INDEX, OTP_LENGTH, &dataflashOTP);
 	
 	// Check validity of OTP
-	if( dataflash_calculate_otp_crc() == dataflashOTP.crc ){
+	if( dataflash_calculate_otp_crc() != dataflashOTP.crc ){
 		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Invalid OTP CRC");
 	}
 	
@@ -498,4 +498,27 @@ unsigned short dataflash_calculate_userPrefs_crc( void ){
 	crc = update_crc_ccitt(crc, userPrefs.screenOffTime);
 
 	return crc;
+}
+
+unsigned char dataflash_send_request(unsigned char command, unsigned char *pointer, unsigned short length, unsigned long index, unsigned char resume, unsigned char delay){
+	struct tDataflashRequest request;
+	
+	request.command = command;
+	request.pointer = pointer;
+	request.length = length;
+	request.index = index;
+	
+	if(resume == TRUE){
+		request.resume = xTaskGetCurrentTaskHandle();
+	}else{
+		request.resume = NULL;
+	}
+	
+	xQueueSend(dataflashManagerQueue, &request, delay);
+	
+	if(resume == TRUE){
+		vTaskSuspend(NULL);
+	}
+	
+	return TRUE;
 }

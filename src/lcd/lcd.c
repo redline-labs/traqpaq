@@ -43,26 +43,33 @@ const unsigned char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', 
 xQueueHandle lcdWidgetsManagerQueue;
 xQueueHandle lcdButtonsManagerQueue;
 
-extern xQueueHandle dataflashManagerQueue;
 extern unsigned char recordFlag;
 
 // Create task for FreeRTOS
-void lcd_task_init( void ){
-	xTaskCreate(lcd_gui_task, configTSK_GUI_TASK_NAME, configTSK_GUI_TASK_STACK_SIZE, NULL, configTSK_GUI_TASK_PRIORITY, configTSK_GUI_TASK_HANDLE);
+void lcd_task_init( unsigned char mode ){
+	if(mode == TASK_MODE_NORMAL){
+		xTaskCreate(lcd_gui_task_normal, configTSK_GUI_TASK_NAME, configTSK_GUI_TASK_STACK_SIZE, NULL, configTSK_GUI_TASK_PRIORITY, configTSK_GUI_TASK_HANDLE);
+	}else{
+		xTaskCreate(lcd_gui_task_usb, configTSK_GUI_TASK_NAME, configTSK_GUI_TASK_STACK_SIZE, NULL, configTSK_GUI_TASK_PRIORITY, configTSK_GUI_TASK_HANDLE);
+	}		
 }
 
 // LCD GUI Task
-void lcd_gui_task( void *pvParameters ){
+// LCD GUI Task
+void lcd_gui_task_normal( void *pvParameters ){
 	unsigned char i = 0;
 	
 	struct tLCDRequest request;
 	struct tLCDTopBar topBar;
 	struct tMenu mainMenu;
 	struct tLCDProgressBar progressBar;
-	struct tDataflashRequest dataflashRequest;
-	struct tGPSRequest gpsRequest;
 	
 	unsigned char responseU8;
+	unsigned int responseU32;
+	
+	// Timer flags for peripherial widget
+	unsigned char peripherialBoxDrawn = FALSE;
+	portTickType LastUpdateTime;
 	
 	unsigned char button;
 	volatile unsigned short lcd_fsm = LCDFSM_MAINMENU;		// Useful for testing new screens!
@@ -84,16 +91,13 @@ void lcd_gui_task( void *pvParameters ){
 	
 	lcd_init();
 	
-	// Clear the screen
-	lcd_fillRGB(COLOR_WHITE);
-	
 	// Create GUI element
 	topBar = lcd_createTopBar("Ryan's traq|paq", COLOR_WHITE, COLOR_BLACK);	
 	mainMenu = menu_init();
 	
 	while(1){
 		// See if a widget needs to be updated
-		if( xQueueReceive(lcdWidgetsManagerQueue, &request, pdFALSE) == pdTRUE ){
+		if( xQueueReceive(lcdWidgetsManagerQueue, &request, (LCD_TASK_SLEEP_TIME / portTICK_RATE_MS) ) == pdTRUE ){
 			switch(request.action){
 				case(LCD_REQUEST_UPDATE_BATTERY):
 					lcd_updateBattery(&topBar, request.data);
@@ -150,6 +154,10 @@ void lcd_gui_task( void *pvParameters ){
 							lcd_drawPeripheralBox(LCD_PERIPHERIAL_FASTER_COLOR);
 							break;
 					}
+					// Update the peripherial box flags
+					peripherialBoxDrawn = TRUE;
+					lcd_resetTimer();
+					
 					break;						
 			}
 		}
@@ -275,11 +283,67 @@ void lcd_gui_task( void *pvParameters ){
 			
 			
 		}
-		
-
-		vTaskDelay( (portTickType)TASK_DELAY_MS(LCD_TASK_SLEEP_TIME) );
 	}
 }
+
+
+
+void lcd_gui_task_usb( void *pvParameters ){
+	unsigned char i = 0;
+	
+	struct tLCDRequest request;
+	
+	struct tLCDProgressBar progressBar;
+	struct tLCDLabel chargingStatus;
+	
+	lcdWidgetsManagerQueue = xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(request));
+	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_LCD, "Task Started");
+	
+	lcd_reset();
+	
+	if( lcd_readID() != LCD_DEVICE_ID){
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_LCD, "Invalid Device ID");
+	}
+	
+	lcd_init();
+	
+	progressBar = lcd_createProgressBar(50, 100, 350, 50, COLOR_BLACK, COLOR_REDLINERED, COLOR_WHITE);
+	chargingStatus = lcd_createLabel("Init", FONT_SMALL_POINTER, 50, 105, 100, 16, COLOR_BLACK, COLOR_WHITE);
+	
+	while(1){
+		// See if a widget needs to be updated
+		xQueueReceive(lcdWidgetsManagerQueue, &request, portMAX_DELAY);
+		
+		switch(request.action){
+			case(LCD_REQUEST_UPDATE_BATTERY):
+				lcd_updateProgressBar(&progressBar, request.data);
+				break;
+					
+			case(LCD_REQUEST_UPDATE_CHARGE):
+				switch(request.data){
+					case(CHARGE_STATUS_SHUTDOWN):
+						lcd_updateLabel(&chargingStatus, "Shutdown");
+						break;
+							
+					case(CHARGE_STATUS_STANDBY):
+						lcd_updateLabel(&chargingStatus, "Standby");
+						break;
+						
+					case(CHARGE_STATUS_COMPLETE):
+						lcd_updateLabel(&chargingStatus, "Complete");
+						break;
+							
+					case(CHARGE_STATUS_CHARGING):
+						lcd_updateLabel(&chargingStatus, "Charging");
+						break;
+				}
+				break;					
+		}
+	}
+}
+
+
 
 
 void lcd_reset( void ){
@@ -429,6 +493,8 @@ void lcd_init(void){
 	
 	vTaskDelay( (portTickType)TASK_DELAY_MS(LCD_SETUP_DELAY) );
 	
+	// Clear the screen
+	lcd_fillRGB(COLOR_WHITE);
 }
 
 unsigned short lcd_readID(){
@@ -922,7 +988,7 @@ void lcd_drawPeripheralBox(unsigned short color){
 							
 	// Horizontal top most line
 	lcd_drawFilledRectangle(LCD_MIN_X,
-							LCD_MAX_Y - LCD_TOPBAR_THICKNESS,
+							LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 1,
 							LCD_MAX_X,
 							LCD_MAX_Y - LCD_TOPBAR_THICKNESS - LCD_PERIPHERIAL_THICKNESS,
 							color);
@@ -933,5 +999,18 @@ void lcd_drawPeripheralBox(unsigned short color){
 							LCD_MAX_X,
 							LCD_MIN_Y,
 							color);
+}
+
+
+unsigned char lcd_sendWidgetRequest(unsigned char action, unsigned char data, unsigned char delay){
+	struct tLCDRequest request;
 	
+	request.action = action;
+	request.data = data;
+	
+	return xQueueSend(lcdWidgetsManagerQueue, &request, delay);
+}
+
+unsigned char lcd_sendButtonRequest(unsigned char button){
+	return xQueueSend(lcdButtonsManagerQueue, &button, pdFALSE);
 }

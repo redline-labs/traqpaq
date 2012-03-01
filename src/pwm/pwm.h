@@ -37,6 +37,8 @@
 #define BACKLIGHT_DEFAULT_FADETIME	10		// Default Inactive Time in Seconds to Fade Screen
 #define BACKLIGHT_DEFAULT_OFFTIME	30		// Default Inactive Time in Seconds to Turn Off Screen
 
+#define BOOST_CONVERTER_TURN_ON_TIME	100	// Time in milliseconds for Boost Converter output to stabilize
+
 
 typedef struct tPWMDisplayStatus {
 	unsigned char displayOn;
@@ -44,11 +46,13 @@ typedef struct tPWMDisplayStatus {
 	unsigned char brightness;
 };
 
-void pwm_task_init( void );
-void pwm_task( void *pvParameters );
+void pwm_task_init( unsigned char mode );
+void pwm_task_normal( void *pvParameters );
+void pwm_task_usb( void *pvParameters );
 
 void pwm_fadeBacklight(unsigned char endValue);
 void pwm_updateBacklightDuty(unsigned char duty);
+void pwm_send_request( void );
 
 
 #endif /* PWM_H_ */

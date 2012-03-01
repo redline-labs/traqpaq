@@ -66,17 +66,24 @@ const unsigned char pwmFadeTable[] = {
 };
 
 extern xQueueHandle lcdButtonsManagerQueue;
+xQueueHandle pwmManagerQueue;
 
 struct tPWMDisplayStatus displayStatus;
 
 extern struct tUserPrefs userPrefs;
 
-void pwm_task_init( void ){
-	xTaskCreate(pwm_task, configTSK_PWM_TASK_NAME, configTSK_PWM_TASK_STACK_SIZE, NULL, configTSK_PWM_TASK_PRIORITY, configTSK_PWM_TASK_HANDLE);
+void pwm_task_init( unsigned char mode ){
+	pwmManagerQueue = xQueueCreate(1, sizeof(unsigned char));
+	
+	if(mode == TASK_MODE_NORMAL){
+		xTaskCreate(pwm_task_normal, configTSK_PWM_TASK_NAME, configTSK_PWM_TASK_STACK_SIZE, NULL, configTSK_PWM_TASK_PRIORITY, configTSK_PWM_TASK_HANDLE);
+	}else{
+		xTaskCreate(pwm_task_usb, configTSK_PWM_TASK_NAME, configTSK_PWM_TASK_STACK_SIZE, NULL, configTSK_PWM_TASK_PRIORITY, configTSK_PWM_TASK_HANDLE);
+	}		
 }
 
-void pwm_task( void *pvParameters ){
-	unsigned char temp;
+void pwm_task_normal( void *pvParameters ){
+	unsigned char flag;
 	
 	// Initialize the display status
 	displayStatus.brightness = 0;
@@ -85,10 +92,15 @@ void pwm_task( void *pvParameters ){
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_PWM, "Task Started");
 	
+	// Turn Boost Converter On
+	gpio_set_gpio_pin(PM_SHDN1);
+	
+	vTaskDelay( (portTickType)TASK_DELAY_MS(BOOST_CONVERTER_TURN_ON_TIME) );
+	
 	pwm_fadeBacklight(userPrefs.screenPWMMax);
 	
 	while( TRUE ){
-		if( xQueuePeek(lcdButtonsManagerQueue, &temp, (portTickType)TASK_DELAY_S(userPrefs.screenFadeTime) ) == pdFALSE ){
+		if( xQueueReceive(pwmManagerQueue, &flag, (portTickType)TASK_DELAY_S(userPrefs.screenFadeTime) ) == pdFALSE ){
 			if(displayStatus.displayFaded == FALSE){
 				pwm_fadeBacklight(userPrefs.screenPWMMin);
 			}
@@ -98,9 +110,33 @@ void pwm_task( void *pvParameters ){
 				pwm_fadeBacklight(userPrefs.screenPWMMax);
 			}			
 		}
-		//vTaskSuspend(NULL);
-		//vTaskDelay( (portTickType)TASK_DELAY_MS(500) );
-		
+	}
+}
+
+
+void pwm_task_usb( void *pvParameters ){
+	unsigned char flag;
+	
+	// Initialize the display status
+	displayStatus.brightness = 0;
+	displayStatus.displayOn = FALSE;
+	displayStatus.displayFaded = FALSE;
+	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_PWM, "Task Started");
+	
+	while( TRUE ){
+		if( xQueueReceive(pwmManagerQueue, &flag, (portTickType)TASK_DELAY_S(userPrefs.screenFadeTime) ) == pdFALSE ){
+			if(displayStatus.displayOn == TRUE){
+				pwm_fadeBacklight(BACKLIGHT_PWM_MIN);
+				gpio_clr_gpio_pin(PM_SHDN1);
+			}
+			
+		}else{
+			if(displayStatus.displayOn == FALSE){
+				gpio_set_gpio_pin(PM_SHDN1);
+				pwm_fadeBacklight(userPrefs.screenPWMMax);
+			}			
+		}
 	}
 }
 
@@ -152,4 +188,10 @@ void pwm_fadeBacklight(unsigned char endValue){
 		displayStatus.displayOn = TRUE;
 		displayStatus.displayFaded = TRUE;
 	}
-}	
+}
+
+
+void pwm_send_request( void ){
+	unsigned char flag;
+	xQueueSend(pwmManagerQueue, &flag, 0);
+}
