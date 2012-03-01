@@ -71,6 +71,8 @@ void gps_task( void *pvParameters ){
 	
 	unsigned char oldMode = 0;
 	
+	portTickType LastUpdateTime;								// Last time RMC message was received
+	
 	struct tRecordDataPage gpsData;								// Formatted GPS Data
 	struct tGPSSetLine finishLine;								// Formatted coordinate pairs for "finish line"
 	struct tGPSSetPoint finishPoint;							// Formatted coordinate pair for "finish point"
@@ -88,7 +90,16 @@ void gps_task( void *pvParameters ){
 	gps_enable_interrupts();
 	gps_reset();
 	
+	gps_resetTimer();
+	
 	while(TRUE){
+		
+		if( gps_did_time_expire(GPS_RMC_TIMEOUT) ){
+			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Message Timer Expired");
+			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Setting Message Rate");
+			gps_set_messaging_rate(GPS_MESSAGING_100MS);
+			gps_resetTimer();
+		}
 		
 		xQueueReceive(gpsRxdQueue, &rxdChar, portMAX_DELAY);
 		
@@ -160,8 +171,39 @@ void gps_task( void *pvParameters ){
 					gpsData.data[recordIndex].course	= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_TRACK	]]) ) & 0xFFFF;
 					
 					gpsData.date						= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_DATE	]]) );
-
+					
+					gps_resetTimer();  // Reset the time since receiving a RMC message
+					
 					processedRMC = TRUE;
+
+				
+				}else
+				//--------------------------
+				// PMTK001 Message Received
+				//--------------------------
+				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_MTK001_ID0) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_MTK001_ID1) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_MTK001_ID2) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK001_ID3) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK001_ID4) ){
+						
+					switch( rxBuffer[gpsTokens[TOKEN_PMTK001_FLAG]] ){
+						case(PMTK001_INVALID_CMD):
+							debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Invalid Command");
+							break;
+							
+						case(PMTK001_UNSUPPORTED_CMD):
+							debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Unsupported Command");
+							break;
+							
+						case(PMTK001_VALID_CMD_FAILED):
+							debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Command Failed");
+							break;
+							
+						case(PMTK001_VALID_CMD):
+							debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Command Succeeded");
+							break;
+					}
 					
 				}
 				
@@ -339,4 +381,35 @@ struct tGPSSetLine gps_find_finish_line(struct tGPSSetPoint point){
 	finish.endLatitude		= point.latitude - vect;
 	
 	return finish;
+}
+
+void gps_set_messaging_rate(unsigned char rate){
+	
+	switch(rate){
+		case(GPS_MESSAGING_100MS):
+			usart_write_line(GPS_USART, "$PMTK300,100,0,0,0,0*2C");
+			break;
+			
+		case(GPS_MESSAGING_200MS):
+			usart_write_line(GPS_USART, "$PMTK300,200,0,0,0,0*2F");
+			break;
+			
+		case(GPS_MESSAGING_500MS):
+			usart_write_line(GPS_USART, "$PMTK300,500,0,0,0,0*28");
+			break;
+			
+		case(GPS_MESSAGING_1000MS):
+			usart_write_line(GPS_USART, "$PMTK300,1000,0,0,0,0*1C");
+			break;
+	}
+	
+	usart_putchar(GPS_USART, GPS_MSG_CR);
+	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
+	
+}
+
+void gps_set_messages( void ){
+	usart_write_line(GPS_USART, "$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28");
+	usart_putchar(GPS_USART, GPS_MSG_CR);
+	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
 }

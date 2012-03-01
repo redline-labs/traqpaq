@@ -72,6 +72,8 @@
 #define MESSAGE_OFFSET_ID0			2
 #define MESSAGE_OFFSET_ID1			3
 #define MESSAGE_OFFSET_ID2			4
+#define MESSAGE_OFFSET_ID3			5
+#define MESSAGE_OFFSET_ID4			6
 
 #define ID_GGA_ID0					'G'
 #define ID_GGA_ID1					'G'
@@ -80,6 +82,12 @@
 #define ID_RMC_ID0					'R'
 #define ID_RMC_ID1					'M'
 #define ID_RMC_ID2					'C'
+
+#define ID_MTK001_ID0				'T'
+#define ID_MTK001_ID1				'K'
+#define ID_MTK001_ID2				'0'
+#define ID_MTK001_ID3				'0'
+#define ID_MTK001_ID4				'1'
 
 #define TOKEN_GGA_UTC				1
 #define TOKEN_GGA_LATITUDE			2
@@ -108,6 +116,14 @@
 #define TOKEN_RMC_MAG_VAR			10
 #define TOKEN_RMC_MAG_VAR_EORW		11
 #define TOKEN_RMC_UNKNOWN			12
+
+#define TOKEN_PMTK001_CMD			1
+#define TOKEN_PMTK001_FLAG			2
+
+#define PMTK001_INVALID_CMD			0x30
+#define PMTK001_UNSUPPORTED_CMD		0x31
+#define PMTK001_VALID_CMD_FAILED	0x32
+#define PMTK001_VALID_CMD			0x33
 
 
 typedef struct tGPSRequest {
@@ -140,10 +156,18 @@ typedef struct tGPSSetLine {
 #define deg2rad(x)			((x) * RADIANS_CONVERSION)
 #define rad2deg(x)			((x) / RADIANS_CONVERSION)
 
+#define gps_resetTimer()			LastUpdateTime = xTaskGetTickCount()
+#define gps_did_time_expire(ms)		((xTaskGetTickCount() - LastUpdateTime) >= ((ms) /  portTICK_RATE_MS))			// Check to see if timer expired
+#define GPS_RMC_TIMEOUT				900		// Timeout in milliseconds since receiving a RMC message
 
 #define GPS_MODE_NO_FIX				0
 #define GPS_MODE_2D_FIX				1
 #define GPS_MODE_3D_FIX				2
+
+#define GPS_MESSAGING_100MS			0
+#define GPS_MESSAGING_200MS			1
+#define GPS_MESSAGING_500MS			2
+#define GPS_MESSAGING_1000MS		3
 
 // Prototypes
 void gps_task_init( void );
@@ -156,5 +180,8 @@ unsigned short gps_received_checksum( void );
 unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, signed int y2, signed int x3, signed int y3, signed int x4, signed int y4);
 signed int gps_convert_to_decimal_degrees(signed int coordinate);
 struct tGPSSetLine gps_find_finish_line(struct tGPSSetPoint point);
+
+void gps_set_messaging_rate(unsigned char rate);
+void gps_set_messages( void );
 
 #endif /* GPS_H_ */
