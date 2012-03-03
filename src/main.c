@@ -82,12 +82,12 @@ int main( void ){
 		
 		#if( TRAQPAQ_HW_EXINT_ENABLED )
 		buttons_task_init(TASK_MODE_USB);
-		// If switches are enabled, then keep the main power supply on!
-		//gpio_set_gpio_pin(PM_ENABLE);
 		#endif
 		
 	}else{
 	#endif
+		// Kick the power supply on
+		main_supply_on();
 		
 		#if( TRAQPAQ_NORMAL_MODE_ON_USB )
 		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Forcing normal mode on USB powerup");
@@ -125,14 +125,12 @@ int main( void ){
 	
 		#if( TRAQPAQ_HW_EXINT_ENABLED )
 		buttons_task_init(TASK_MODE_NORMAL);
-		// If switches are enabled, then keep the main power supply on!
-		gpio_set_gpio_pin(PM_ENABLE);
 		#endif
 	
 		#if( TRAQPAQ_HW_CHARGE_ENABLED )
 		charge_task_init();
 		#endif
-	
+		
 		#if( TRAQPAQ_HW_ADC_ENABLED )
 		adc_task_init();
 		#endif
@@ -144,7 +142,7 @@ int main( void ){
 	#if( TRAQPAQ_NORMAL_MODE_ON_USB == FALSE )
 	}
 	#endif
-	
+
 	Enable_global_interrupt();
 
 	// Start the scheduler! ---------------------------------------

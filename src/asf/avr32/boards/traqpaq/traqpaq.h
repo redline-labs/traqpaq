@@ -240,6 +240,9 @@
 #define ADC_VEE_FUNCTION			AVR32_ADC_AD_3_FUNCTION
 
 
+#define main_supply_on()			gpio_set_gpio_pin(PM_ENABLE)
+#define main_supply_off()			gpio_clr_gpio_pin(PM_ENABLE)
+
 // Function Prototypes
 void board_init(void);
 

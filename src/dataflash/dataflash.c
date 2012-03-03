@@ -38,8 +38,6 @@ struct tDataflashOTP dataflashOTP;
 // Queue for receiving requests into the dataflash manager
 xQueueHandle dataflashManagerQueue;
 
-extern xQueueHandle gpsManagerQueue;
-
 struct tDataflashRequest request;
 
 struct tUserPrefs userPrefs;

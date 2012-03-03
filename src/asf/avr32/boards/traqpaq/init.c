@@ -79,14 +79,16 @@ void board_init(void){
 	gpio_clr_gpio_pin(GPS_RESET);			
 	gpio_clr_gpio_pin(PM_SHDN1);			// Boost Converter
 	gpio_clr_gpio_pin(LCD_RESET);
-	gpio_clr_gpio_pin(PM_ENABLE);
 	gpio_clr_gpio_pin(ADC_VREF_EN);
+	gpio_clr_gpio_pin(PM_ENABLE);			// Main Power Supply
 	
 	//gpio_clr_gpio_pin(CHARGE_RATE);		// Battery Charge Rate
 
 	gpio_enable_pin_pull_up(CHARGE_STAT1);
 	gpio_enable_pin_pull_up(CHARGE_STAT2);
 	gpio_enable_pin_pull_up(CHARGE_PG);
+	
+	
 	
 
 

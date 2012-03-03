@@ -81,15 +81,18 @@ void buttons_task_normal( void *pvParameters ){
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Task Started");
 	
-	// Wait for buttons to be released (in order to ignore the button press during power on)
-	while( gpio_get_pin_value(GPIO_BUTTON0) | gpio_get_pin_value(GPIO_BUTTON1) | gpio_get_pin_value(GPIO_BUTTON2) | gpio_get_pin_value(GPIO_BUTTON3) ){
-		vTaskDelay( (portTickType)TASK_DELAY_MS(BUTTON_TIMER_INCREMENT) );
-	}
-	
 	INTC_register_interrupt(&ISR_button0, EXTINT_BUTTON0_IRQ, EXTINT_BUTTON0); 
 	INTC_register_interrupt(&ISR_button1, EXTINT_BUTTON1_IRQ, EXTINT_BUTTON1); 
 	INTC_register_interrupt(&ISR_button2, EXTINT_BUTTON2_IRQ, EXTINT_BUTTON2); 
-	INTC_register_interrupt(&ISR_button3, EXTINT_BUTTON3_IRQ, EXTINT_BUTTON3); 
+	INTC_register_interrupt(&ISR_button3, EXTINT_BUTTON3_IRQ, EXTINT_BUTTON3);
+	
+	// Wait for buttons to be released (in order to ignore the button press during power on)
+	while( gpio_get_pin_value(GPIO_BUTTON2) ){
+		vTaskDelay( (portTickType)TASK_DELAY_MS(BUTTON_TIMER_INCREMENT) );
+	}
+	
+	// Flush the buffer
+	xQueueReceive(buttonPress, &button, pdFALSE);
 	
 	while(1){
 		timer = 0;
@@ -112,7 +115,7 @@ void buttons_task_normal( void *pvParameters ){
 		
 		// Power Off Condition
 		if(button == BUTTON_LONG_SELECT){
-			gpio_clr_gpio_pin(PM_ENABLE);
+			main_supply_off();
 		}
 		
 		// Send button press and request the backlight on!
