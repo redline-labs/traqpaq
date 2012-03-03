@@ -32,6 +32,7 @@
 #include "math.h"
 
 xQueueHandle gpsRxdQueue;
+xQueueHandle gpsManagerQueue;
 
 unsigned char rxBuffer[GPS_MSG_MAX_STRLEN];
 unsigned char gpsTokens[MAX_SIGNALS_SENTENCE];
@@ -47,7 +48,10 @@ __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
 
 
 void gps_task_init( void ){
-	gpsRxdQueue		= xQueueCreate(GPS_RXD_QUEUE_SIZE, sizeof(int));
+	struct tGPSRequest request;
+	
+	gpsRxdQueue		= xQueueCreate( GPS_RXD_QUEUE_SIZE,     sizeof(int)     );
+	gpsManagerQueue = xQueueCreate( GPS_MANAGER_QUEUE_SIZE, sizeof(request) );
 
 	INTC_register_interrupt(&ISR_gps_rxd, AVR32_USART3_IRQ, AVR32_INTC_INT0);
 	
@@ -74,13 +78,15 @@ void gps_task( void *pvParameters ){
 	portTickType LastUpdateTime;								// Last time RMC message was received
 	
 	struct tRecordDataPage gpsData;								// Formatted GPS Data
-	struct tGPSSetLine finishLine;								// Formatted coordinate pairs for "finish line"
-	struct tGPSSetPoint finishPoint;							// Formatted coordinate pair for "finish point"
+	struct tGPSLine finishLine;								// Formatted coordinate pairs for "finish line"
+	struct tGPSPoint finishPoint;							// Formatted coordinate pair for "finish point"
+	
+	struct tGPSRequest request;
 	
 	// Test finish line
-	finishPoint.heading = 2666;
-	finishPoint.longitude = -83453003;
-	finishPoint.latitude = 42570383;
+	finishPoint.heading		= 2666;
+	finishPoint.longitude	= -83453003;
+	finishPoint.latitude	= 42570383;
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Task Started");
 	
@@ -94,16 +100,33 @@ void gps_task( void *pvParameters ){
 	
 	while(TRUE){
 		
-		if( gps_did_time_expire(GPS_RMC_TIMEOUT) ){
+		if( gps_did_time_expire(GPS_MSG_TIMEOUT) ){
 			debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "Message Timer Expired");
 			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Setting Message Rate");
 			gps_set_messaging_rate(GPS_MESSAGING_100MS);
 			gps_resetTimer();
 		}
 		
+		
+		if( xQueueReceive(gpsManagerQueue, &request, pdFALSE) == pdTRUE ){
+			switch(request.command){
+				case(GPS_REQUEST_START_RECORDING):
+					recordFlag = TRUE;
+					break;
+					
+				case(GPS_REQUEST_STOP_RECORDING):
+					recordFlag = FALSE;
+					dataflash_send_request(DFMAN_REQUEST_END_CURRENT_RECORD, NULL, NULL, NULL, FALSE, 20);
+					break;
+			}
+		}
+		
+		
 		xQueueReceive(gpsRxdQueue, &rxdChar, portMAX_DELAY);
 		
 		if( rxdChar == GPS_MSG_END_CHAR ){
+			gps_resetTimer();  // Reset the time since receiving a message
+				
 			if( gps_received_checksum() == calculatedChecksum ){
 					
 				gps_buffer_tokenize();
@@ -137,9 +160,9 @@ void gps_task( void *pvParameters ){
 					
 					// Determine if a lap was detected!
 					gpsData.data[recordIndex].lapDetected = gps_intersection(oldLongitude,							oldLatitude,
-																			 gpsData.data[recordIndex].longitude,   gpsData.data[recordIndex].latitude,
-																			 finishLine.startLongitude,				finishLine.startLatitude,
-																			 finishLine.endLongitude,				finishLine.endLatitude);
+																				gpsData.data[recordIndex].longitude,   gpsData.data[recordIndex].latitude,
+																				finishLine.startLongitude,				finishLine.startLatitude,
+																				finishLine.endLongitude,				finishLine.endLatitude);
 																			 
 					if( gpsData.data[recordIndex].lapDetected ){
 						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_PERIPHERIAL, LCD_PERIPHERIAL_SLOWER, pdFALSE);
@@ -171,8 +194,6 @@ void gps_task( void *pvParameters ){
 					gpsData.data[recordIndex].course	= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_TRACK	]]) ) & 0xFFFF;
 					
 					gpsData.date						= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_DATE	]]) );
-					
-					gps_resetTimer();  // Reset the time since receiving a RMC message
 					
 					processedRMC = TRUE;
 
@@ -258,8 +279,7 @@ void gps_task( void *pvParameters ){
 				rxBuffer[rxIndex++] = (rxdChar & 0xFF);
 			}
 						
-		}			
-	
+		}					
 	}		
 }
 
@@ -358,11 +378,11 @@ signed int gps_convert_to_decimal_degrees(signed int coordinate){
 	return degrees;
 }
 
-struct tGPSSetLine gps_find_finish_line(struct tGPSSetPoint point){
+struct tGPSLine gps_find_finish_line(struct tGPSPoint point){
 	float angle;
 	int	vect;
 	
-	struct tGPSSetLine finish;
+	struct tGPSLine finish;
 	
 	// Add 90 degrees to heading, make sure it is between 0 and 360,
 	// and finally shift the decimal back in
@@ -413,4 +433,12 @@ void gps_set_messages( void ){
 	usart_write_line(GPS_USART, "$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28");
 	usart_putchar(GPS_USART, GPS_MSG_CR);
 	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
+}
+
+void gps_send_request(unsigned char command, unsigned int *pointer, unsigned char delay){
+	struct tGPSRequest request;
+	request.command = command;
+	request.pointer = pointer;
+	
+	xQueueSend(gpsManagerQueue, &request, delay);
 }

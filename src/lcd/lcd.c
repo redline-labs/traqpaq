@@ -43,8 +43,6 @@ const unsigned char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', 
 xQueueHandle lcdWidgetsManagerQueue;
 xQueueHandle lcdButtonsManagerQueue;
 
-extern unsigned char recordFlag;
-
 // Create task for FreeRTOS
 void lcd_task_init( unsigned char mode ){
 	if(mode == TASK_MODE_NORMAL){

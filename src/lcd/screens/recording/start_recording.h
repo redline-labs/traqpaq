@@ -30,7 +30,7 @@
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
 	
-	recordFlag = TRUE;
+	gps_send_request(GPS_REQUEST_START_RECORDING, NULL, pdFALSE);
 	
 	lcd_writeText_16x32("Recording!", FONT_LARGE_POINTER, LCD_MIN_X, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 64, COLOR_BLACK);
 	lcd_writeText_16x32("SELECT to stop!", FONT_LARGE_POINTER, LCD_MIN_X, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 96, COLOR_BLACK);
@@ -59,9 +59,7 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, pdFALSE) == pdTRUE ){
 			break;
 			
 		case(BUTTON_SELECT):
-			recordFlag = FALSE;
-
-			dataflash_send_request(DFMAN_REQUEST_END_CURRENT_RECORD, NULL, NULL, NULL, TRUE, 20);
+			gps_send_request(GPS_REQUEST_STOP_RECORDING, NULL, pdFALSE);
 
 			lcd_force_redraw();
 			lcd_change_screens( LCDFSM_MAINMENU );

@@ -36,8 +36,8 @@
 #define gps_disable_interrupts()	GPS_USART->idr |= AVR32_USART_IER_RXRDY_MASK
 
 #define GPS_RESET_TIME				100						// Time in milliseconds
-#define GPS_RXD_QUEUE_SIZE			GPS_MSG_MAX_STRLEN	// Number of items to buffer in Receive Queue
-#define GPS_MANAGER_QUEUE_SIZE		5						// Number of items to buffer in Request Queue
+#define GPS_RXD_QUEUE_SIZE			(GPS_MSG_MAX_STRLEN * 2)	// Number of items to buffer in Receive Queue
+#define GPS_MANAGER_QUEUE_SIZE		5						// Number of items to buffer in Request 
 
 #define GPS_WAIT_RXD_TIME			20						// Time (milliseconds) to wait for a received character
 
@@ -136,13 +136,13 @@ typedef struct tGPSRequest {
 #define GPS_REQUEST_STOP_RECORDING	2
 
 
-typedef struct tGPSSetPoint {
+typedef struct tGPSPoint {
 	signed int latitude;
 	signed int longitude;
 	unsigned short heading;
 };
 
-typedef struct tGPSSetLine {
+typedef struct tGPSLine {
 	unsigned short heading;
 	
 	signed int startLatitude;
@@ -158,7 +158,7 @@ typedef struct tGPSSetLine {
 
 #define gps_resetTimer()			LastUpdateTime = xTaskGetTickCount()
 #define gps_did_time_expire(ms)		((xTaskGetTickCount() - LastUpdateTime) >= ((ms) /  portTICK_RATE_MS))			// Check to see if timer expired
-#define GPS_RMC_TIMEOUT				900		// Timeout in milliseconds since receiving a RMC message
+#define GPS_MSG_TIMEOUT				900		// Timeout in milliseconds since receiving a RMC message
 
 #define GPS_MODE_NO_FIX				0
 #define GPS_MODE_2D_FIX				1
@@ -179,9 +179,11 @@ unsigned short gps_received_checksum( void );
 
 unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, signed int y2, signed int x3, signed int y3, signed int x4, signed int y4);
 signed int gps_convert_to_decimal_degrees(signed int coordinate);
-struct tGPSSetLine gps_find_finish_line(struct tGPSSetPoint point);
+struct tGPSLine gps_find_finish_line(struct tGPSPoint point);
 
 void gps_set_messaging_rate(unsigned char rate);
 void gps_set_messages( void );
+
+void gps_send_request(unsigned char command, unsigned int *pointer, unsigned char delay);
 
 #endif /* GPS_H_ */
