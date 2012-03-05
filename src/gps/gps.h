@@ -126,23 +126,25 @@
 #define PMTK001_VALID_CMD			0x33
 
 
-typedef struct tGPSRequest {
+struct tGPSRequest {
 	unsigned char command;
+	unsigned char data;
 	unsigned int *pointer;
 };
 
 #define GPS_REQUEST_DATE			0
 #define GPS_REQUEST_START_RECORDING	1
 #define GPS_REQUEST_STOP_RECORDING	2
+#define GPS_SET_FINISH_POINT		3
 
 
-typedef struct tGPSPoint {
+struct tGPSPoint {
 	signed int latitude;
 	signed int longitude;
 	unsigned short heading;
 };
 
-typedef struct tGPSLine {
+struct tGPSLine {
 	unsigned short heading;
 	
 	signed int startLatitude;
@@ -179,11 +181,11 @@ unsigned short gps_received_checksum( void );
 
 unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, signed int y2, signed int x3, signed int y3, signed int x4, signed int y4);
 signed int gps_convert_to_decimal_degrees(signed int coordinate);
-struct tGPSLine gps_find_finish_line(struct tGPSPoint point);
+struct tGPSLine gps_find_finish_line(signed int latitude, signed int longitude, unsigned short heading);
 
 void gps_set_messaging_rate(unsigned char rate);
 void gps_set_messages( void );
 
-void gps_send_request(unsigned char command, unsigned int *pointer, unsigned char delay);
+void gps_send_request(unsigned char command, unsigned int *pointer, unsigned char data, unsigned char delay);
 
 #endif /* GPS_H_ */

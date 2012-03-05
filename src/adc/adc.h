@@ -35,7 +35,7 @@
 	
 #define ADC_SLEEP_TIME					5000	// Time in milliseconds for ADC task to sleep
 
-typedef struct tADCvalues {
+struct tADCvalues {
 	unsigned short main;
 	unsigned short vcc;
 	unsigned short vee;

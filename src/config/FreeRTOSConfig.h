@@ -162,8 +162,8 @@ to exclude the API function. */
 
 /* GUI Task */
 #define configTSK_GUI_TASK_NAME				((const signed portCHAR *)"GUI")
-#define configTSK_GUI_TASK_STACK_SIZE		1024
-#define configTSK_GUI_TASK_PRIORITY			TASK_PRIORITY_LOW
+#define configTSK_GUI_TASK_STACK_SIZE		512
+#define configTSK_GUI_TASK_PRIORITY			TASK_PRIORITY_MEDIUM
 #define configTSK_GUI_TASK_PERIOD			20
 #define configTSK_GUI_TASK_HANDLE			NULL
 
@@ -176,7 +176,7 @@ to exclude the API function. */
 
 /* Dataflash Task */
 #define configTSK_DATAFLASH_TASK_NAME		((const signed portCHAR *)"Dataflash")
-#define configTSK_DATAFLASH_TASK_STACK_SIZE	4352	// 4.25KB - Required since dataflash_updatePage burns up 4KB!
+#define configTSK_DATAFLASH_TASK_STACK_SIZE	1536	// 4.25KB - Required since dataflash_updatePage burns up 4KB!
 #define configTSK_DATAFLASH_TASK_PRIORITY	TASK_PRIORITY_MEDIUM
 #define configTSK_DATAFLASH_TASK_PERIOD		20
 #define configTSK_DATAFLASH_TASK_HANDLE		NULL
@@ -184,7 +184,7 @@ to exclude the API function. */
 /* Fuel Task */
 #define configTSK_FUEL_TASK_NAME			((const signed portCHAR *)"Fuel")
 #define configTSK_FUEL_TASK_STACK_SIZE		256
-#define configTSK_FUEL_TASK_PRIORITY		TASK_PRIORITY_LOW
+#define configTSK_FUEL_TASK_PRIORITY		TASK_PRIORITY_MEDIUM
 #define configTSK_FUEL_TASK_PERIOD			20
 #define configTSK_FUEL_TASK_HANDLE			NULL
 
@@ -198,14 +198,14 @@ to exclude the API function. */
 /* Charge Task */
 #define configTSK_CHARGE_TASK_NAME			((const signed portCHAR *)"Charge")
 #define configTSK_CHARGE_TASK_STACK_SIZE	256
-#define configTSK_CHARGE_TASK_PRIORITY		TASK_PRIORITY_LOW
+#define configTSK_CHARGE_TASK_PRIORITY		TASK_PRIORITY_MEDIUM
 #define configTSK_CHARGE_TASK_PERIOD		20
 #define configTSK_CHARGE_TASK_HANDLE		NULL
 
 /* Buttons Task */
 #define configTSK_BUTTONS_TASK_NAME			((const signed portCHAR *)"Buttons")
 #define configTSK_BUTTONS_TASK_STACK_SIZE	256
-#define configTSK_BUTTONS_TASK_PRIORITY		TASK_PRIORITY_LOW
+#define configTSK_BUTTONS_TASK_PRIORITY		TASK_PRIORITY_MEDIUM
 #define configTSK_BUTTONS_TASK_PERIOD		20
 #define configTSK_BUTTONS_TASK_HANDLE		NULL
 
@@ -225,7 +225,7 @@ to exclude the API function. */
 
 /* Debug Task */
 #define configTSK_DEBUG_TASK_NAME			((const signed portCHAR *)"Debug")
-#define configTSK_DEBUG_TASK_STACK_SIZE		512
+#define configTSK_DEBUG_TASK_STACK_SIZE		256
 #define configTSK_DEBUG_TASK_PRIORITY		TASK_PRIORITY_LOW
 #define configTSK_DEBUG_TASK_PERIOD			20
 #define configTSK_DEBUG_TASK_HANDLE			NULL

@@ -195,3 +195,8 @@ void pwm_send_request( void ){
 	unsigned char flag;
 	xQueueSend(pwmManagerQueue, &flag, 0);
 }
+
+void pwm_send_request_isr( void ){
+	unsigned char flag;
+	xQueueSendFromISR(pwmManagerQueue, &flag, 0);
+}

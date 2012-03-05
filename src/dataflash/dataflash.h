@@ -41,6 +41,9 @@
 #define dataflash_clr_hold()				gpio_set_gpio_pin(DATAFLASH_HOLD)
 #define dataflash_set_hold()				gpio_clr_gpio_pin(DATAFLASH_HOLD)
 
+#define dataflash_set_busy_flag()			flashIsBusy = TRUE
+#define dataflash_clr_busy_flag()			flashIsBusy = FALSE
+
 // Device IDs for AT25DF161
 #define DATAFLASH_MANUFACTURER_ID			0x1F
 #define DATAFLASH_DEVICE_ID0				0x46
@@ -157,6 +160,7 @@
 
 
 #define DATAFLASH_4KB						4096	// Number of bytes in 4KB
+#define DATAFLASH_32KB						32768	// Number of bytes in 32KB
 
 
 #define DATAFLASH_PDCA_CHECK_TIME			5	// Time in milliseconds to suspend task before checking PDCA status again
@@ -164,7 +168,7 @@
 #define DATAFLASH_PROGRAM_TIME				2
 #define DATAFLASH_ERASE_TIME				20
 
-typedef struct tDataflashStatusRegisters{
+struct tDataflashStatusRegisters{
 	unsigned SPRL	: 1;		// Sector Protection Registers Locked
 	unsigned RES0	: 1;		// Reserved for future use
 	unsigned EPE	: 1;		// Erase/Program Error
@@ -182,7 +186,7 @@ typedef struct tDataflashStatusRegisters{
 };
 
 
-typedef union tDataflashStatus {
+union tDataflashStatus {
 	struct tDataflashStatusRegisters registers;
 	unsigned char raw[2];
 };
@@ -208,6 +212,6 @@ unsigned char dataflash_is_busy( void );
 unsigned short dataflash_calculate_otp_crc( void );
 unsigned short dataflash_calculate_userPrefs_crc( void );
 unsigned char dataflash_send_request(unsigned char command, unsigned char *pointer, unsigned short length, unsigned long index, unsigned char resume, unsigned char delay);
-
+unsigned char dataflash_eraseRecordedData( void );
 
 #endif /* DATAFLASH_H_ */

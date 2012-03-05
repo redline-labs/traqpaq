@@ -42,19 +42,19 @@
 #define MENU_TEXT_X_PADDING			6										// X Padding for menu item text
 #define MENU_TEXT_Y_PADDING			6										// Y Padding for menu item text
 
-struct tMenu menu_init();
+struct tMenu menu_init( void );
 void menu_addItem(struct tMenu *menu, unsigned char *itemText, unsigned short actionCode);
 void menu_scrollUp(struct tMenu *menu);
 void menu_scrollDown(struct tMenu *menu);
 unsigned short menu_readCallback(struct tMenu *menu);
 void menu_clear(struct tMenu *menu);
 
-typedef struct tMenuItem {
+struct tMenuItem {
 	unsigned char text[MENU_MAX_ITEM_STRLEN];
 	unsigned short callback; //TO DO: Implement call backs
 };
 
-typedef struct tMenu {
+struct tMenu {
 	unsigned char numItems;
 	unsigned char selectedIndex;
 	unsigned char displayIndex;

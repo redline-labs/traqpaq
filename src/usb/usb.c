@@ -31,6 +31,7 @@
 #include "drivers.h"
 #include "dataflash/dataflash_manager_request.h"
 #include "dataflash/dataflash_otp_layout.h"
+#include "string.h"
 
 void main_vendor_bulk_in_received(udd_ep_status_t status, iram_size_t nb_transfered);
 void main_vendor_read_callback(udd_ep_status_t status, iram_size_t nb_transfered);
@@ -43,6 +44,7 @@ static uint8_t usbTxBuffer[USB_TX_BUFFER_SIZE];
 xQueueHandle usbManagerQueue;
 
 extern struct tDataflashOTP dataflashOTP;
+extern unsigned char flashIsBusy;
 
 // Create task for FreeRTOS
 void usb_task_init( void ){
@@ -59,6 +61,8 @@ void usb_task( void *pvParameters ){
 	unsigned char responseU8;
 	unsigned short responseU16;
 	unsigned short i;
+	
+	struct tTracklist trackList;
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_USB, "Task Started");
 	
@@ -128,12 +132,15 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_DBG_DF_BUSY):
 				data_length = 1;
-				dataflash_send_request(DFMAN_REQUEST_BUSY, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
+				//dataflash_send_request(DFMAN_REQUEST_BUSY, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
+				usbTxBuffer[0] = flashIsBusy;
+				
 				break;
-					
-			case(USB_DBG_DF_CHIP_ERASE):
+				
+			case(USB_CMD_ERASE_RECORDDATA):
 				data_length = 1;
-				dataflash_send_request(DFMAN_REQUEST_CHIP_ERASE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
+				dataflash_send_request(DFMAN_REQUEST_ERASE_RECORDED_DATA, NULL, NULL, NULL, FALSE, pdFALSE);
+				usbTxBuffer[0] = TRUE;
 				break;
 					
 			case(USB_DBG_DF_IS_FLASH_FULL):
@@ -175,6 +182,41 @@ void usb_task( void *pvParameters ){
 
 				dataflash_WriteOTP(0, 18, &usbTxBuffer);
 				break;
+				
+			case(USB_CMD_WRITE_SAVEDTRACKS):
+				strlcpy(&trackList.name, "Burn Pit", TRACKLIST_MAX_STRLEN);
+				trackList.course = 900;
+				trackList.longitude = -83472574;
+				trackList.latitude = 42558193;
+				trackList.isEmpty = FALSE;
+				trackList.reserved = 0xA5;
+				
+				dataflash_send_request(DFMAN_REQUEST_UPDATE_TRACKLIST, &trackList, NULL, 0, TRUE, pdFALSE);
+				
+				strlcpy(&trackList.name, "Oakley Park", TRACKLIST_MAX_STRLEN);
+				trackList.course = 2666;
+				trackList.longitude = -83453003;
+				trackList.latitude = 42570383;
+				trackList.isEmpty = FALSE;
+				trackList.reserved = 0xA5;
+				
+				
+				dataflash_send_request(DFMAN_REQUEST_UPDATE_TRACKLIST, &trackList, NULL, 1, TRUE, pdFALSE);
+				
+				data_length = 1;
+				usbTxBuffer[0] = TRUE;
+				break;
+				
+			case(USB_CMD_READ_SAVEDTRACKS):
+				data_length = sizeof(trackList);
+				dataflash_send_request(DFMAN_REQUEST_READ_TRACKLIST, &usbTxBuffer, NULL, (usbRxBuffer[1] << 8) + (usbRxBuffer[2] << 0), TRUE, pdFALSE);
+				break;
+				
+			case(USB_CMD_WRITE_USERPREFS):
+				data_length = 1;
+				usbTxBuffer[0] = TRUE;
+				dataflash_send_request(DFMAN_REQUEST_WRITE_USER_PREFS, NULL, NULL, NULL, FALSE, pdFALSE);
+				break;
 
 
 			default:
@@ -191,21 +233,15 @@ void usb_task( void *pvParameters ){
 }
 
 
-
-
-
-
-
-
-
-
 void main_vbus_action(bool b_high){
 	if (b_high) {
 		// Attach USB Device
 		udc_attach();
+		pwm_send_request_isr();
 	} else {
 		// VBUS not present
 		udc_detach();
+		pwm_send_request_isr();
 	}
 }
 
@@ -267,97 +303,3 @@ void main_vendor_read_callback(udd_ep_status_t status, iram_size_t nb_transfered
 	flag = TRUE;
 	xQueueSendFromISR(usbManagerQueue, &flag, pdFALSE);
 }
-
-
-
-// Send Data out of module
-/*void main_vendor_bulk_out_received(udd_ep_status_t status, iram_size_t nb_transfered) {
-	
-	if (UDD_EP_TRANSFER_OK != status) {
-		return; // Transfer aborted, then stop loopback
-	}
-	
-	// Send on IN endpoint the data received on endpoint OUT
-	udi_vendor_bulk_in_run(usbRxBuffer, nb_transfered, main_vendor_bulk_in_received);
-}*/
-
-
-
-
-
-
-
-/*void main_vendor_iso_in_received(udd_ep_status_t status, iram_size_t nb_transfered) {
-	asm("nop");
-}
-
-void main_vendor_iso_out_received(udd_ep_status_t status, iram_size_t nb_transfered) {
-	uint8_t *buf_ptr;
-
-	if (UDD_EP_TRANSFER_OK != status) {
-		return; // Tranfert aborted, then stop loopback
-	}
-
-	if (nb_transfered) {
-		asm("nop");
-		// Send on IN endpoint the data received on endpoint OUT
-		buf_ptr = &main_buf_loopback[ main_buf_iso_sel
-				*(sizeof(main_buf_loopback)/2) ];
-		udi_vendor_iso_in_run(
-				buf_ptr,
-				nb_transfered,
-				main_vendor_iso_in_received);
-	}
-
-	// Switch of buffer
-	main_buf_iso_sel = main_buf_iso_sel? 0:1;
-
-	// Immediately enable a transfer on next USB isochronous OUT packet
-	// to avoid to skip a USB packet.
-	// NOTE:
-	// Here the expected buffer size is equal to endpoint size.
-	// Thus, this transfer request will end after reception of
-	// one USB packet.
-	//
-	// When using buffer size larger than endpoint size,
-	// the requested transfer is stopped when the buffer is = full*.
-	// *on USBC and XMEGA USB driver, the buffer is full
-	// when "number of data transfered" > "buffer size" - "endppoint size".
-	buf_ptr = &main_buf_loopback[ main_buf_iso_sel
-			*(sizeof(main_buf_loopback)/2) ];
-
-	// Send on IN endpoint the data received on endpoint OUT
-	udi_vendor_iso_out_run(
-			buf_ptr,
-			udd_is_high_speed()?
-				UDI_VENDOR_EPS_SIZE_ISO_HS:UDI_VENDOR_EPS_SIZE_ISO_FS,
-			main_vendor_iso_out_received);
-}*/
-
-
-/*
-void main_vendor_int_in_received(udd_ep_status_t status, iram_size_t nb_transfered){
-	if (UDD_EP_TRANSFER_OK != status) {
-		return; // Tranfert aborted, then stop loopback
-	}
-	asm("nop");
-	// Wait a full buffer
-	udi_vendor_interrupt_out_run(
-			main_buf_loopback,
-			sizeof(main_buf_loopback),
-			main_vendor_int_out_received);
-}
-*/
-/*
-void main_vendor_int_out_received(udd_ep_status_t status, iram_size_t nb_transfered) {
-	if (UDD_EP_TRANSFER_OK != status) {
-		return; // Tranfert aborted, then stop loopback
-	}
-	asm("nop");
-	// Send on IN endpoint the data received on endpoint OUT
-	udi_vendor_interrupt_in_run(
-			main_buf_loopback,
-			nb_transfered,
-			main_vendor_int_in_received);
-}
-*/

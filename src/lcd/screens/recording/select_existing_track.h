@@ -29,9 +29,20 @@
 
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
-	menu_addItem(&mainMenu, "Track 1",	LCDFSM_START_RECORD);
-	menu_addItem(&mainMenu, "Track 2",	LCDFSM_START_RECORD);
 	
+	responseU8 = 0;		// Number of tracks loaded
+
+	dataflash_send_request(DFMAN_REQUEST_READ_TRACKLIST, &trackList, sizeof(trackList), responseU8, TRUE, 20);
+	while( trackList.isEmpty == FALSE){
+		menu_addItem(&mainMenu, &trackList.name, responseU8);
+		responseU8++;
+		dataflash_send_request(DFMAN_REQUEST_READ_TRACKLIST, &trackList, sizeof(trackList), responseU8, TRUE, 20);
+	}
+	
+	if( responseU8 == 0 ){
+		menu_addItem(&mainMenu, "No Tracks Found", LCDFSM_MAINMENU);
+	}
+
 	lcd_redraw_complete();
 }
 
@@ -50,13 +61,15 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_SELECT):
+			gps_send_request(GPS_SET_FINISH_POINT, NULL, (unsigned char)menu_readCallback(&mainMenu), pdFALSE);
+			
 			lcd_force_redraw();
-			lcd_change_screens( menu_readCallback(&mainMenu) );
+			lcd_change_screens( LCDFSM_START_RECORD );
 			break;
 			
 		case(BUTTON_BACK):
 			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_OPTIONS );
+			lcd_change_screens( LCDFSM_RECORD_NEW_SESSION );
 			break;
 			
 			

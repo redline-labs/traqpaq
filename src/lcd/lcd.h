@@ -323,7 +323,7 @@ void lcd_drawPeripheralBox(unsigned short color);
 unsigned char lcd_sendWidgetRequest(unsigned char action, unsigned char data, unsigned char delay);
 unsigned char lcd_sendButtonRequest(unsigned char button);
 
-typedef struct tLCDProgressBar {
+struct tLCDProgressBar {
 	unsigned short start_x;
 	unsigned short start_y;
 	unsigned short end_x;
@@ -338,7 +338,7 @@ typedef struct tLCDProgressBar {
 	unsigned short color_background;
 };
 
-typedef struct tLCDLabel {
+struct tLCDLabel {
 	unsigned short start_x;
 	unsigned short start_y;
 	unsigned short width;
@@ -350,20 +350,20 @@ typedef struct tLCDLabel {
 	unsigned short color_background;
 };
 
-typedef struct tLCDBattery {
+struct tLCDBattery {
 	unsigned short barcolor;
 	unsigned short framecolor;
 	unsigned char percent;
 };
 
-typedef struct tLCDAntenna {
+struct tLCDAntenna {
 	unsigned short fcolor;	// Active bars on the icon
 	unsigned short bcolor;	// Inactive bars on the icon
 	unsigned short errorcolor;	// Color of bars when no reception
 	unsigned char bars;		// Current number of bars shown
 };
 
-typedef struct tLCDTopBar {
+struct tLCDTopBar {
 	unsigned short bcolor;	// Background Color
 	unsigned short fcolor;	// Foreground Color
 	
@@ -382,7 +382,7 @@ typedef struct tLCDTopBar {
 #define LCD_REQUEST_UPDATE_PERIPHERIAL	4
 
 
-typedef struct tLCDRequest {
+struct tLCDRequest {
 	unsigned char action;
 	unsigned char data;
 };

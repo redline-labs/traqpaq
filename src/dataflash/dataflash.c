@@ -42,8 +42,12 @@ struct tDataflashRequest request;
 
 struct tUserPrefs userPrefs;
 
+unsigned char flashIsBusy;
+
 void dataflash_task_init( void ){
 	unsigned char i;
+	
+	dataflash_set_busy_flag();
 	
 	dataflashManagerQueue = xQueueCreate(DFMAN_QUEUE_SIZE, sizeof(request));
 	
@@ -81,7 +85,8 @@ void dataflash_task_init( void ){
 void dataflash_task( void *pvParameters ){
 	volatile unsigned char recordTableIndex = 0;	// Index of first empty record table
 	struct tRecordsEntry recordTable, prevRecordTable;
-	
+	struct tTracklist trackList;
+
 	unsigned char flashIsFull = FALSE;
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_DATAFLASH, "Task Started");
@@ -108,8 +113,12 @@ void dataflash_task( void *pvParameters ){
 		recordTable.endAddress = recordTable.startAddress;
 	}
 	
+	dataflash_clr_busy_flag();
+	
 	while(TRUE){
 		xQueueReceive(dataflashManagerQueue, &request, portMAX_DELAY);
+		
+		dataflash_set_busy_flag();
 		
 		switch(request.command){
 			case(DFMAN_REQUEST_END_CURRENT_RECORD):
@@ -127,10 +136,6 @@ void dataflash_task( void *pvParameters ){
 					
 				break;
 				
-			case(DFMAN_REQUEST_UPDATE_TRACKLIST):
-				// Not implemented yet!
-				break;
-				
 			case(DFMAN_REQUEST_ADD_RECORDDATA):
 				dataflash_WriteFromBuffer(recordTable.endAddress, request.length, request.pointer);
 				recordTable.endAddress += DATAFLASH_PAGE_SIZE;
@@ -146,6 +151,14 @@ void dataflash_task( void *pvParameters ){
 				
 			case(DFMAN_REQUEST_READ_RECORDDATA):
 				dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDDATA_START + (request.index * DATAFLASH_PAGE_SIZE), DATAFLASH_PAGE_SIZE, request.pointer);
+				break;
+				
+			case(DFMAN_REQUEST_READ_TRACKLIST):
+				dataflash_ReadToBuffer(DATAFLASH_ADDR_TRACKLIST_START + (request.index * sizeof(trackList)), sizeof(trackList), request.pointer);
+				break;
+				
+			case(DFMAN_REQUEST_UPDATE_TRACKLIST):
+				dataflash_UpdateSector(DATAFLASH_ADDR_TRACKLIST_START + (request.index * sizeof(trackList)), sizeof(trackList), request.pointer);
 				break;
 				
 			case(DFMAN_REQUEST_READ_OTP):
@@ -175,14 +188,25 @@ void dataflash_task( void *pvParameters ){
 				*(request.pointer) = (((recordTable.endAddress - DATAFLASH_ADDR_RECORDDATA_START) * 100) / (DATAFLASH_ADDR_RECORDDATA_END - DATAFLASH_ADDR_RECORDDATA_START));
 				break;
 				
-			case(DFMAN_REQUEST_UPDATE_DATE):
-				recordTable.datestamp = request.length;
+			case(DFMAN_REQUEST_ERASE_RECORDED_DATA):
+				debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_DATAFLASH, "Erasing recorded data");
+				dataflash_eraseRecordedData();
+				debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_DATAFLASH, "Done erasing!");
 				break;
+				
+			case(DFMAN_REQUEST_WRITE_USER_PREFS):
+				userPrefs.crc = dataflash_calculate_userPrefs_crc();
+				dataflash_WriteFromBuffer(DATAFLASH_ADDR_USERPREFS_START, sizeof(userPrefs), &userPrefs);
+				break;
+			
 		}
 		
+		dataflash_clr_busy_flag();
+		
 		// Resume requesting task if it has been suspended
-		if(request.resume != NULL){
-			vTaskResume(request.resume);
+		if(request.resume == TRUE){
+			//debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_DATAFLASH, "Waking Task");
+			vTaskResume(request.handle);
 		}
 		
 	}
@@ -295,6 +319,38 @@ unsigned char dataflash_UpdateSector(unsigned long startAddress, unsigned short 
 	// Write new data back
 	for(i = 0; i < DATAFLASH_4KB; i += DATAFLASH_PAGE_SIZE){
 		dataflash_WriteFromBuffer(sectorAddress + i, DATAFLASH_PAGE_SIZE, &(sectorBuffer[i]));
+		
+		// Wait for dataflash to become ready again.
+		while( dataflash_is_busy() ){
+			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
+		}
+	}	
+	
+	return TRUE;
+}
+
+unsigned char dataflash_eraseRecordedData(){
+	unsigned short i;
+	unsigned char sectorBuffer[DATAFLASH_4KB];
+	
+	dataflash_ReadToBuffer(DATAFLASH_ADDR_USERPREFS_START, DATAFLASH_4KB, &sectorBuffer);
+	
+	// Wait for dataflash to become ready again. NEEDED?
+	while( dataflash_is_busy() ){
+		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_STATUS_CHECK_TIME ) );
+	}
+	
+	// Erase the flash
+	dataflash_chipErase();
+	
+	// Wait for the erase operation to finish
+	while( dataflash_is_busy() ){
+		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_ERASE_TIME ) );
+	}
+
+	// Write new data back
+	for(i = 0; i < DATAFLASH_4KB; i += DATAFLASH_PAGE_SIZE){
+		dataflash_WriteFromBuffer(DATAFLASH_ADDR_USERPREFS_START + i, DATAFLASH_PAGE_SIZE, &(sectorBuffer[i]));
 		
 		// Wait for dataflash to become ready again.
 		while( dataflash_is_busy() ){
@@ -517,15 +573,16 @@ unsigned short dataflash_calculate_userPrefs_crc( void ){
 unsigned char dataflash_send_request(unsigned char command, unsigned char *pointer, unsigned short length, unsigned long index, unsigned char resume, unsigned char delay){
 	struct tDataflashRequest request;
 	
+	taskENTER_CRITICAL();
+	
 	request.command = command;
 	request.pointer = pointer;
 	request.length = length;
 	request.index = index;
+	request.resume = resume;
 	
 	if(resume == TRUE){
-		request.resume = xTaskGetCurrentTaskHandle();
-	}else{
-		request.resume = NULL;
+		request.handle = xTaskGetCurrentTaskHandle();
 	}
 	
 	xQueueSend(dataflashManagerQueue, &request, delay);
@@ -533,6 +590,8 @@ unsigned char dataflash_send_request(unsigned char command, unsigned char *point
 	if(resume == TRUE){
 		vTaskSuspend(NULL);
 	}
+	
+	taskEXIT_CRITICAL();
 	
 	return TRUE;
 }

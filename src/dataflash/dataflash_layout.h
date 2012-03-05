@@ -36,7 +36,7 @@
 #define DATAFLASH_PAGE_SIZE		256
 
 
-typedef struct __attribute__ ((packed)) tRecordsEntry {
+struct __attribute__ ((packed)) tRecordsEntry {
 	unsigned char recordEmpty;
 	unsigned char trackID;
 	unsigned char reserved1[2];
@@ -50,19 +50,11 @@ typedef struct __attribute__ ((packed)) tRecordsEntry {
 #define RECORDS_TOTAL_POSSIBLE	256
 #define RECORDS_ENTRY_PER_PAGE	16
 
-typedef struct tRecordsEntryPage {
+struct tRecordsEntryPage {
 	struct tRecordsEntry record[RECORDS_ENTRY_PER_PAGE];
 };
 
-/*
-unsigned long latitude;
-unsigned short latitude_decimal;
-unsigned long longitude;
-unsigned short longitude_decimal;
-
-*/
-
-typedef struct __attribute__ ((packed)) tRecordData {
+struct __attribute__ ((packed)) tRecordData {
 	unsigned int utc;
 	signed int latitude;
 	signed int longitude;
@@ -77,7 +69,7 @@ typedef struct __attribute__ ((packed)) tRecordData {
 
 #define RECORD_DATA_PER_PAGE	12
 
-typedef struct __attribute__ ((packed)) tRecordDataPage {
+struct __attribute__ ((packed)) tRecordDataPage {
 	unsigned int date;
 	
 	unsigned short hdop;
@@ -92,7 +84,7 @@ typedef struct __attribute__ ((packed)) tRecordDataPage {
 
 
 
-typedef struct tUserPrefs {
+struct tUserPrefs {
 	unsigned char	screenPWMMax;		// Max Screen Brightness ( 8-bit PWM value; 0 - 255 )
 	unsigned char	screenPWMMin;		// Min Screen Brightness ( 8-bit PWM value; 0 - 255 )
 	unsigned short	screenFadeTime;		// Inactive time for module until screen fades darker
@@ -101,20 +93,31 @@ typedef struct tUserPrefs {
 };
 
 
+#define TRACKLIST_MAX_STRLEN		20
+
+struct __attribute__ ((packed)) tTracklist {
+	unsigned char name[TRACKLIST_MAX_STRLEN];
+	
+	signed int longitude;
+	signed int latitude;
+	
+	unsigned short course;
+	unsigned char isEmpty;
+	unsigned char reserved;
+}; // 32 Bytes
+
+
 #define DATAFLASH_ADDR_USERPREFS_START			0x00000000
 #define DATAFLASH_ADDR_USERPREFS_END			0x000000FF
 
-#define DATAFLASH_ADDR_RECORDTABLE_START		0x00000100
-#define DATAFLASH_ADDR_RECORDTABLE_END			0x00000FFF	// Align to 4KB sector
+#define DATAFLASH_ADDR_TRACKLIST_START			0x00000100
+#define DATAFLASH_ADDR_TRACKLIST_END			0x00000FFF	// Align to 4KB sector
 
-#define DATAFLASH_ADDR_TRACKLIST_START			0x00001000
-#define DATAFLASH_ADDR_TRACKLIST_END			0x00001FFF	// Align to 4KB sector
+#define DATAFLASH_ADDR_RECORDTABLE_START		0x00001000
+#define DATAFLASH_ADDR_RECORDTABLE_END			0x00001FFF	// Align to 4KB sector
 
 #define DATAFLASH_ADDR_RECORDDATA_START			0x00002000	// Size is remainder of 16Mb
 #define DATAFLASH_ADDR_RECORDDATA_END			0x001FFFFF	// Dataflash End Address
-
-// Define the the number of record samples available in Dataflash space alloted
-//#define RECORDSDATA_TOTAL_POSSIBLE (DATAFLASH_ADDR_RECORDDATA_END - DATAFLASH_ADDR_RECORDDATA_START) / RECORD_PAGE_SIZE
 
 
 #endif /* DATAFLASH_LAYOUT_H_ */

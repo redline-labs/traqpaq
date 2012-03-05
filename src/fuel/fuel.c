@@ -225,6 +225,8 @@ unsigned char fuel_writeBatteryInfo(unsigned short capacity, unsigned short char
 	fuel_write_register(FUEL_ADDRESS_EEPROM_BLOCK0_START, &batteryInfo, sizeof(batteryInfo) );
 	fuel_writeShadowRAM();
 	fuel_copyEEtoShadowRAM();
+	
+	return TRUE;
 }
 
 unsigned char fuel_isBusy( void ){

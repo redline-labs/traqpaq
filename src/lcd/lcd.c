@@ -62,6 +62,8 @@ void lcd_gui_task_normal( void *pvParameters ){
 	struct tMenu mainMenu;
 	struct tLCDProgressBar progressBar;
 	
+	struct tTracklist trackList;
+	
 	unsigned char responseU8;
 	unsigned int responseU32;
 	

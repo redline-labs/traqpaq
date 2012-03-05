@@ -40,7 +40,7 @@
 #define BOOST_CONVERTER_TURN_ON_TIME	100	// Time in milliseconds for Boost Converter output to stabilize
 
 
-typedef struct tPWMDisplayStatus {
+struct tPWMDisplayStatus {
 	unsigned char displayOn;
 	unsigned char displayFaded;
 	unsigned char brightness;
@@ -53,6 +53,6 @@ void pwm_task_usb( void *pvParameters );
 void pwm_fadeBacklight(unsigned char endValue);
 void pwm_updateBacklightDuty(unsigned char duty);
 void pwm_send_request( void );
-
+void pwm_send_request_isr( void );
 
 #endif /* PWM_H_ */

@@ -128,7 +128,7 @@
 #define FUEL_WRITE_TO_EE_TIME					2		// Time in milliseconds to recheck EE status
 
 
-typedef struct __attribute__ ((packed)) tFuelStatus{ 
+struct __attribute__ ((packed)) tFuelStatus{ 
 	// Protection Register - 8 bits
     unsigned OV		: 1;	// Overvoltage Flag
 	unsigned UV		: 1;	// Undervoltage Flag
@@ -145,7 +145,7 @@ typedef struct __attribute__ ((packed)) tFuelStatus{
 	unsigned Res0	: 5;	// Reserved bits
 };
 
-typedef struct __attribute__ ((packed)) tFuelBatteryStatus{
+struct __attribute__ ((packed)) tFuelBatteryStatus{
 	unsigned short accumCurrent;
 	unsigned short voltage;
 	unsigned short instCurrent;
@@ -153,7 +153,7 @@ typedef struct __attribute__ ((packed)) tFuelBatteryStatus{
 };
 
 
-typedef struct __attribute__ ((packed)) tFuelEEStatus{
+struct __attribute__ ((packed)) tFuelEEStatus{
 	// EEPROM Register
 	unsigned EEC	: 1;	// EEPROM Copy Flag
 	unsigned LOCK	: 1;	// EEPROM Lock Enable
@@ -169,7 +169,7 @@ typedef struct __attribute__ ((packed)) tFuelEEStatus{
 	//unsigned Res0	: 1;	// Reserved bit
 };
 
-typedef struct __attribute__ ((packed)) tBatteryInfo{
+struct __attribute__ ((packed)) tBatteryInfo{
 	unsigned short capacity;		// Capacity of Battery in counts
 	unsigned short chargeCycles;	// Number of Charge Cycles
 	unsigned short health;			// Health of battery - default to FF
@@ -194,7 +194,7 @@ void fuel_clearEELocks( void );
 unsigned char fuel_writeBatteryInfo(unsigned short capacity, unsigned short chargeCycles, unsigned short health);
 struct tBatteryInfo fuel_readBatteryInfo( void );
 void fuel_updateAccumulatedCurrent(unsigned short value);
-void inline fuel_writeShadowRAM( void );
+void fuel_writeShadowRAM( void );
 unsigned char fuel_isBusy( void );
 
 

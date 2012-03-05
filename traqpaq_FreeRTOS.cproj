@@ -412,15 +412,6 @@
       <Value>../src</Value>
       <Value>../src/asf/avr32/boards</Value>
       <Value>../src/asf/avr32/drivers/tc</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/device</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/host</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum/device</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum_example_freertos/freertos</Value>
-      <Value>../src/asf/avr32/services/usb/_asf_v1</Value>
       <Value>../src/asf/thirdparty/freertos/source/include</Value>
       <Value>../src/asf/thirdparty/freertos/source/portable/gcc/avr32_uc3</Value>
       <Value>../src/config</Value>
@@ -453,7 +444,6 @@
       <Value>../src/asf/common/services/usb/udc</Value>
     </ListValues>
   </avr32gcc.compiler.directories.IncludePaths>
-  <avr32gcc.compiler.optimization.level>Optimize most (-O3)</avr32gcc.compiler.optimization.level>
   <avr32gcc.compiler.optimization.OtherFlags>-fdata-sections</avr32gcc.compiler.optimization.OtherFlags>
   <avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
   <avr32gcc.compiler.optimization.DebugLevel>Maximum (-g3)</avr32gcc.compiler.optimization.DebugLevel>
@@ -473,15 +463,6 @@
       <Value>../src</Value>
       <Value>../src/asf/avr32/boards</Value>
       <Value>../src/asf/avr32/drivers/tc</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/device</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/host</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum/device</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum_example_freertos/freertos</Value>
-      <Value>../src/asf/avr32/services/usb/_asf_v1</Value>
       <Value>../src/asf/thirdparty/freertos/source/include</Value>
       <Value>../src/asf/thirdparty/freertos/source/portable/gcc/avr32_uc3</Value>
       <Value>../src/config</Value>
@@ -521,15 +502,6 @@
       <Value>../src/asf/avr32/boards</Value>
       <Value>../src/asf/avr32/boards/evk1100</Value>
       <Value>../src/asf/avr32/drivers/tc</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/device</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/enum/host</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum/device</Value>
-      <Value>../src/asf/avr32/drivers/usbb/_asf_v1/examples/enum_example_freertos/freertos</Value>
-      <Value>../src/asf/avr32/services/usb/_asf_v1</Value>
       <Value>../src/asf/thirdparty/freertos/source/include</Value>
       <Value>../src/asf/thirdparty/freertos/source/portable/gcc/avr32_uc3</Value>
       <Value>../src/config</Value>
@@ -803,6 +775,12 @@
     <None Include="src\asf\common\services\usb\udc\udi.h">
       <SubType>compile</SubType>
     </None>
+    <Compile Include="src\asf\thirdparty\freertos\source\portable\gcc\avr32_uc3\read.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\asf\thirdparty\freertos\source\portable\gcc\avr32_uc3\write.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\button\button.c">
       <SubType>compile</SubType>
     </Compile>
@@ -1032,12 +1010,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\asf\thirdparty\freertos\source\portable\gcc\avr32_uc3\portmacro.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\asf\thirdparty\freertos\source\portable\gcc\avr32_uc3\read.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\asf\thirdparty\freertos\source\portable\gcc\avr32_uc3\write.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\asf\thirdparty\freertos\source\portable\memmang\heap_3.c">

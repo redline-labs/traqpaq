@@ -48,19 +48,21 @@
 #define DFMAN_REQUEST_IS_FLASH_FULL				10
 #define DFMAN_REQUEST_USED_SPACE				11
 #define DFMAN_REQUEST_UPDATE_DATE				12
-
+#define DFMAN_REQUEST_READ_TRACKLIST			13
+#define DFMAN_REQUEST_ERASE_RECORDED_DATA		14
+#define DFMAN_REQUEST_WRITE_USER_PREFS			15
 
 
 #define DFMAN_STATUS_BUSY						0
 #define DFMAN_STATUS_READY						1
 
-typedef struct tDataflashRequest {
+struct tDataflashRequest {
 	unsigned char command;		// Define the request
 	unsigned char *pointer;		// Pointer for data to be written
 	unsigned short length;		// Length of data to be written
 	unsigned long index;		// Used for reading requests
-
-	xTaskHandle resume;			// Handle of task to resume after completion
+	unsigned char resume;		// Flag to resume the calling task
+	xTaskHandle handle;			// Handle of task to resume after completion
 };
 
 
