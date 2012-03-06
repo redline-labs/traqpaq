@@ -53,7 +53,7 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_SELECT):
-			pwm_updateBacklightDuty( menu_readCallback(&mainMenu) );
+			backlight_updateDuty( menu_readCallback(&mainMenu) );
 			lcd_force_redraw();
 			lcd_change_screens( LCDFSM_DISPLAY );
 			break;

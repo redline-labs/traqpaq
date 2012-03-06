@@ -45,6 +45,7 @@ xQueueHandle usbManagerQueue;
 
 extern struct tDataflashOTP dataflashOTP;
 extern struct tDataflashFlags dataflashFlags;
+extern struct tUserPrefs userPrefs;
 
 // Create task for FreeRTOS
 void usb_task_init( void ){
@@ -219,6 +220,10 @@ void usb_task( void *pvParameters ){
 			case(USB_CMD_WRITE_USERPREFS):
 				data_length = 1;
 				usbTxBuffer[0] = TRUE;
+				userPrefs.screenFadeTime = BACKLIGHT_DEFAULT_FADETIME;
+				userPrefs.screenOffTime = BACKLIGHT_DEFAULT_OFFTIME;
+				userPrefs.screenPWMMax = BACKLIGHT_DEFAULT_MAX;
+				userPrefs.screenPWMMin = BACKLIGHT_DEFAULT_MIN;
 				dataflash_send_request(DFMAN_REQUEST_WRITE_USER_PREFS, NULL, NULL, NULL, FALSE, pdFALSE);
 				break;
 
@@ -241,11 +246,9 @@ void main_vbus_action(bool b_high){
 	if (b_high) {
 		// Attach USB Device
 		udc_attach();
-		pwm_send_request_isr();
 	} else {
 		// VBUS not present
 		udc_detach();
-		pwm_send_request_isr();
 	}
 }
 

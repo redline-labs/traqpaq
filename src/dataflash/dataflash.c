@@ -197,7 +197,7 @@ void dataflash_task( void *pvParameters ){
 				
 			case(DFMAN_REQUEST_WRITE_USER_PREFS):
 				userPrefs.crc = dataflash_calculate_userPrefs_crc();
-				dataflash_WriteFromBuffer(DATAFLASH_ADDR_USERPREFS_START, sizeof(userPrefs), &userPrefs);
+				dataflash_UpdateSector(DATAFLASH_ADDR_USERPREFS_START, sizeof(userPrefs), &userPrefs);
 				break;
 			
 			case(DFMAN_REQUEST_SET_TRACK):

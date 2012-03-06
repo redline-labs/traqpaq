@@ -63,10 +63,6 @@ int main( void ){
 		#if( TRAQPAQ_HW_EBI_ENABLED )
 		lcd_task_init(TASK_MODE_USB);
 		#endif
-		
-		#if( TRAQPAQ_HW_PWM_ENABLED )
-		pwm_task_init(TASK_MODE_USB);
-		#endif
 	
 		#if( TRAQPAQ_HW_USB_ENABLED )
 		usb_task_init();
@@ -102,10 +98,6 @@ int main( void ){
 	
 		#if( TRAQPAQ_HW_EBI_ENABLED )
 		lcd_task_init(TASK_MODE_NORMAL);
-		#endif
-		
-		#if( TRAQPAQ_HW_PWM_ENABLED )
-		pwm_task_init(TASK_MODE_NORMAL);
 		#endif
 	
 		#if( TRAQPAQ_HW_USB_ENABLED )

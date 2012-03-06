@@ -30,29 +30,33 @@
 #ifndef PWM_H_
 #define PWM_H_
 
-#define BACKLIGHT_FADE_DELAY		1
+#include "drivers.h"
+
+#define BACKLIGHT_TURN_ON_DELAY		100		// Time in milliseconds to delay turning on backlight initally
 
 #define BACKLIGHT_DEFAULT_MAX		255		// Default MAX Screen Brightness
-#define BACKLIGHT_DEFAULT_MIN		150		// Default MIN Screen Brightness
+#define BACKLIGHT_DEFAULT_MIN		55		// Default MIN Screen Brightness
 #define BACKLIGHT_DEFAULT_FADETIME	10		// Default Inactive Time in Seconds to Fade Screen
 #define BACKLIGHT_DEFAULT_OFFTIME	30		// Default Inactive Time in Seconds to Turn Off Screen
 
-#define BOOST_CONVERTER_TURN_ON_TIME	100	// Time in milliseconds for Boost Converter output to stabilize
+#define boost_converter_on()		gpio_set_gpio_pin(PM_SHDN1)
+#define boost_converter_off()		gpio_clr_gpio_pin(PM_SHDN1)
 
-
-struct tPWMDisplayStatus {
-	unsigned char displayOn;
-	unsigned char displayFaded;
-	unsigned char brightness;
+struct tDisplayStatus{
+	unsigned char isReady;
+	unsigned char isFaded;
+	unsigned char isOff;
 };
 
-void pwm_task_init( unsigned char mode );
-void pwm_task_normal( void *pvParameters );
-void pwm_task_usb( void *pvParameters );
 
-void pwm_fadeBacklight(unsigned char endValue);
-void pwm_updateBacklightDuty(unsigned char duty);
-void pwm_send_request( void );
-void pwm_send_request_isr( void );
+void backlight_init( unsigned short delay );
+void backlight_updateDuty(unsigned char duty);
+
+void backlight_resetTimer( void );
+void backlight_fadeTimerCallback( void );
+void backlight_offTimerCallback( void );
+void backlight_timerOffCallback( void );
+void backlight_delayTimerCallback( void );
+void backlight_stopTimers( void );
 
 #endif /* PWM_H_ */

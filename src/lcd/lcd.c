@@ -47,9 +47,13 @@ extern struct tDataflashOTP dataflashOTP;
 xQueueHandle lcdWidgetsManagerQueue;
 xQueueHandle lcdButtonsManagerQueue;
 
+//xTimerHandle xPeripherialTimer;
+
 // Create task for FreeRTOS
 void lcd_task_init( unsigned char mode ){
 	if(mode == TASK_MODE_NORMAL){
+		//xPeripherialTimer = xTimerCreate( "PeripheralTimer", LCD_PERIPHERIAL_FADE_TIME * configTICK_RATE_HZ, pdFALSE, NULL, lcd_clearPeripheral );
+		
 		xTaskCreate(lcd_gui_task_normal, configTSK_GUI_TASK_NAME, configTSK_GUI_TASK_STACK_SIZE, NULL, configTSK_GUI_TASK_PRIORITY, configTSK_GUI_TASK_HANDLE);
 	}else{
 		xTaskCreate(lcd_gui_task_usb, configTSK_GUI_TASK_NAME, configTSK_GUI_TASK_STACK_SIZE, NULL, configTSK_GUI_TASK_PRIORITY, configTSK_GUI_TASK_HANDLE);
@@ -85,9 +89,6 @@ void lcd_gui_task_normal( void *pvParameters ){
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_LCD, "Task Started");
 	
-	// Turn Boost Converter On
-	gpio_set_gpio_pin(PM_SHDN1);
-	
 	lcd_reset();
 	
 	if( lcd_readID() != LCD_DEVICE_ID){
@@ -99,6 +100,8 @@ void lcd_gui_task_normal( void *pvParameters ){
 	// Create GUI element
 	topBar = lcd_createTopBar("Ryan's traq|paq", COLOR_WHITE, COLOR_BLACK);	
 	mainMenu = menu_init();
+	
+	backlight_init(BACKLIGHT_TURN_ON_DELAY);
 	
 	while(1){
 		// See if a widget needs to be updated

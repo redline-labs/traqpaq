@@ -33,6 +33,8 @@
 
 static xQueueHandle buttonPress;
 
+extern struct tDisplayStatus displayStatus;
+
 //------------------------------
 // ISR's
 //------------------------------
@@ -87,11 +89,7 @@ void buttons_task_normal( void *pvParameters ){
 	INTC_register_interrupt(&ISR_button3, EXTINT_BUTTON3_IRQ, EXTINT_BUTTON3);
 	
 	// Wait for buttons to be released (in order to ignore the button press during power on)
-	while( gpio_get_pin_value(GPIO_BUTTON2) ){
-		vTaskDelay( (portTickType)TASK_DELAY_MS(BUTTON_TIMER_INCREMENT) );
-	}
-	
-	// Flush the buffer
+	while( gpio_get_pin_value(GPIO_BUTTON2) ) vTaskDelay( (portTickType)TASK_DELAY_MS(BUTTON_TIMER_INCREMENT) );
 	xQueueReceive(buttonPress, &button, pdFALSE);
 	
 	while(1){
@@ -119,8 +117,13 @@ void buttons_task_normal( void *pvParameters ){
 		}
 		
 		// Send button press and request the backlight on!
-		lcd_sendButtonRequest(button);
-		pwm_send_request();
+		if( !displayStatus.isOff ){
+			lcd_sendButtonRequest(button);
+		}
+		
+		if( displayStatus.isReady ){
+			backlight_resetTimer();
+		}			
 			
 		// Clear any pending EXTINT interrupts and re-enable them
 		eic_clear_interrupt_lines(&AVR32_EIC, (1<<EXTINT_BUTTON0) | (1<<EXTINT_BUTTON1) | (1<<EXTINT_BUTTON2) | (1<<EXTINT_BUTTON3));
@@ -132,13 +135,10 @@ void buttons_task_normal( void *pvParameters ){
 
 void buttons_task_usb( void *pvParameters ){
 	unsigned char button;			// Storage for queue - Holds the ID of the button pressed
-	unsigned char buttonStatus;		// Storage for status of the buttons
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Task Started");
 	
 	while(1){
-		buttonStatus = 1;
-		
 		// Wait for button press - suspends task
 		xQueueReceive(buttonPress, &button, portMAX_DELAY);
 		
@@ -146,13 +146,12 @@ void buttons_task_usb( void *pvParameters ){
 		eic_disable_interrupt_lines(&AVR32_EIC, (1<<EXTINT_BUTTON0) | (1<<EXTINT_BUTTON1) | (1<<EXTINT_BUTTON2) | (1<<EXTINT_BUTTON3));
 
 		// See how long the button is being pressed
-		while( buttonStatus ){
+		while( gpio_get_pin_value(GPIO_BUTTON0) | gpio_get_pin_value(GPIO_BUTTON1) | gpio_get_pin_value(GPIO_BUTTON2) | gpio_get_pin_value(GPIO_BUTTON3) ){
 			vTaskDelay( (portTickType)TASK_DELAY_MS(BUTTON_TIMER_INCREMENT) );
-			buttonStatus = gpio_get_pin_value(GPIO_BUTTON0) | gpio_get_pin_value(GPIO_BUTTON1) | gpio_get_pin_value(GPIO_BUTTON2) | gpio_get_pin_value(GPIO_BUTTON3);
 		}
 		
 		// Request the backlight to be on!
-		pwm_send_request();
+		backlight_resetTimer();
 			
 		// Clear any pending EXTINT interrupts and re-enable them
 		eic_clear_interrupt_lines(&AVR32_EIC, (1<<EXTINT_BUTTON0) | (1<<EXTINT_BUTTON1) | (1<<EXTINT_BUTTON2) | (1<<EXTINT_BUTTON3));

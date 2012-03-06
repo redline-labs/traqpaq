@@ -36,7 +36,7 @@
 #include "gps/gps.h"
 
 // PWM
-#include "pwm/pwm.h"
+#include "lcd/backlight/backlight.h"
 
 // Charge
 #include "charge/charge.h"
@@ -52,6 +52,7 @@
 
 // FreeRTOS
 #include "FreeRTOS.h"
+#include "timers.h"
 #include "task.h"
 #include "queue.h"
 #include "semphr.h"
