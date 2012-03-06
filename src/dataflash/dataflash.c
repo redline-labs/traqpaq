@@ -42,12 +42,13 @@ struct tDataflashRequest request;
 
 struct tUserPrefs userPrefs;
 
-unsigned char flashIsBusy;
+struct tDataflashFlags dataflashFlags;
 
 void dataflash_task_init( void ){
 	unsigned char i;
 	
 	dataflash_set_busy_flag();
+	dataflash_clr_full_flag();
 	
 	dataflashManagerQueue = xQueueCreate(DFMAN_QUEUE_SIZE, sizeof(request));
 	
@@ -124,8 +125,6 @@ void dataflash_task( void *pvParameters ){
 			case(DFMAN_REQUEST_END_CURRENT_RECORD):
 				
 				recordTable.recordEmpty = FALSE;
-				recordTable.trackID = 0xAA;
-				
 				dataflash_UpdateSector(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
 				
 				// Get the new record table ready!
@@ -189,9 +188,11 @@ void dataflash_task( void *pvParameters ){
 				break;
 				
 			case(DFMAN_REQUEST_ERASE_RECORDED_DATA):
-				debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_DATAFLASH, "Erasing recorded data");
+				recordTableIndex = 0;
+				recordTable.startAddress = DATAFLASH_ADDR_RECORDDATA_START;
+				recordTable.endAddress = DATAFLASH_ADDR_RECORDDATA_START;
+
 				dataflash_eraseRecordedData();
-				debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_DATAFLASH, "Done erasing!");
 				break;
 				
 			case(DFMAN_REQUEST_WRITE_USER_PREFS):
@@ -199,6 +200,9 @@ void dataflash_task( void *pvParameters ){
 				dataflash_WriteFromBuffer(DATAFLASH_ADDR_USERPREFS_START, sizeof(userPrefs), &userPrefs);
 				break;
 			
+			case(DFMAN_REQUEST_SET_TRACK):
+				recordTable.trackID = (unsigned char)request.index;
+				break;
 		}
 		
 		dataflash_clr_busy_flag();

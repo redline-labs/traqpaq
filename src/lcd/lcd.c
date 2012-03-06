@@ -32,12 +32,16 @@
 #include "menu.h"
 #include "control_fsm.h"
 #include "dataflash/dataflash_manager_request.h"
+#include "dataflash/dataflash_otp_layout.h"
+#include "string.h"
 
 #include FONT_SMALL_INCLUDE
 #include FONT_LARGE_INCLUDE
 
 // Lookup Table
 const unsigned char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+
+extern struct tDataflashOTP dataflashOTP;
 
 // Queues
 xQueueHandle lcdWidgetsManagerQueue;
@@ -64,6 +68,7 @@ void lcd_gui_task_normal( void *pvParameters ){
 	
 	struct tTracklist trackList;
 	
+	unsigned char tempString[20];
 	unsigned char responseU8;
 	unsigned int responseU32;
 	

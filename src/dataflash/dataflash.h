@@ -41,8 +41,13 @@
 #define dataflash_clr_hold()				gpio_set_gpio_pin(DATAFLASH_HOLD)
 #define dataflash_set_hold()				gpio_clr_gpio_pin(DATAFLASH_HOLD)
 
-#define dataflash_set_busy_flag()			flashIsBusy = TRUE
-#define dataflash_clr_busy_flag()			flashIsBusy = FALSE
+#define dataflash_set_busy_flag()			dataflashFlags.isBusy = TRUE
+#define dataflash_clr_busy_flag()			dataflashFlags.isBusy = FALSE
+#define dataflash_busy_flag()				dataflashFlags.isBusy
+
+#define dataflash_set_full_flag()			dataflashFlags.isFull = TRUE
+#define dataflash_clr_full_flag()			dataflashFlags.isFull = FALSE
+#define dataflash_full_flag()				dataflashFlags.isFull
 
 // Device IDs for AT25DF161
 #define DATAFLASH_MANUFACTURER_ID			0x1F
@@ -189,6 +194,11 @@ struct tDataflashStatusRegisters{
 union tDataflashStatus {
 	struct tDataflashStatusRegisters registers;
 	unsigned char raw[2];
+};
+
+struct tDataflashFlags {
+	unsigned char isBusy;
+	unsigned char isFull;	
 };
 	
 

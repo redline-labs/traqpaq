@@ -44,7 +44,7 @@ static uint8_t usbTxBuffer[USB_TX_BUFFER_SIZE];
 xQueueHandle usbManagerQueue;
 
 extern struct tDataflashOTP dataflashOTP;
-extern unsigned char flashIsBusy;
+extern struct tDataflashFlags dataflashFlags;
 
 // Create task for FreeRTOS
 void usb_task_init( void ){
@@ -132,8 +132,7 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_DBG_DF_BUSY):
 				data_length = 1;
-				//dataflash_send_request(DFMAN_REQUEST_BUSY, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
-				usbTxBuffer[0] = flashIsBusy;
+				usbTxBuffer[0] = dataflash_is_busy();
 				
 				break;
 				
@@ -145,12 +144,17 @@ void usb_task( void *pvParameters ){
 					
 			case(USB_DBG_DF_IS_FLASH_FULL):
 				data_length = 1;
-				dataflash_send_request(DFMAN_REQUEST_IS_FLASH_FULL, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
+				usbTxBuffer[0] = dataflash_full_flag();
 				break;
 					
 			case(USB_DBG_DF_USED_SPACE):
 				data_length = 1;
 				dataflash_send_request(DFMAN_REQUEST_USED_SPACE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
+				break;
+				
+			case(USB_DBG_DF_CHIP_ERASE):
+				data_length = 1;
+				dataflash_send_request(DFMAN_REQUEST_CHIP_ERASE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
 				break;
 				
 			case(USB_CMD_WRITE_OTP):

@@ -123,7 +123,9 @@ void gps_task( void *pvParameters ){
 					break;
 					
 				case(GPS_SET_FINISH_POINT):
+					// Load the track, and then tell the dataflash that we are using it
 					dataflash_send_request(DFMAN_REQUEST_READ_TRACKLIST, &trackList, sizeof(trackList), request.data, TRUE, 20);
+					dataflash_send_request(DFMAN_REQUEST_SET_TRACK, NULL, NULL, request.data, FALSE, 20);
 					finishLine = gps_find_finish_line(trackList.latitude, trackList.longitude, trackList.course);
 					break;
 			}

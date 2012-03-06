@@ -41,7 +41,7 @@
 // ------------------------------------------------------------
 #define TRAQPAQ_SW_LEVEL_MAJOR		1
 #define TRAQPAQ_SW_LEVEL_MINOR		0
-#define TRAQPAQ_SW_LEVEL_ASCII		"1.00"
+#define TRAQPAQ_SW_LEVEL_ASCII		"1.10"
 #define TRAQPAQ_SW_BUILD_DATE		__DATE__
 #define TRAQPAQ_SW_SUPPORT_VER		__VERSION__
 
