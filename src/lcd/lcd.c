@@ -46,21 +46,19 @@ extern struct tDataflashOTP dataflashOTP;
 // Queues
 xQueueHandle lcdWidgetsManagerQueue;
 xQueueHandle lcdButtonsManagerQueue;
-
-//xTimerHandle xPeripherialTimer;
+xTimerHandle xPeripherialTimer;
 
 // Create task for FreeRTOS
 void lcd_task_init( unsigned char mode ){
 	if(mode == TASK_MODE_NORMAL){
-		//xPeripherialTimer = xTimerCreate( "PeripheralTimer", LCD_PERIPHERIAL_FADE_TIME * configTICK_RATE_HZ, pdFALSE, NULL, lcd_clearPeripheral );
-		
+		xPeripherialTimer = xTimerCreate( "PeripheralTimer", LCD_PERIPHERIAL_FADE_TIME * configTICK_RATE_HZ, pdFALSE, NULL, lcd_clearPeripheral );
 		xTaskCreate(lcd_gui_task_normal, configTSK_GUI_TASK_NAME, configTSK_GUI_TASK_STACK_SIZE, NULL, configTSK_GUI_TASK_PRIORITY, configTSK_GUI_TASK_HANDLE);
+		
 	}else{
 		xTaskCreate(lcd_gui_task_usb, configTSK_GUI_TASK_NAME, configTSK_GUI_TASK_STACK_SIZE, NULL, configTSK_GUI_TASK_PRIORITY, configTSK_GUI_TASK_HANDLE);
 	}		
 }
 
-// LCD GUI Task
 // LCD GUI Task
 void lcd_gui_task_normal( void *pvParameters ){
 	unsigned char i = 0;
@@ -75,10 +73,6 @@ void lcd_gui_task_normal( void *pvParameters ){
 	unsigned char tempString[20];
 	unsigned char responseU8;
 	unsigned int responseU32;
-	
-	// Timer flags for peripherial widget
-	unsigned char peripherialBoxDrawn = FALSE;
-	portTickType LastUpdateTime;
 	
 	unsigned char button;
 	volatile unsigned short lcd_fsm = LCDFSM_MAINMENU;		// Useful for testing new screens!
@@ -162,10 +156,8 @@ void lcd_gui_task_normal( void *pvParameters ){
 							lcd_drawPeripheralBox(LCD_PERIPHERIAL_FASTER_COLOR);
 							break;
 					}
-					// Update the peripherial box flags
-					peripherialBoxDrawn = TRUE;
-					lcd_resetTimer();
-					
+
+					lcd_resetPeripheralTimer();
 					break;						
 			}
 		}
@@ -982,14 +974,14 @@ void lcd_updateCharge(struct tLCDTopBar *topBar, unsigned short state){
 void lcd_drawPeripheralBox(unsigned short color){
 	// Vertical left most line
 	lcd_drawFilledRectangle(LCD_MIN_X,
-							LCD_MAX_Y - LCD_TOPBAR_THICKNESS,
+							LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 1,
 							LCD_MIN_X + LCD_PERIPHERIAL_THICKNESS,
 							LCD_MIN_Y,
 							color);
 							
 	// Vertical right most line
 	lcd_drawFilledRectangle(LCD_MAX_X - LCD_PERIPHERIAL_THICKNESS,
-							LCD_MAX_Y - LCD_TOPBAR_THICKNESS,
+							LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 1,
 							LCD_MAX_X,
 							LCD_MIN_Y,
 							color);
@@ -1021,4 +1013,12 @@ unsigned char lcd_sendWidgetRequest(unsigned char action, unsigned char data, un
 
 unsigned char lcd_sendButtonRequest(unsigned char button){
 	return xQueueSend(lcdButtonsManagerQueue, &button, pdFALSE);
+}
+
+void lcd_clearPeripheral( void ){
+	lcd_drawPeripheralBox(COLOR_WHITE);
+}
+
+void lcd_resetPeripheralTimer( void ){
+	xTimerReset( xPeripherialTimer, 20 );
 }

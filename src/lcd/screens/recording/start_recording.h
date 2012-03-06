@@ -33,16 +33,12 @@ if(lcd_redraw_required()){
 	gps_send_request(GPS_REQUEST_START_RECORDING, NULL, NULL, pdFALSE);
 	backlight_stopTimers();
 	
+	// Keep out of peripheral box area!
+	
 	lcd_writeText_16x32("Recording!", FONT_LARGE_POINTER, LCD_MIN_X, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 64, COLOR_BLACK);
 	lcd_writeText_16x32("SELECT to stop!", FONT_LARGE_POINTER, LCD_MIN_X, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 96, COLOR_BLACK);
 	
 	lcd_redraw_complete();
-}
-
-if( peripherialBoxDrawn && lcd_did_time_expire(LCD_PERIPHERIAL_FADE_TIME) ){
-	lcd_resetTimer();
-	peripherialBoxDrawn = FALSE;
-	lcd_drawPeripheralBox(COLOR_WHITE);
 }
 
 if( xQueueReceive(lcdButtonsManagerQueue, &button, pdFALSE) == pdTRUE ){

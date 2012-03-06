@@ -280,9 +280,6 @@ extern struct tLCDTopBar topBar;
 
 #define lcd_change_screens(screen)	lcd_fsm = screen
 
-#define lcd_resetTimer()			LastUpdateTime = xTaskGetTickCount()
-#define lcd_did_time_expire(seconds) ((xTaskGetTickCount() - LastUpdateTime) >= (seconds * configTICK_RATE_HZ))			// Check to see if timer expired
-
 #define LCD_TASK_SLEEP_TIME			20
 
 unsigned short lcd_readID(void);
@@ -322,6 +319,9 @@ void lcd_drawPeripheralBox(unsigned short color);
 
 unsigned char lcd_sendWidgetRequest(unsigned char action, unsigned char data, unsigned char delay);
 unsigned char lcd_sendButtonRequest(unsigned char button);
+
+void lcd_clearPeripheral( void );
+void lcd_resetPeripheralTimer( void );
 
 struct tLCDProgressBar {
 	unsigned short start_x;
