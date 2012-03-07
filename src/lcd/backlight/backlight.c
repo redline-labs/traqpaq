@@ -73,6 +73,7 @@ void backlight_resetTimer( void ){
 	
 	displayStatus.isFaded = FALSE;
 	displayStatus.isOff = FALSE;
+	displayStatus.isReady = TRUE;
 }
 
 
