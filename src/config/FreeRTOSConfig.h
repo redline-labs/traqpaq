@@ -158,7 +158,6 @@ to exclude the API function. */
 #endif
 
 
-
 /* USB task definitions. */
 #define configTSK_USB_TASK_NAME				((const signed portCHAR *)"USB")
 #define configTSK_USB_TASK_STACK_SIZE		512
@@ -195,7 +194,7 @@ to exclude the API function. */
 
 /* GPS Task */
 #define configTSK_GPS_TASK_NAME				((const signed portCHAR *)"GPS")
-#define configTSK_GPS_TASK_STACK_SIZE		1024
+#define configTSK_GPS_TASK_STACK_SIZE		512
 #define configTSK_GPS_TASK_PRIORITY			TASK_PRIORITY_MEDIUM
 #define configTSK_GPS_TASK_PERIOD			20
 #define configTSK_GPS_TASK_HANDLE			NULL
@@ -220,13 +219,6 @@ to exclude the API function. */
 #define configTSK_ADC_TASK_PRIORITY			TASK_PRIORITY_LOW
 #define configTSK_ADC_TASK_PERIOD			20
 #define configTSK_ADC_TASK_HANDLE			NULL
-
-/* PWM Task */
-#define configTSK_PWM_TASK_NAME				((const signed portCHAR *)"PWM")
-#define configTSK_PWM_TASK_STACK_SIZE		256
-#define configTSK_PWM_TASK_PRIORITY			TASK_PRIORITY_LOW
-#define configTSK_PWM_TASK_PERIOD			20
-#define configTSK_PWM_TASK_HANDLE			NULL
 
 /* Debug Task */
 #define configTSK_DEBUG_TASK_NAME			((const signed portCHAR *)"Debug")

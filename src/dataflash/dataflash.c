@@ -126,8 +126,7 @@ void dataflash_task( void *pvParameters ){
 				
 				recordTable.recordEmpty = FALSE;
 				dataflash_UpdateSector(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
-				
-				// Get the new record table ready!
+
 				recordTableIndex++;
 				recordTable.recordEmpty = TRUE;
 				recordTable.startAddress = recordTable.endAddress; 
@@ -209,7 +208,6 @@ void dataflash_task( void *pvParameters ){
 		
 		// Resume requesting task if it has been suspended
 		if(request.resume == TRUE){
-			//debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_DATAFLASH, "Waking Task");
 			vTaskResume(request.handle);
 		}
 		
@@ -300,33 +298,24 @@ unsigned char dataflash_UpdateSector(unsigned long startAddress, unsigned short 
 	unsigned short offset = startAddress & 0x0FFF;
 	unsigned short i;
 	
+	union tDataflashStatus status;
+	
 	dataflash_ReadToBuffer(sectorAddress, DATAFLASH_4KB, &sectorBuffer);
 	
-	// Wait for dataflash to become ready again. NEEDED?
-	while( dataflash_is_busy() ){
-		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_STATUS_CHECK_TIME ) );
-	}
-	
 	// Erase the sector
-	dataflash_eraseBlock(DATAFLASH_CMD_BLOCK_ERASE_4KB, sectorAddress);
+	if( dataflash_eraseBlock(DATAFLASH_CMD_BLOCK_ERASE_4KB, sectorAddress) == DATAFLASH_RESPONSE_FAILURE ){
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Erase Failed");
+	}
 	
 	// Copy new data to buffer
 	for(i = 0; i < length; i++){
 		sectorBuffer[ i + offset ] = bufferPointer[i];
 	}
 	
-	// Wait for the erase operation to finish
-	while( dataflash_is_busy() ){
-		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_ERASE_TIME ) );
-	}
-
 	// Write new data back
 	for(i = 0; i < DATAFLASH_4KB; i += DATAFLASH_PAGE_SIZE){
-		dataflash_WriteFromBuffer(sectorAddress + i, DATAFLASH_PAGE_SIZE, &(sectorBuffer[i]));
-		
-		// Wait for dataflash to become ready again.
-		while( dataflash_is_busy() ){
-			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
+		if( dataflash_WriteFromBuffer(sectorAddress + i, DATAFLASH_PAGE_SIZE, &(sectorBuffer[i])) == DATAFLASH_RESPONSE_FAILURE ){
+			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Write Failed");
 		}
 	}	
 	
@@ -336,29 +325,19 @@ unsigned char dataflash_UpdateSector(unsigned long startAddress, unsigned short 
 unsigned char dataflash_eraseRecordedData(){
 	unsigned short i;
 	unsigned char sectorBuffer[DATAFLASH_4KB];
+	union tDataflashStatus status;
 	
 	dataflash_ReadToBuffer(DATAFLASH_ADDR_USERPREFS_START, DATAFLASH_4KB, &sectorBuffer);
 	
-	// Wait for dataflash to become ready again. NEEDED?
-	while( dataflash_is_busy() ){
-		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_STATUS_CHECK_TIME ) );
-	}
-	
 	// Erase the flash
-	dataflash_chipErase();
-	
-	// Wait for the erase operation to finish
-	while( dataflash_is_busy() ){
-		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_ERASE_TIME ) );
+	if( dataflash_chipErase() == DATAFLASH_RESPONSE_FAILURE){
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Erase Failed");
 	}
 
 	// Write new data back
 	for(i = 0; i < DATAFLASH_4KB; i += DATAFLASH_PAGE_SIZE){
-		dataflash_WriteFromBuffer(DATAFLASH_ADDR_USERPREFS_START + i, DATAFLASH_PAGE_SIZE, &(sectorBuffer[i]));
-		
-		// Wait for dataflash to become ready again.
-		while( dataflash_is_busy() ){
-			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
+		if( dataflash_WriteFromBuffer(DATAFLASH_ADDR_USERPREFS_START + i, DATAFLASH_PAGE_SIZE, &(sectorBuffer[i])) == DATAFLASH_RESPONSE_FAILURE ){
+			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Write Failed");
 		}
 	}	
 	
@@ -419,6 +398,16 @@ unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned sho
 	}
 	
 	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	
+	// Wait for dataflash to become ready again.
+	vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
+	while( dataflash_is_busy() ){
+		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
+	}
+		
+	if(dataflash_operation_failed()){
+		return DATAFLASH_RESPONSE_FAILURE;
+	}
 	
 	return DATAFLASH_RESPONSE_OK;
 }
@@ -488,6 +477,15 @@ unsigned char dataflash_eraseBlock(unsigned char blockSize, unsigned long startA
 		
 		spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 		
+		// Wait for dataflash to become ready again.
+		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_ERASE_TIME ) );
+		while( dataflash_is_busy() ){
+			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_ERASE_TIME ) );
+		}
+		
+		if(dataflash_operation_failed()){
+			return DATAFLASH_RESPONSE_FAILURE;
+		}
 		return DATAFLASH_RESPONSE_OK;
 		
 	}else{
@@ -497,17 +495,27 @@ unsigned char dataflash_eraseBlock(unsigned char blockSize, unsigned long startA
 }
 
 unsigned char dataflash_chipErase( void ){
-		while( dataflash_is_busy() ){
-			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
-		}
+	while( dataflash_is_busy() ){
+		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
+	}
 	
-		dataflash_WriteEnable();
+	dataflash_WriteEnable();
 	
-		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-		spi_write(DATAFLASH_SPI, DATAFLASH_CMD_CHIP_ERASE);
-		spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_CHIP_ERASE);
+	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	
+	
+	// Wait for dataflash to become ready again.
+	vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_ERASE_TIME ) );
+	while( dataflash_is_busy() ){
+		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_ERASE_TIME ) );
+	}
 		
-		return DATAFLASH_RESPONSE_OK;
+	if(dataflash_operation_failed()){
+		return DATAFLASH_RESPONSE_FAILURE;
+	}
+	return DATAFLASH_RESPONSE_OK;
 }
 
 unsigned char dataflash_powerDown( void ){
@@ -546,6 +554,14 @@ unsigned char dataflash_is_busy( void ){
 	}else{
 		return FALSE;
 	}		
+}
+
+unsigned char dataflash_operation_failed( void ){
+	union tDataflashStatus status;
+	
+	status = dataflash_readStatus();
+	
+	return status.registers.EPE;
 }
 
 unsigned short dataflash_calculate_otp_crc( void ){

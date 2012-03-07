@@ -37,8 +37,7 @@ xQueueHandle gpsManagerQueue;
 unsigned char rxBuffer[GPS_MSG_MAX_STRLEN];
 unsigned char gpsTokens[MAX_SIGNALS_SENTENCE];
 
-unsigned char recordFlag = FALSE;
-
+xTimerHandle xMessageTimer;
 
 __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
 	int rxd;
@@ -65,6 +64,8 @@ void gps_task( void *pvParameters ){
 	
 	unsigned char processedRMC = FALSE, processedGGA = FALSE;	// Flags for processed NMEA messages
 	
+	unsigned char recordFlag = FALSE;
+	
 	unsigned char processChecksum = FALSE;
 	unsigned short calculatedChecksum = 0;
 	
@@ -75,40 +76,21 @@ void gps_task( void *pvParameters ){
 	
 	unsigned char oldMode = 0;
 	
-	portTickType LastUpdateTime;								// Last time RMC message was received
-	
-	struct tRecordDataPage gpsData;								// Formatted GPS Data
+	struct tRecordDataPage gpsData;							// Formatted GPS Data
 	struct tGPSLine finishLine;								// Formatted coordinate pairs for "finish line"
-	struct tGPSPoint finishPoint;							// Formatted coordinate pair for "finish point"
 	struct tTracklist trackList;
 	
 	struct tGPSRequest request;
 	
-	// Test finish line
-	//finishPoint.heading		= 2666;
-	//finishPoint.longitude	= -83453003;
-	//finishPoint.latitude	= 42570383;
-	
-	// Burn pit
-	//42558193, -83472574, 900
-	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Task Started");
 
+	xMessageTimer = xTimerCreate( "gpsMessageTimer", GPS_MSG_TIMEOUT * portTICK_RATE_MS, pdFALSE, NULL, gps_messageTimeout );
+	
 	// Pull the GPS out of reset and enable the ISR
 	gps_enable_interrupts();
 	gps_reset();
 	
-	gps_resetTimer();
-	
 	while(TRUE){
-		// Checking for correct message rate from GPS
-		if( gps_did_time_expire(GPS_MSG_TIMEOUT) ){
-			debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "Message Timer Expired");
-			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Setting Message Rate");
-			gps_set_messaging_rate(GPS_MESSAGING_100MS);
-			gps_resetTimer();
-		}
-		
 		// Check for pending requests
 		if( xQueueReceive(gpsManagerQueue, &request, pdFALSE) == pdTRUE ){
 			switch(request.command){
@@ -136,7 +118,7 @@ void gps_task( void *pvParameters ){
 		
 		if( rxdChar == GPS_MSG_END_CHAR ){
 			// Reset the time since receiving a message
-			gps_resetTimer();
+			xTimerReset(xMessageTimer, pdFALSE);
 				
 			if( gps_received_checksum() == calculatedChecksum ){
 					
@@ -175,7 +157,7 @@ void gps_task( void *pvParameters ){
 																			finishLine.startLongitude,				finishLine.startLatitude,
 																			finishLine.endLongitude,				finishLine.endLatitude);
 																			 
-					if( gpsData.data[recordIndex].lapDetected ){
+					if( gpsData.data[recordIndex].lapDetected && recordFlag){
 						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_PERIPHERIAL, LCD_PERIPHERIAL_SLOWER, pdFALSE);
 					}
 					
@@ -452,4 +434,10 @@ void gps_send_request(unsigned char command, unsigned int *pointer, unsigned cha
 	request.data = data;
 	
 	xQueueSend(gpsManagerQueue, &request, delay);
+}
+
+void gps_messageTimeout( void ){
+	debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "Message Timer Expired");
+	debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Setting Message Rate");
+	gps_set_messaging_rate(GPS_MESSAGING_100MS);
 }

@@ -223,5 +223,6 @@ unsigned short dataflash_calculate_otp_crc( void );
 unsigned short dataflash_calculate_userPrefs_crc( void );
 unsigned char dataflash_send_request(unsigned char command, unsigned char *pointer, unsigned short length, unsigned long index, unsigned char resume, unsigned char delay);
 unsigned char dataflash_eraseRecordedData( void );
+unsigned char dataflash_operation_failed( void );
 
 #endif /* DATAFLASH_H_ */

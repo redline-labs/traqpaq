@@ -158,8 +158,6 @@ struct tGPSLine {
 #define deg2rad(x)			((x) * RADIANS_CONVERSION)
 #define rad2deg(x)			((x) / RADIANS_CONVERSION)
 
-#define gps_resetTimer()			LastUpdateTime = xTaskGetTickCount()
-#define gps_did_time_expire(ms)		((xTaskGetTickCount() - LastUpdateTime) >= ((ms) /  portTICK_RATE_MS))			// Check to see if timer expired
 #define GPS_MSG_TIMEOUT				900		// Timeout in milliseconds since receiving a RMC message
 
 #define GPS_MODE_NO_FIX				0
@@ -187,5 +185,6 @@ void gps_set_messaging_rate(unsigned char rate);
 void gps_set_messages( void );
 
 void gps_send_request(unsigned char command, unsigned int *pointer, unsigned char data, unsigned char delay);
+void gps_messageTimeout( void );
 
 #endif /* GPS_H_ */
