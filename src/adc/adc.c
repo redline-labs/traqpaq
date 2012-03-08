@@ -28,7 +28,7 @@
  ******************************************************************************/
 
 #include <asf.h>
-#include "drivers.h"
+#include "hal.h"
 
 void adc_task_init( void ){
 	xTaskCreate(adc_task, configTSK_ADC_TASK_NAME, configTSK_ADC_TASK_STACK_SIZE, NULL, configTSK_ADC_TASK_PRIORITY, configTSK_ADC_TASK_HANDLE);

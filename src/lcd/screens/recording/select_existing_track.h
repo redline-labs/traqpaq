@@ -32,11 +32,11 @@ if(lcd_redraw_required()){
 	
 	responseU8 = 0;		// Number of tracks loaded
 
-	dataflash_send_request(DFMAN_REQUEST_READ_TRACKLIST, &trackList, sizeof(trackList), responseU8, TRUE, 20);
+	dataflash_send_request(DFMAN_REQUEST_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
 	while( trackList.isEmpty == FALSE){
 		menu_addItem(&mainMenu, &trackList.name, responseU8);
 		responseU8++;
-		dataflash_send_request(DFMAN_REQUEST_READ_TRACKLIST, &trackList, sizeof(trackList), responseU8, TRUE, 20);
+		dataflash_send_request(DFMAN_REQUEST_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
 	}
 	
 	if( responseU8 == 0 ){

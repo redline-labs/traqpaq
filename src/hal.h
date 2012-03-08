@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Watchdog Routines
+ * Hardware Abstraction Includes
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -26,40 +26,61 @@
  * with traq|paq. If not, see http://www.gnu.org/licenses/.
  *
  ******************************************************************************/
-#include "asf.h"
-#include "hal.h"
 
-void wdt_task_init(){
-	xTaskCreate(wdt_task, configTSK_WATCHDOG_TASK_NAME, configTSK_WATCHDOG_TASK_STACK_SIZE, NULL, configTSK_WATCHDOG_TASK_PRIORITY, configTSK_WATCHDOG_TASK_HANDLE);
-}
 
-void wdt_task( void *pvParameters ){
-	portTickType xLastWakeTime;
-	
-	wdt_opt_t wdt_options = {
-		.us_timeout_period = WATCHDOG_TIMEOUT_US  // TimeOut Value = 100ms
-	};
+#ifndef HAL_H_
+#define HAL_H_
 
-	xLastWakeTime = xTaskGetTickCount();
-	
-	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_WDT, "Task Started");
-	
-	wdt_enable(&wdt_options);
-	
-	while(1){
-		wdt_clear();
-		vTaskDelayUntil( &xLastWakeTime, ( WATCHDOG_UPDATE_INTERVAL_MS / portTICK_RATE_MS ) );
-	}
-}
+#define TASK_MODE_NORMAL		0
+#define TASK_MODE_USB			1
 
-unsigned char wdt_triggered(void){
-	reset_cause_t resetCause;
-	
-	resetCause = reset_cause_get_causes();
-	
-	if(resetCause &= CHIP_RESET_CAUSE_WDT){
-		return TRUE;
-	}else{
-		return FALSE;
-	}
-}
+
+// Debug
+#include "adc/adc.h"
+
+// Dataflash
+#include "dataflash/dataflash.h"
+#include "dataflash/dataflash_layout.h"
+
+// Fuel Gauge
+#include "fuel/fuel.h"
+
+// Watchdog
+#include "wdt/wdt.h"
+
+// Idle Task Hook
+#include "idle/idle.h"
+
+// LCD
+#include "lcd/lcd.h"
+
+// GPS
+#include "gps/gps.h"
+
+// PWM
+#include "lcd/backlight/backlight.h"
+
+// Charge
+#include "charge/charge.h"
+
+// Buttons
+#include "button/button.h"
+
+// Debug
+#include "debug/debug.h"
+
+// USB
+#include "usb/usb.h"
+
+// FreeRTOS
+#include "FreeRTOS.h"
+#include "timers.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
+
+// CRC
+#include "crc/crc.h"
+
+
+#endif /* HAL_H_ */

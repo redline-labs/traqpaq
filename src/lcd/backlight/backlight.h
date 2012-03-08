@@ -30,9 +30,9 @@
 #ifndef PWM_H_
 #define PWM_H_
 
-#include "drivers.h"
+#include "hal.h"
 
-#define BACKLIGHT_TURN_ON_DELAY		100		// Time in milliseconds to delay turning on backlight initally
+#define BACKLIGHT_TURN_ON_DELAY		200		// Time in milliseconds to delay turning on backlight initally
 
 #define BACKLIGHT_DEFAULT_MAX		255		// Default MAX Screen Brightness
 #define BACKLIGHT_DEFAULT_MIN		55		// Default MIN Screen Brightness

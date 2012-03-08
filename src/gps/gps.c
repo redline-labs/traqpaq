@@ -27,7 +27,7 @@
  *
  ******************************************************************************/
 #include "asf.h"
-#include "drivers.h"
+#include "hal.h"
 #include "dataflash/dataflash_manager_request.h"
 #include "math.h"
 
@@ -76,6 +76,8 @@ void gps_task( void *pvParameters ){
 	
 	unsigned char oldMode = 0;
 	
+	unsigned int lapTime, oldLapTime;
+	
 	struct tRecordDataPage gpsData;							// Formatted GPS Data
 	struct tGPSLine finishLine;								// Formatted coordinate pairs for "finish line"
 	struct tTracklist trackList;
@@ -95,6 +97,8 @@ void gps_task( void *pvParameters ){
 		if( xQueueReceive(gpsManagerQueue, &request, pdFALSE) == pdTRUE ){
 			switch(request.command){
 				case(GPS_REQUEST_START_RECORDING):
+					lapTime = 0;
+					oldLapTime = 0xFFFFFFFF;
 					recordFlag = TRUE;
 					break;
 					
@@ -106,7 +110,7 @@ void gps_task( void *pvParameters ){
 					
 				case(GPS_SET_FINISH_POINT):
 					// Load the track, and then tell the dataflash that we are using it
-					dataflash_send_request(DFMAN_REQUEST_READ_TRACKLIST, &trackList, sizeof(trackList), request.data, TRUE, 20);
+					dataflash_send_request(DFMAN_REQUEST_READ_TRACK, &trackList, sizeof(trackList), request.data, TRUE, 20);
 					dataflash_send_request(DFMAN_REQUEST_SET_TRACK, NULL, NULL, request.data, FALSE, 20);
 					finishLine = gps_find_finish_line(trackList.latitude, trackList.longitude, trackList.course);
 					break;
@@ -158,7 +162,16 @@ void gps_task( void *pvParameters ){
 																			finishLine.endLongitude,				finishLine.endLatitude);
 																			 
 					if( gpsData.data[recordIndex].lapDetected && recordFlag){
-						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_PERIPHERIAL, LCD_PERIPHERIAL_SLOWER, pdFALSE);
+						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_OLDLAPTIME, lapTime, pdFALSE);
+						
+						if(lapTime <= oldLapTime){
+							lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_PERIPHERIAL, LCD_PERIPHERIAL_FASTER, pdFALSE);
+						}else{
+							lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_PERIPHERIAL, LCD_PERIPHERIAL_SLOWER, pdFALSE);
+						}
+						
+						oldLapTime = lapTime;
+						lapTime = 0;
 					}
 					
 					// Update the antenna widget
@@ -173,7 +186,7 @@ void gps_task( void *pvParameters ){
 						
 					processedGGA = TRUE;
 					
-				}else
+				}
 				//--------------------------
 				// RMC Message Received
 				//--------------------------
@@ -227,8 +240,10 @@ void gps_task( void *pvParameters ){
 					processedRMC = FALSE;
 						
 					if(recordFlag){
+						// Update lap time counter;
+						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_LAPTIME, lapTime++, pdFALSE);
+						
 						recordIndex++;
-				
 						if(recordIndex == RECORD_DATA_PER_PAGE){
 							dataflash_send_request(DFMAN_REQUEST_ADD_RECORDDATA, &gpsData, sizeof(gpsData), NULL, TRUE, 20);
 							recordIndex = 0;

@@ -28,12 +28,13 @@
  ******************************************************************************/
 
 #include <asf.h>
-#include "drivers.h"
+#include "hal.h"
 #include "menu.h"
 #include "control_fsm.h"
 #include "dataflash/dataflash_manager_request.h"
 #include "dataflash/dataflash_otp_layout.h"
 #include "string.h"
+#include "itoa.h"
 
 #include FONT_SMALL_INCLUDE
 #include FONT_LARGE_INCLUDE
@@ -67,6 +68,8 @@ void lcd_gui_task_normal( void *pvParameters ){
 	struct tLCDTopBar topBar;
 	struct tMenu mainMenu;
 	struct tLCDProgressBar progressBar;
+	struct tLCDLabel lapHourLabel, lapMinuteLabel, lapSecondLabel, lapMilliLabel;
+	struct tLCDLabel oldLapHourLabel, oldLapMinuteLabel, oldLapSecondLabel, oldLapMilliLabel;
 	
 	struct tTracklist trackList;
 	
@@ -74,8 +77,10 @@ void lcd_gui_task_normal( void *pvParameters ){
 	unsigned char responseU8;
 	unsigned int responseU32;
 	
+	unsigned char lastHour, lastMinute, lastSecond;
+	
 	unsigned char button;
-	volatile unsigned short lcd_fsm = LCDFSM_MAINMENU;		// Useful for testing new screens!
+	unsigned short lcd_fsm = LCDFSM_MAINMENU;		// Useful for testing new screens!
 	unsigned char redraw = TRUE;
 	
 	lcdWidgetsManagerQueue = xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(request));
@@ -158,7 +163,57 @@ void lcd_gui_task_normal( void *pvParameters ){
 					}
 
 					lcd_resetPeripheralTimer();
-					break;						
+					break;
+					
+				case(LCD_REQUEST_UPDATE_LAPTIME):
+					lcd_updateLabel(&lapMilliLabel, itoa( (request.data % 10), &tempString, 10));
+					
+					request.data = request.data / 10;	// Lop off the milliseconds
+					responseU8 = request.data % 60;		// Find the seconds
+					if(responseU8 != lastSecond){
+						lcd_updateLabel(&lapSecondLabel, itoa_paddded( responseU8, &tempString, 10));
+						lastSecond = responseU8;
+					}
+					
+					request.data = request.data / 60;	// Lop off the seconds
+					responseU8 = request.data % 60;		// Find the minutes
+					if(responseU8 != lastMinute){
+						lcd_updateLabel(&lapMinuteLabel, itoa_paddded( responseU8, &tempString, 10));
+						lastMinute = responseU8;	
+					}
+					
+					responseU8 = request.data / 60;		// Lop off the minutes
+					if(responseU8 != lastHour){
+						lcd_updateLabel(&lapHourLabel, itoa_paddded( responseU8, &tempString, 10));
+						lastMinute = responseU8;	
+					}
+					
+					break;
+					
+				case(LCD_REQUEST_UPDATE_OLDLAPTIME):
+					lcd_updateLabel(&oldLapMilliLabel, itoa( (request.data % 10), &tempString, 10));
+					
+					request.data = request.data / 10;	// Lop off the milliseconds
+					responseU8 = request.data % 60;		// Find the seconds
+					if(responseU8 != lastSecond){
+						lcd_updateLabel(&oldLapSecondLabel, itoa_paddded( responseU8, &tempString, 10));
+						lastSecond = responseU8;
+					}
+					
+					request.data = request.data / 60;	// Lop off the seconds
+					responseU8 = request.data % 60;		// Find the minutes
+					if(responseU8 != lastMinute){
+						lcd_updateLabel(&oldLapMinuteLabel, itoa_paddded( responseU8, &tempString, 10));
+						lastMinute = responseU8;	
+					}
+					
+					responseU8 = request.data / 60;		// Lop off the minutes
+					if(responseU8 != lastHour){
+						lcd_updateLabel(&oldLapHourLabel, itoa_paddded( responseU8, &tempString, 10));
+						lastMinute = responseU8;	
+					}
+					
+					break;					
 			}
 		}
 		
@@ -794,14 +849,22 @@ struct tLCDLabel lcd_createLabel(unsigned char *string, unsigned char *font_styl
 	label.color_background = backcolor;
 	label.font = font_style;
 	
-	lcd_writeText_8x16(string, label.font, label.start_x, label.start_y, label.color_text);
-	
+	if(font_style == FONT_LARGE_POINTER){
+		lcd_writeText_16x32(string, label.font, label.start_x, label.start_y, label.color_text);
+	}else{
+		lcd_writeText_8x16(string, label.font, label.start_x, label.start_y, label.color_text);
+	}	
 	return label;
 }
 
 void lcd_updateLabel(struct tLCDLabel * label, unsigned char *string) {
 	lcd_drawFilledRectangle(label->start_x, label->start_y + label->height, label->start_x + label->width, label->start_y, label->color_background);
-	lcd_writeText_8x16(string, label->font, label->start_x, label->start_y, label->color_text);
+	
+	if(label->font == FONT_LARGE_POINTER){
+		lcd_writeText_16x32(string, label->font, label->start_x, label->start_y, label->color_text);
+	}else{
+		lcd_writeText_8x16(string, label->font, label->start_x, label->start_y, label->color_text);
+	}
 }
 
 void lcd_scrollDisplay(unsigned short numLines){
@@ -1002,7 +1065,7 @@ void lcd_drawPeripheralBox(unsigned short color){
 }
 
 
-unsigned char lcd_sendWidgetRequest(unsigned char action, unsigned char data, unsigned char delay){
+unsigned char lcd_sendWidgetRequest(unsigned char action, unsigned int data, unsigned char delay){
 	struct tLCDRequest request;
 	
 	request.action = action;

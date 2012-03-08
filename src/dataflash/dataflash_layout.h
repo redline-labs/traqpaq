@@ -106,6 +106,8 @@ struct __attribute__ ((packed)) tTracklist {
 	unsigned char reserved;
 }; // 32 Bytes
 
+#define TRACKLIST_TOTAL_NUM			120		// Maximum number of tracks able to be stored
+
 
 #define DATAFLASH_ADDR_USERPREFS_START			0x00000000
 #define DATAFLASH_ADDR_USERPREFS_END			0x000000FF

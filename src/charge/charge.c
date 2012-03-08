@@ -29,7 +29,7 @@
 
 /* TODO: Add software framework include drivers below */
 #include "asf.h"
-#include "drivers.h"
+#include "hal.h"
 
 void charge_task_init( void ){
 	xTaskCreate(charge_task, configTSK_CHARGE_TASK_NAME, configTSK_CHARGE_TASK_STACK_SIZE, NULL, configTSK_CHARGE_TASK_PRIORITY, configTSK_CHARGE_TASK_HANDLE);

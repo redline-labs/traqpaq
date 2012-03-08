@@ -28,7 +28,7 @@
  ******************************************************************************/
 
 #include "asf.h"
-#include "drivers.h"
+#include "hal.h"
 
 // This hooks into the idle task of FreeRTOS
 void vApplicationIdleHook(){

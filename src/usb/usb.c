@@ -28,7 +28,7 @@
  ******************************************************************************/
 
 #include "asf.h"
-#include "drivers.h"
+#include "hal.h"
 #include "dataflash/dataflash_manager_request.h"
 #include "dataflash/dataflash_otp_layout.h"
 #include "string.h"
@@ -189,14 +189,15 @@ void usb_task( void *pvParameters ){
 				break;
 				
 			case(USB_CMD_WRITE_SAVEDTRACKS):
+				dataflash_send_request(DFMAN_REQUEST_ERASE_TRACKS, NULL, NULL, NULL, TRUE, pdFALSE);
+			
 				strlcpy(&trackList.name, "Burn Pit", TRACKLIST_MAX_STRLEN);
 				trackList.course = 900;
 				trackList.longitude = -83472574;
 				trackList.latitude = 42558193;
 				trackList.isEmpty = FALSE;
 				trackList.reserved = 0xA5;
-				
-				dataflash_send_request(DFMAN_REQUEST_UPDATE_TRACKLIST, &trackList, NULL, 0, TRUE, pdFALSE);
+				dataflash_send_request(DFMAN_REQUEST_ADD_TRACK, &trackList, NULL, NULL, TRUE, pdFALSE);
 				
 				strlcpy(&trackList.name, "Oakley Park", TRACKLIST_MAX_STRLEN);
 				trackList.course = 2666;
@@ -204,9 +205,7 @@ void usb_task( void *pvParameters ){
 				trackList.latitude = 42570383;
 				trackList.isEmpty = FALSE;
 				trackList.reserved = 0xA5;
-				
-				
-				dataflash_send_request(DFMAN_REQUEST_UPDATE_TRACKLIST, &trackList, NULL, 1, TRUE, pdFALSE);
+				dataflash_send_request(DFMAN_REQUEST_ADD_TRACK, &trackList, NULL, NULL, TRUE, pdFALSE);
 				
 				data_length = 1;
 				usbTxBuffer[0] = TRUE;
@@ -214,7 +213,7 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_CMD_READ_SAVEDTRACKS):
 				data_length = sizeof(trackList);
-				dataflash_send_request(DFMAN_REQUEST_READ_TRACKLIST, &usbTxBuffer, NULL, (usbRxBuffer[1] << 8) + (usbRxBuffer[2] << 0), TRUE, pdFALSE);
+				dataflash_send_request(DFMAN_REQUEST_READ_TRACK, &usbTxBuffer, NULL, (usbRxBuffer[1] << 8) + (usbRxBuffer[2] << 0), TRUE, pdFALSE);
 				break;
 				
 			case(USB_CMD_WRITE_USERPREFS):

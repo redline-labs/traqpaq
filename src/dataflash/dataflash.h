@@ -31,7 +31,7 @@
 #ifndef DATAFLASH_H_
 #define DATAFLASH_H_
 
-#include "drivers.h"
+#include "hal.h"
 
 #define DATAFLASH_VERSION					"1.00"
 
@@ -224,5 +224,6 @@ unsigned short dataflash_calculate_userPrefs_crc( void );
 unsigned char dataflash_send_request(unsigned char command, unsigned char *pointer, unsigned short length, unsigned long index, unsigned char resume, unsigned char delay);
 unsigned char dataflash_eraseRecordedData( void );
 unsigned char dataflash_operation_failed( void );
+unsigned char dataflash_eraseTracks( void );
 
 #endif /* DATAFLASH_H_ */

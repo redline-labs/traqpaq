@@ -29,7 +29,7 @@
 
 /* TODO: Add software framework include drivers below */
 #include "asf.h"
-#include "drivers.h"
+#include "hal.h"
 #include "dataflash/dataflash_layout.h"
 
 xTimerHandle xBacklightFadeTimer;

@@ -28,21 +28,23 @@
  ******************************************************************************/
 
 #include <asf.h>
-#include "drivers.h"
+#include "hal.h"
 #include "dataflash_otp_layout.h"
 #include "dataflash_manager_request.h"
 
-// Struct for holding serial number, HW Version, and Tester ID;
-struct tDataflashOTP dataflashOTP;
-
-// Queue for receiving requests into the dataflash manager
+//--------------------------
+// Queues
+//--------------------------
 xQueueHandle dataflashManagerQueue;
 
-struct tDataflashRequest request;
+//--------------------------
+// Structs
+//--------------------------
+struct tDataflashOTP		dataflashOTP;
+struct tDataflashRequest	request;
+struct tUserPrefs			userPrefs;
+struct tDataflashFlags		dataflashFlags;
 
-struct tUserPrefs userPrefs;
-
-struct tDataflashFlags dataflashFlags;
 
 void dataflash_task_init( void ){
 	unsigned char i;
@@ -84,7 +86,8 @@ void dataflash_task_init( void ){
 }
 
 void dataflash_task( void *pvParameters ){
-	volatile unsigned char recordTableIndex = 0;	// Index of first empty record table
+	unsigned char recordTableIndex = 0;	// Index of first empty record table
+	unsigned char trackCount = 0;		// Count the number of tracks
 	struct tRecordsEntry recordTable, prevRecordTable;
 	struct tTracklist trackList;
 
@@ -95,7 +98,9 @@ void dataflash_task( void *pvParameters ){
 	dataflash_GlobalUnprotect();
 	dataflash_WriteEnable();
 	
-	// Find the first empty record table entry
+	//--------------------------
+	// Record Table Initialization
+	//--------------------------
 	while( recordTableIndex < RECORDS_TOTAL_POSSIBLE ){
 		dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
 		if(recordTable.recordEmpty) break;
@@ -114,6 +119,15 @@ void dataflash_task( void *pvParameters ){
 		recordTable.endAddress = recordTable.startAddress;
 	}
 	
+	//--------------------------
+	// Track Initialization
+	//--------------------------
+	while( trackCount < TRACKLIST_TOTAL_NUM ){
+		dataflash_ReadToBuffer(DATAFLASH_ADDR_TRACKLIST_START + (sizeof(trackList) * trackCount), sizeof(trackList), &trackList);
+		if(trackList.isEmpty) break;
+		trackCount++;
+	}
+	
 	dataflash_clr_busy_flag();
 	
 	while(TRUE){
@@ -126,7 +140,8 @@ void dataflash_task( void *pvParameters ){
 				
 				recordTable.recordEmpty = FALSE;
 				dataflash_UpdateSector(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
-
+				
+				// Get the new record table ready!
 				recordTableIndex++;
 				recordTable.recordEmpty = TRUE;
 				recordTable.startAddress = recordTable.endAddress; 
@@ -151,12 +166,18 @@ void dataflash_task( void *pvParameters ){
 				dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDDATA_START + (request.index * DATAFLASH_PAGE_SIZE), DATAFLASH_PAGE_SIZE, request.pointer);
 				break;
 				
-			case(DFMAN_REQUEST_READ_TRACKLIST):
+			case(DFMAN_REQUEST_READ_TRACK):
 				dataflash_ReadToBuffer(DATAFLASH_ADDR_TRACKLIST_START + (request.index * sizeof(trackList)), sizeof(trackList), request.pointer);
 				break;
 				
-			case(DFMAN_REQUEST_UPDATE_TRACKLIST):
-				dataflash_UpdateSector(DATAFLASH_ADDR_TRACKLIST_START + (request.index * sizeof(trackList)), sizeof(trackList), request.pointer);
+			case(DFMAN_REQUEST_ADD_TRACK):
+				dataflash_UpdateSector(DATAFLASH_ADDR_TRACKLIST_START + (trackCount * sizeof(trackList)), sizeof(trackList), request.pointer);
+				trackCount++;
+				break;
+				
+			case(DFMAN_REQUEST_ERASE_TRACKS):
+				dataflash_eraseTracks();
+				trackCount = 0;
 				break;
 				
 			case(DFMAN_REQUEST_READ_OTP):
@@ -320,6 +341,28 @@ unsigned char dataflash_UpdateSector(unsigned long startAddress, unsigned short 
 	}	
 	
 	return TRUE;
+}
+
+
+unsigned char dataflash_eraseTracks(){
+	unsigned short i;
+	unsigned char userPrefsBuffer[DATAFLASH_ADDR_USERPREFS_END - DATAFLASH_ADDR_USERPREFS_START + 1];
+	
+	// Copy the user prefs to buffer
+	dataflash_ReadToBuffer(DATAFLASH_ADDR_USERPREFS_START, DATAFLASH_ADDR_USERPREFS_END - DATAFLASH_ADDR_USERPREFS_START + 1, &userPrefsBuffer);
+	
+	// Erase the sector
+	if( dataflash_eraseBlock(DATAFLASH_CMD_BLOCK_ERASE_4KB, DATAFLASH_ADDR_USERPREFS_START) == DATAFLASH_RESPONSE_FAILURE ){
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Erase Failed");
+	}
+	
+	for(i = DATAFLASH_ADDR_USERPREFS_START; i < DATAFLASH_ADDR_USERPREFS_END; i += DATAFLASH_PAGE_SIZE){
+		if( dataflash_WriteFromBuffer(i, DATAFLASH_PAGE_SIZE, &(userPrefsBuffer[i])) == DATAFLASH_RESPONSE_FAILURE ){
+			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Write Failed");
+		}
+	}
+	
+	return DATAFLASH_RESPONSE_OK;
 }
 
 unsigned char dataflash_eraseRecordedData(){

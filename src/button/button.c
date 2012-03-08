@@ -28,7 +28,7 @@
  ******************************************************************************/
 
 #include <asf.h>
-#include "drivers.h"
+#include "hal.h"
 #include "lcd/menu.h"
 
 static xQueueHandle buttonPress;

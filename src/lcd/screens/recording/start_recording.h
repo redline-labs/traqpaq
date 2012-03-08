@@ -28,15 +28,28 @@
  ******************************************************************************/
 
 if(lcd_redraw_required()){
+	lastSecond = 0;
+	lastMinute = 0;
+	lastHour = 0;
+	
 	menu_clear(&mainMenu);
+	
+	// Keep out of peripheral box area!
+	lcd_writeText_16x32("Recording!", FONT_LARGE_POINTER, LCD_MIN_X + 50, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 64, COLOR_BLACK);
+	lcd_writeText_16x32("SELECT to stop!", FONT_LARGE_POINTER, LCD_MIN_X + 50, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 96, COLOR_BLACK);
+	
+	lapHourLabel = lcd_createLabel("00", FONT_LARGE_POINTER, LCD_MIN_X + 50, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 160, 32, 32, COLOR_BLACK, COLOR_WHITE);
+	lapMinuteLabel = lcd_createLabel("00", FONT_LARGE_POINTER, LCD_MIN_X + 98, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 160, 32, 32, COLOR_BLACK, COLOR_WHITE);
+	lapSecondLabel = lcd_createLabel("00", FONT_LARGE_POINTER, LCD_MIN_X + 146, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 160, 32, 32, COLOR_BLACK, COLOR_WHITE);
+	lapMilliLabel = lcd_createLabel("0", FONT_LARGE_POINTER, LCD_MIN_X + 194, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 160, 16, 32, COLOR_BLACK, COLOR_WHITE);
+	
+	oldLapHourLabel = lcd_createLabel("00", FONT_LARGE_POINTER, LCD_MIN_X + 50, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 192, 32, 32, COLOR_BLACK, COLOR_WHITE);
+	oldLapMinuteLabel = lcd_createLabel("00", FONT_LARGE_POINTER, LCD_MIN_X + 98, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 192, 32, 32, COLOR_BLACK, COLOR_WHITE);
+	oldLapSecondLabel = lcd_createLabel("00", FONT_LARGE_POINTER, LCD_MIN_X + 146, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 192, 32, 32, COLOR_BLACK, COLOR_WHITE);
+	oldLapMilliLabel = lcd_createLabel("0", FONT_LARGE_POINTER, LCD_MIN_X + 194, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 192, 16, 32, COLOR_BLACK, COLOR_WHITE);
 	
 	gps_send_request(GPS_REQUEST_START_RECORDING, NULL, NULL, pdFALSE);
 	backlight_stopTimers();
-	
-	// Keep out of peripheral box area!
-	
-	lcd_writeText_16x32("Recording!", FONT_LARGE_POINTER, LCD_MIN_X, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 64, COLOR_BLACK);
-	lcd_writeText_16x32("SELECT to stop!", FONT_LARGE_POINTER, LCD_MIN_X, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 96, COLOR_BLACK);
 	
 	lcd_redraw_complete();
 }

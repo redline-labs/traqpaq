@@ -317,7 +317,7 @@ void lcd_updateCharge(struct tLCDTopBar *topBar, unsigned short state);
 
 void lcd_drawPeripheralBox(unsigned short color);
 
-unsigned char lcd_sendWidgetRequest(unsigned char action, unsigned char data, unsigned char delay);
+unsigned char lcd_sendWidgetRequest(unsigned char action, unsigned int data, unsigned char delay);
 unsigned char lcd_sendButtonRequest(unsigned char button);
 
 void lcd_clearPeripheral( void );
@@ -380,11 +380,13 @@ struct tLCDTopBar {
 #define LCD_REQUEST_UPDATE_USB			2
 #define LCD_REQUEST_UPDATE_ANTENNA		3
 #define LCD_REQUEST_UPDATE_PERIPHERIAL	4
+#define LCD_REQUEST_UPDATE_LAPTIME		5
+#define LCD_REQUEST_UPDATE_OLDLAPTIME	6
 
 
 struct tLCDRequest {
 	unsigned char action;
-	unsigned char data;
+	unsigned int data;
 };
 
 

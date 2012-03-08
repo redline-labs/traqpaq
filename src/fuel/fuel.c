@@ -29,7 +29,7 @@
 
 /* TODO: Add software framework include drivers below */
 #include "asf.h"
-#include "drivers.h"
+#include "hal.h"
 #include "battery.h"
 
 void fuel_task_init( void ){

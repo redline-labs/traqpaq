@@ -824,7 +824,7 @@
     <Compile Include="src\debug\debug.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\drivers.h">
+    <Compile Include="src\hal.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\font\Simple16X32.c">
@@ -861,6 +861,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\lcd\control_fsm.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcd\itoa.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcd\itoa.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\lcd\lcd.c">
