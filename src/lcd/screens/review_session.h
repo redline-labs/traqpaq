@@ -29,7 +29,23 @@
 
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
-	menu_addItem(&mainMenu, "Back",	LCDFSM_MAINMENU);
+	
+	responseU8 = 0;
+	
+	/*while( responseU8 < RECORDS_TOTAL_POSSIBLE ){
+		dataflash_send_request(DFMAN_REQUEST_READ_RECORDTABLE, &recordTable, NULL, responseU8, TRUE, 20);
+		if(recordTable.recordEmpty) break;
+		
+		dataflash_send_request(DFMAN_REQUEST_READ_RECORDDATA, &recordData, NULL, (recordTable.startAddress - DATAFLASH_ADDR_RECORDDATA_START)/DATAFLASH_PAGE_SIZE, TRUE, pdFALSE);
+		
+		menu_addItem(&mainMenu, itoa(recordData.data[0].utc, &tempString, 10), responseU8);
+		
+		responseU8++;
+	}*/
+	
+	if(responseU8 == 0){
+		menu_addItem(&mainMenu, "No Items",	LCDFSM_MAINMENU);
+	}		
 	
 	lcd_redraw_complete();
 }
@@ -50,11 +66,14 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			
 		case(BUTTON_SELECT):
 			lcd_force_redraw();
-			lcd_change_screens( menu_readCallback(&mainMenu) );
+			//screenArgs = menu_readCallback(&mainMenu);
+			//lcd_change_screens( LCDFSM_REVIEW_DETAILED_INFO );
+			lcd_change_screens( LCDFSM_MAINMENU );
 			break;
 			
 		case(BUTTON_BACK):
-			asm("nop");
+			lcd_force_redraw();
+			lcd_change_screens( LCDFSM_MAINMENU );
 			break;
 			
 			
@@ -70,11 +89,9 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_LONG_SELECT):
-			asm("nop");
 			break;
 			
 		case(BUTTON_LONG_BACK):
-			asm("nop");
 			break;
 	}
 }

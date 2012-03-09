@@ -61,12 +61,6 @@
 #define LCDFSM_START_RECORD				300
 
 
-
-// ---------------------------------
-// Main Menu -> Review Session
-// ---------------------------------
-
-
 // ---------------------------------
 // Main Menu -> Options
 // ---------------------------------
@@ -74,6 +68,7 @@
 #define LCDFSM_MODIFY_EXISTING_TRACK	410
 #define LCDFSM_DISPLAY					420
 #define LCDFSM_DATE_AND_TIME			430
+#define LCDFSM_OPTIONS_MEMORY			440
 
 // ---------------------------------
 // Main Menu -> Options -> Create New Track
@@ -90,6 +85,13 @@
 // ---------------------------------
 // Main Menu -> Options -> Date and Time
 // ---------------------------------
+#define LCDFSM_OPTIONS_ERASE			441
+#define LCDFSM_OPTIONS_ERASE_CONFIRM	442
+#define LCDFSM_OPTIONS_VIEW_USAGE		443
+
+// ---------------------------------
+// Main Menu -> Options -> Create New Track
+// ---------------------------------
 
 
 // ---------------------------------
@@ -100,6 +102,11 @@
 #define LCDFSM_TECHNICAL_INFO			520
 #define LCDFSM_DISCLAIMER				530
 #define LCDFSM_MODULE_INFO				540
+
+// ---------------------------------
+// Main Menu -> Review Session
+// ---------------------------------
+#define LCDFSM_REVIEW_DETAILED_INFO		600
 
 
 

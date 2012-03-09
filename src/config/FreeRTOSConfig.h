@@ -166,7 +166,7 @@ to exclude the API function. */
 
 /* GUI Task */
 #define configTSK_GUI_TASK_NAME				((const signed portCHAR *)"GUI")
-#define configTSK_GUI_TASK_STACK_SIZE		512
+#define configTSK_GUI_TASK_STACK_SIZE		1024
 #define configTSK_GUI_TASK_PRIORITY			TASK_PRIORITY_MEDIUM
 #define configTSK_GUI_TASK_PERIOD			20
 #define configTSK_GUI_TASK_HANDLE			NULL
@@ -180,7 +180,7 @@ to exclude the API function. */
 
 /* Dataflash Task */
 #define configTSK_DATAFLASH_TASK_NAME		((const signed portCHAR *)"Dataflash")
-#define configTSK_DATAFLASH_TASK_STACK_SIZE	1536	// 4.25KB - Required since dataflash_updatePage burns up 4KB!
+#define configTSK_DATAFLASH_TASK_STACK_SIZE	2048	// 4.25KB - Required since dataflash_updatePage burns up 4KB!
 #define configTSK_DATAFLASH_TASK_PRIORITY	TASK_PRIORITY_MEDIUM
 #define configTSK_DATAFLASH_TASK_PERIOD		20
 #define configTSK_DATAFLASH_TASK_HANDLE		NULL

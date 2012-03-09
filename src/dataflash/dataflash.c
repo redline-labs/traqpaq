@@ -159,7 +159,7 @@ void dataflash_task( void *pvParameters ){
 				break;
 				
 			case(DFMAN_REQUEST_READ_RECORDTABLE):
-				dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + ( request.index * sizeof(recordTable) ), request.length, request.pointer);
+				dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + ( request.index * sizeof(recordTable) ), sizeof(recordTable), request.pointer);
 				break;
 				
 			case(DFMAN_REQUEST_READ_RECORDDATA):

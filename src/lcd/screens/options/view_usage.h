@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Options
+ * Main Menu -> Options -> Memory
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -29,11 +29,11 @@
 
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
-	menu_addItem(&mainMenu, "Create New Track",			LCDFSM_OPTIONS_CREATE_NEW_TRACK);
-	menu_addItem(&mainMenu, "Modify Existing Track",	LCDFSM_MODIFY_EXISTING_TRACK);
-	menu_addItem(&mainMenu, "Display",					LCDFSM_DISPLAY);
-	menu_addItem(&mainMenu, "Date and Time",			LCDFSM_DATE_AND_TIME);
-	menu_addItem(&mainMenu, "Memory",					LCDFSM_OPTIONS_MEMORY);
+
+	lcd_writeText_8x16("Used Memory", FONT_SMALL_POINTER, 50, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 50, COLOR_BLACK);
+	progressBar = lcd_createProgressBar(50, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 50, 350, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 100, COLOR_REDLINERED, COLOR_BLACK, COLOR_WHITE);
+	dataflash_send_request(DFMAN_REQUEST_USED_SPACE, &responseU8, NULL, NULL, TRUE, 20);
+	lcd_updateProgressBar(&progressBar, responseU8);
 	
 	lcd_redraw_complete();
 }
@@ -45,21 +45,19 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 		// Short duration button presses
 		// ---------------------------------
 		case(BUTTON_UP):
-			menu_scrollUp(&mainMenu);
 			break;
 			
 		case(BUTTON_DOWN):
-			menu_scrollDown(&mainMenu);
 			break;
 			
 		case(BUTTON_SELECT):
 			lcd_force_redraw();
-			lcd_change_screens( menu_readCallback(&mainMenu) );
+			lcd_change_screens( LCDFSM_OPTIONS_MEMORY );
 			break;
 			
 		case(BUTTON_BACK):
 			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_MAINMENU );
+			lcd_change_screens( LCDFSM_OPTIONS_MEMORY );
 			break;
 			
 			
@@ -67,20 +65,15 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 		// Long duration button presses
 		// ---------------------------------
 		case(BUTTON_LONG_UP):
-			menu_scrollUp(&mainMenu);
 			break;
 			
 		case(BUTTON_LONG_DOWN):
-			menu_scrollDown(&mainMenu);
 			break;
 			
 		case(BUTTON_LONG_SELECT):
-			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_MAINMENU );
 			break;
 			
 		case(BUTTON_LONG_BACK):
-			asm("nop");
 			break;
 	}
 }

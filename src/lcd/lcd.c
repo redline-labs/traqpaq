@@ -72,10 +72,13 @@ void lcd_gui_task_normal( void *pvParameters ){
 	struct tLCDLabel oldLapHourLabel, oldLapMinuteLabel, oldLapSecondLabel, oldLapMilliLabel;
 	
 	struct tTracklist trackList;
+	struct tRecordsEntry recordTable;
+	struct tRecordDataPage recordData;
 	
 	unsigned char tempString[20];
 	unsigned char responseU8;
 	unsigned int responseU32;
+	unsigned int screenArgs;
 	
 	unsigned char lastHour, lastMinute, lastSecond;
 	
@@ -166,53 +169,11 @@ void lcd_gui_task_normal( void *pvParameters ){
 					break;
 					
 				case(LCD_REQUEST_UPDATE_LAPTIME):
-					lcd_updateLabel(&lapMilliLabel, itoa( (request.data % 10), &tempString, 10));
-					
-					request.data = request.data / 10;	// Lop off the milliseconds
-					responseU8 = request.data % 60;		// Find the seconds
-					if(responseU8 != lastSecond){
-						lcd_updateLabel(&lapSecondLabel, itoa_paddded( responseU8, &tempString, 10));
-						lastSecond = responseU8;
-					}
-					
-					request.data = request.data / 60;	// Lop off the seconds
-					responseU8 = request.data % 60;		// Find the minutes
-					if(responseU8 != lastMinute){
-						lcd_updateLabel(&lapMinuteLabel, itoa_paddded( responseU8, &tempString, 10));
-						lastMinute = responseU8;	
-					}
-					
-					responseU8 = request.data / 60;		// Lop off the minutes
-					if(responseU8 != lastHour){
-						lcd_updateLabel(&lapHourLabel, itoa_paddded( responseU8, &tempString, 10));
-						lastMinute = responseU8;	
-					}
-					
+					lcd_updateLapTimer( request.data, &lapHourLabel, &lapMinuteLabel, &lapSecondLabel, &lapMilliLabel );
 					break;
 					
 				case(LCD_REQUEST_UPDATE_OLDLAPTIME):
-					lcd_updateLabel(&oldLapMilliLabel, itoa( (request.data % 10), &tempString, 10));
-					
-					request.data = request.data / 10;	// Lop off the milliseconds
-					responseU8 = request.data % 60;		// Find the seconds
-					if(responseU8 != lastSecond){
-						lcd_updateLabel(&oldLapSecondLabel, itoa_paddded( responseU8, &tempString, 10));
-						lastSecond = responseU8;
-					}
-					
-					request.data = request.data / 60;	// Lop off the seconds
-					responseU8 = request.data % 60;		// Find the minutes
-					if(responseU8 != lastMinute){
-						lcd_updateLabel(&oldLapMinuteLabel, itoa_paddded( responseU8, &tempString, 10));
-						lastMinute = responseU8;	
-					}
-					
-					responseU8 = request.data / 60;		// Lop off the minutes
-					if(responseU8 != lastHour){
-						lcd_updateLabel(&oldLapHourLabel, itoa_paddded( responseU8, &tempString, 10));
-						lastMinute = responseU8;	
-					}
-					
+					lcd_updateLapTimer( request.data, &oldLapHourLabel, &oldLapMinuteLabel, &oldLapSecondLabel, &oldLapMilliLabel );
 					break;					
 			}
 		}
@@ -272,6 +233,10 @@ void lcd_gui_task_normal( void *pvParameters ){
 				#include "screens/options/date_and_time.h"
 				break;
 				
+			case(LCDFSM_OPTIONS_MEMORY):
+				#include "screens/options/memory.h"
+				break;
+				
 				
 			// ---------------------------------
 			// Main Menu -> Options -> Display
@@ -282,6 +247,25 @@ void lcd_gui_task_normal( void *pvParameters ){
 				
 			case(LCDFSM_OPTIONS_SCREEN_TIMEOUT):
 				#include "screens/options/screen_timeout.h"
+				break;
+			
+			
+			// ---------------------------------
+			// Main Menu -> Options -> Erase
+			// ---------------------------------
+			case(LCDFSM_OPTIONS_ERASE):
+				#include "screens/options/memory_erase.h"
+				break;
+				
+			case(LCDFSM_OPTIONS_ERASE_CONFIRM):
+				#include "screens/options/memory_erase_confirm.h"
+				break;
+				
+			// ---------------------------------
+			// Main Menu -> Options -> View Memory Usage
+			// ---------------------------------
+			case(LCDFSM_OPTIONS_VIEW_USAGE):
+				#include "screens/options/view_usage.h"
 				break;
 
 			
@@ -328,6 +312,13 @@ void lcd_gui_task_normal( void *pvParameters ){
 				#include "screens/help/module_info.h"
 				break;
 			
+			
+			// ---------------------------------
+			// Main Menu -> Review Session -> Detailed Info
+			// ---------------------------------
+			case(LCDFSM_REVIEW_DETAILED_INFO):
+				#include "screens/review/detailed_info.h"
+				break;
 			
 			// ---------------------------------
 			// Error screen - should never reach
@@ -1084,4 +1075,32 @@ void lcd_clearPeripheral( void ){
 
 void lcd_resetPeripheralTimer( void ){
 	xTimerReset( xPeripherialTimer, 20 );
+}
+
+void lcd_updateLapTimer( unsigned int ticks, struct tLCDLabel *hours, struct tLCDLabel *minutes, struct tLCDLabel *seconds, struct tLCDLabel *milli ){
+	static unsigned char lastHour, lastMinute, lastSecond;
+	unsigned char temp;
+	unsigned char tempString[3];	// Two for the digits and one for the null character
+	
+	lcd_updateLabel(milli, itoa( (ticks % 10), &tempString, 10, FALSE));
+					
+	ticks = ticks / 10;		// Lop off the milliseconds
+	temp = ticks % 60;		// Find the seconds
+	if(temp != lastSecond){
+		lcd_updateLabel(seconds, itoa( temp, &tempString, 10, TRUE));
+		lastSecond = temp;
+	}
+					
+	ticks = ticks / 60;		// Lop off the seconds
+	temp = ticks % 60;		// Find the minutes
+	if(temp != lastMinute){
+		lcd_updateLabel(minutes, itoa( temp, &tempString, 10, TRUE));
+		lastMinute = temp;	
+	}
+					
+	temp = ticks / 60;		// Lop off the minutes
+	if(temp != lastHour){
+		lcd_updateLabel(hours, itoa( temp, &tempString, 10, TRUE));
+		lastMinute = temp;	
+	}
 }

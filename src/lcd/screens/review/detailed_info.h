@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Options
+ * Review Session -> Detailed Info
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -29,11 +29,13 @@
 
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
-	menu_addItem(&mainMenu, "Create New Track",			LCDFSM_OPTIONS_CREATE_NEW_TRACK);
-	menu_addItem(&mainMenu, "Modify Existing Track",	LCDFSM_MODIFY_EXISTING_TRACK);
-	menu_addItem(&mainMenu, "Display",					LCDFSM_DISPLAY);
-	menu_addItem(&mainMenu, "Date and Time",			LCDFSM_DATE_AND_TIME);
-	menu_addItem(&mainMenu, "Memory",					LCDFSM_OPTIONS_MEMORY);
+	
+	dataflash_send_request(DFMAN_REQUEST_READ_RECORDTABLE, &recordTable, NULL, screenArgs, TRUE, 20);
+	dataflash_send_request(DFMAN_REQUEST_READ_TRACK, &trackList, NULL, recordTable.trackID, TRUE, 20);
+	lcd_writeText_16x32("Track", FONT_LARGE_POINTER, LCD_MIN_X, LCD_MAX_Y-LCD_TOPBAR_THICKNESS - 32, COLOR_BLACK);
+	lcd_writeText_16x32(trackList.name, FONT_LARGE_POINTER, LCD_MIN_X + 112, LCD_MAX_Y-LCD_TOPBAR_THICKNESS - 32, COLOR_BLACK);
+	
+	//itoa(recordData.data[0].utc, &tempString, 10)
 	
 	lcd_redraw_complete();
 }
@@ -53,13 +55,12 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_SELECT):
-			lcd_force_redraw();
-			lcd_change_screens( menu_readCallback(&mainMenu) );
+			asm("nop");
 			break;
 			
 		case(BUTTON_BACK):
 			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_MAINMENU );
+			lcd_change_screens( LCDFSM_REVIEW_SESSION );
 			break;
 			
 			
@@ -75,8 +76,7 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_LONG_SELECT):
-			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_MAINMENU );
+			asm("nop");
 			break;
 			
 		case(BUTTON_LONG_BACK):

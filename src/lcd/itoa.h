@@ -13,8 +13,7 @@
 #ifndef ITOA_H_
 #define ITOA_H_
 
-char *itoa(int value, char *string, unsigned short radix);
-char *itoa_paddded(int value, char *string, unsigned short radix);
+char *itoa(int value, char *string, unsigned short radix, unsigned char pad);
 
 
 

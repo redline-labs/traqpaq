@@ -905,16 +905,28 @@
     <Compile Include="src\lcd\screens\options\display.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\lcd\screens\options\memory_erase.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcd\screens\options\memory_erase_confirm.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\lcd\screens\options\modify_existing_track.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\lcd\screens\options\new_track_created.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\lcd\screens\options\memory.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\lcd\screens\options\screen_brightness.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\lcd\screens\options\screen_timeout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcd\screens\options\view_usage.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\lcd\screens\recording\create_new_track.h">
@@ -933,6 +945,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\lcd\screens\record_new_session.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcd\screens\review\detailed_info.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\lcd\screens\review_session.h">
@@ -1143,6 +1158,7 @@
     <Folder Include="src\lcd\backlight\" />
     <Folder Include="src\lcd\screens" />
     <Folder Include="src\lcd\screens\help" />
+    <Folder Include="src\lcd\screens\review" />
     <Folder Include="src\lcd\screens\recording" />
     <Folder Include="src\lcd\screens\options" />
     <Folder Include="src\adc" />
