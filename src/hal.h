@@ -35,15 +35,14 @@
 #define TASK_MODE_USB			1
 
 
-// Debug
-#include "adc/adc.h"
-
 // Dataflash
 #include "dataflash/dataflash.h"
 #include "dataflash/dataflash_layout.h"
 
 // Fuel Gauge
 #include "fuel/fuel.h"
+#include "fuel/charge.h"
+#include "fuel/adc.h"
 
 // Watchdog
 #include "wdt/wdt.h"
@@ -59,9 +58,6 @@
 
 // PWM
 #include "lcd/backlight/backlight.h"
-
-// Charge
-#include "charge/charge.h"
 
 // Buttons
 #include "button/button.h"

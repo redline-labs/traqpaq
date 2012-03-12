@@ -32,6 +32,8 @@
 #include "hal.h"
 #include "battery.h"
 #include "lcd/itoa.h"
+#include "adc.h"
+#include "charge.h"
 
 void fuel_task_init( void ){
 	xTaskCreate(fuel_task, configTSK_FUEL_TASK_NAME, configTSK_FUEL_TASK_STACK_SIZE, NULL, configTSK_FUEL_TASK_PRIORITY, configTSK_FUEL_TASK_HANDLE);
@@ -41,10 +43,12 @@ void fuel_task_init( void ){
 void fuel_task( void *pvParameters ){
 	unsigned short percent;
 	signed short accumulated_current;
+	unsigned char oldChargeStatus;
 	
-	struct tBatteryInfo batteryInfo;
-	struct tFuelStatus fuelStatus;
-	struct tFuelEEStatus fuelEEStatus;
+	struct tBatteryInfo		batteryInfo;
+	struct tFuelStatus		fuelStatus;
+	struct tFuelEEStatus	fuelEEStatus;
+	struct tADCvalues		adcValues;
 	
 	#if (TRAQPAQ_HW_BATTERY_TEST_MODE == TRUE)
 	unsigned char tempString[10];
@@ -53,7 +57,9 @@ void fuel_task( void *pvParameters ){
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Task Started");
 	
-	// Check the Status Registers
+	// ---------------------------------
+	// Check the Fuel Status registers
+	// ---------------------------------
 	fuel_read_register(FUEL_ADDRESS_PROTECTION_REGISTER, &fuelStatus, sizeof(fuelStatus));
 	if( fuelStatus.COC ) debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FUEL, "Charge Overcurrent Detected");
 	if( fuelStatus.DOC ) debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FUEL, "Discharge Overcurrent Detected");
@@ -61,6 +67,9 @@ void fuel_task( void *pvParameters ){
 	if( fuelStatus.UV ) debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FUEL, "Undervoltage Detected");
 
 	
+	// ---------------------------------
+	// Initialize battery info
+	// ---------------------------------
 	batteryInfo = fuel_readBatteryInfo();
 	
 	if( batteryInfo.crc != fuel_calculateBatteryInfoCRC(&batteryInfo) ){
@@ -68,16 +77,28 @@ void fuel_task( void *pvParameters ){
 		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FUEL, "Battery Info CRC failed");
 	}
 	
+	
+	// ---------------------------------
+	// Initialize charge state
+	// ---------------------------------
+	oldChargeStatus = charge_state();
+	lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_CHARGE, oldChargeStatus, pdFALSE);
+	
+	
 	while(1){
-		accumulated_current = fuel_read_current( FUEL_CURRENT_ACCUMULATED );
+		// Turn on ADC reference and allow it to settle
+		gpio_set_gpio_pin(ADC_VREF_EN);
 		
+		// ---------------------------------
+		// Read accumulated current
+		// ---------------------------------
+		accumulated_current = fuel_read_current( FUEL_CURRENT_ACCUMULATED );
 		#if (TRAQPAQ_HW_BATTERY_TEST_MODE == TRUE)
 			debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_BATTERY_ACCUM, itoa(accumulated_current, &tempString, 10, FALSE));
 			
 			voltage = fuel_read_voltage();
 			debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_BATTERY_VOLT, itoa(voltage, &tempString, 10, FALSE));
 		#endif
-		
 		
 		if(accumulated_current < 0){
 			accumulated_current = 0;
@@ -87,10 +108,29 @@ void fuel_task( void *pvParameters ){
 			accumulated_current = batteryInfo.capacity;
 			
 		}
-		
-		// Format the data in percentage
+
 		lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_BATTERY, (accumulated_current * 100) / batteryInfo.capacity, pdFALSE);
 		
+		
+		// ---------------------------------
+		// Read supply voltages
+		// ---------------------------------
+		adc_start(ADC);
+		adcValues.main	= adc_get_value(ADC, ADC_3V3_CHANNEL);
+		adcValues.vcc	= adc_get_value(ADC, ADC_VCC_CHANNEL);
+		adcValues.vee	= adc_get_value(ADC, ADC_VEE_CHANNEL);
+		gpio_clr_gpio_pin(ADC_VREF_EN);
+		
+		
+		// ---------------------------------
+		// Read charge status
+		// ---------------------------------
+		lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_CHARGE, charge_state(), pdFALSE);
+		
+		
+		// ---------------------------------
+		// Go to sleep for a while
+		// ---------------------------------
 		vTaskDelay( (portTickType)TASK_DELAY_MS(FUEL_UPDATE_RATE) );
 	}
 }
@@ -249,4 +289,20 @@ unsigned char fuel_isBusy( void ){
 	fuel_read_register(FUEL_ADDRESS_EEPROM_REGISTER, &fuelEEStatus, sizeof(fuelEEStatus) );
 	
 	return fuelEEStatus.EEC;
+}
+
+void charge_setRate(unsigned char rate){
+	if(rate == CHARGE_RATE_HIGH){
+		gpio_set_gpio_pin(CHARGE_RATE);
+	}else{
+		gpio_clr_gpio_pin(CHARGE_RATE);
+	}
+}
+
+unsigned char charge_powerGood( void ){
+	return gpio_get_pin_value(CHARGE_PG);
+}
+
+unsigned char charge_state( void ){
+	return (( gpio_get_pin_value(CHARGE_STAT1) << 2 ) |  ( gpio_get_pin_value(CHARGE_STAT2) << 1 ) | ( gpio_get_pin_value(CHARGE_PG) << 0 ));
 }

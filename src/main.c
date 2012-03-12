@@ -72,10 +72,6 @@ int main( void ){
 		fuel_task_init();
 		#endif
 		
-		#if( TRAQPAQ_HW_CHARGE_ENABLED )
-		charge_task_init();
-		#endif
-		
 		#if( TRAQPAQ_HW_EXINT_ENABLED )
 		buttons_task_init(TASK_MODE_USB);
 		#endif
@@ -117,14 +113,6 @@ int main( void ){
 	
 		#if( TRAQPAQ_HW_EXINT_ENABLED )
 		buttons_task_init(TASK_MODE_NORMAL);
-		#endif
-	
-		#if( TRAQPAQ_HW_CHARGE_ENABLED )
-		charge_task_init();
-		#endif
-		
-		#if( TRAQPAQ_HW_ADC_ENABLED )
-		adc_task_init();
 		#endif
 	
 		#if( TRAQPAQ_HW_WDT_ENABLED )
