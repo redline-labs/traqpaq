@@ -34,10 +34,26 @@
 #define WATCHDOG_TIMEOUT_US			100000	// 100ms Watchdog Timeout
 #define WATCHDOG_UPDATE_INTERVAL_MS	90		// 90ms Watchdog clear interval
 
+#define WATCHDOG_QUEUE_SIZE			5
+
+
+#define WDT_REQUEST_POWEROFF						0
+#define WDT_REQUEST_DATAFLASH_SHUTDOWN_COMPLETE		1
+#define WDT_REQUEST_GPS_SHUTDOWN_COMPLETE			2
+#define WDT_REQUEST_LCD_SHUTDOWN_COMPLETE			3
+#define WDT_REQUEST_USB_SHUTDOWN_COMPLETE			4
+#define WDT_REQUEST_FUEL_SHUTDOWN_COMPLETE			5
+
+struct tWatchdogRequest {
+	unsigned char command;
+	unsigned char data;
+};
+
 void wdt_task_init(void);
 void wdt_task( void *pvParameters );
 
 unsigned char wdt_triggered(void);
+unsigned char wdt_send_request(unsigned char command, unsigned char data);
 
 
 #endif /* WDT_H_ */

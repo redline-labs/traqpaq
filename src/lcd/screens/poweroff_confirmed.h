@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Timed Moto -> Lap Based
+ * Power Down
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -29,53 +29,9 @@
 
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
-	menu_addItem(&mainMenu, "3 Laps",	LCDFSM_START_RECORD);
-	menu_addItem(&mainMenu, "5 Laps",	LCDFSM_START_RECORD);
-	menu_addItem(&mainMenu, "10 Laps",	LCDFSM_START_RECORD);
 	
-	lcd_redraw_complete();
-}
-
-if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
-	switch(button){
-		
-		// ---------------------------------
-		// Short duration button presses
-		// ---------------------------------
-		case(BUTTON_UP):
-			menu_scrollUp(&mainMenu);
-			break;
-			
-		case(BUTTON_DOWN):
-			menu_scrollDown(&mainMenu);
-			break;
-			
-		case(BUTTON_SELECT):
-			lcd_force_redraw();
-			lcd_change_screens( menu_readCallback(&mainMenu) );
-			break;
-			
-		case(BUTTON_BACK):
-			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_OPTIONS );
-			break;
-			
-			
-		// ---------------------------------
-		// Long duration button presses
-		// ---------------------------------
-		case(BUTTON_LONG_UP):
-			break;
-			
-		case(BUTTON_LONG_DOWN):
-			break;
-			
-		case(BUTTON_LONG_SELECT):
-			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_POWEROFF );
-			break;
-			
-		case(BUTTON_LONG_BACK):
-			break;
-	}
+	lcd_writeText_16x32("Powering Off!", FONT_LARGE_POINTER, 50, LCD_MAX_Y >> 2, COLOR_RED);
+	
+	wdt_send_request(WDT_REQUEST_POWEROFF, NULL);
+	vTaskSuspend(NULL);
 }

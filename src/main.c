@@ -46,11 +46,6 @@ int main( void ){
 	debug_task_init();
 	#endif
 	
-	// Check to see if we got reset from a watchdog timeout
-	if( wdt_triggered() ){
-		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_WDT, "Recovering from WDT reset");
-	}
-	
 	#if( TRAQPAQ_NORMAL_MODE_ON_USB == FALSE )
 	// Enter special mode if powered on by USB
 	if( !gpio_get_pin_value(GPIO_BUTTON2) ){

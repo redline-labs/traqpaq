@@ -61,11 +61,9 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, pdFALSE) == pdTRUE ){
 		// Short duration button presses
 		// ---------------------------------
 		case(BUTTON_UP):
-			asm("nop");
 			break;
 			
 		case(BUTTON_DOWN):
-			asm("nop");
 			break;
 			
 		case(BUTTON_SELECT):
@@ -76,7 +74,6 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, pdFALSE) == pdTRUE ){
 			break;
 			
 		case(BUTTON_BACK):
-			asm("nop");
 			break;
 			
 			
@@ -84,19 +81,15 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, pdFALSE) == pdTRUE ){
 		// Long duration button presses
 		// ---------------------------------
 		case(BUTTON_LONG_UP):
-			asm("nop");
 			break;
 			
 		case(BUTTON_LONG_DOWN):
-			asm("nop");
 			break;
 			
 		case(BUTTON_LONG_SELECT):
-			asm("nop");
 			break;
 			
 		case(BUTTON_LONG_BACK):
-			asm("nop");
 			break;
 	}
 }

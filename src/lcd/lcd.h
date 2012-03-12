@@ -384,6 +384,7 @@ struct tLCDTopBar {
 #define LCD_REQUEST_UPDATE_LAPTIME		5
 #define LCD_REQUEST_UPDATE_OLDLAPTIME	6
 
+#define LCD_REQUEST_SHUTDOWN			7
 
 struct tLCDRequest {
 	unsigned char action;

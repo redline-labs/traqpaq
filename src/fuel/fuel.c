@@ -35,6 +35,8 @@
 #include "adc.h"
 #include "charge.h"
 
+xQueueHandle fuelManagerQueue;
+
 void fuel_task_init( void ){
 	xTaskCreate(fuel_task, configTSK_FUEL_TASK_NAME, configTSK_FUEL_TASK_STACK_SIZE, NULL, configTSK_FUEL_TASK_PRIORITY, configTSK_FUEL_TASK_HANDLE);
 }
@@ -49,6 +51,7 @@ void fuel_task( void *pvParameters ){
 	struct tFuelStatus		fuelStatus;
 	struct tFuelEEStatus	fuelEEStatus;
 	struct tADCvalues		adcValues;
+	struct tFuelRequest		request;
 	
 	#if (TRAQPAQ_HW_BATTERY_TEST_MODE == TRUE)
 	unsigned char tempString[10];
@@ -56,6 +59,8 @@ void fuel_task( void *pvParameters ){
 	#endif
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Task Started");
+	
+	fuelManagerQueue = xQueueCreate(FUEL_QUEUE_SIZE, sizeof(request));
 	
 	// ---------------------------------
 	// Check the Fuel Status registers
@@ -125,7 +130,24 @@ void fuel_task( void *pvParameters ){
 		// ---------------------------------
 		// Read charge status
 		// ---------------------------------
-		lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_CHARGE, charge_state(), pdFALSE);
+		if( oldChargeStatus != charge_state() ){
+			oldChargeStatus = charge_state();
+			lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_CHARGE, oldChargeStatus, pdFALSE);
+		}			
+		
+		
+		// ---------------------------------
+		// Check for any requests!
+		// ---------------------------------
+		if( xQueueReceive(fuelManagerQueue, &request, pdFALSE) == pdTRUE ){
+			switch(request.command){
+				case(FUEL_REQUEST_SHUTDOWN):
+					debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Task shut down");
+					wdt_send_request(WDT_REQUEST_FUEL_SHUTDOWN_COMPLETE, NULL);
+					vTaskSuspend(NULL);
+					break;
+			}
+		}
 		
 		
 		// ---------------------------------
@@ -305,4 +327,13 @@ unsigned char charge_powerGood( void ){
 
 unsigned char charge_state( void ){
 	return (( gpio_get_pin_value(CHARGE_STAT1) << 2 ) |  ( gpio_get_pin_value(CHARGE_STAT2) << 1 ) | ( gpio_get_pin_value(CHARGE_PG) << 0 ));
+}
+
+unsigned char fuel_send_request(unsigned char command, unsigned char data){
+	struct tFuelRequest request;
+	
+	request.command = command;
+	request.data = data;
+	
+	return xQueueSend(fuelManagerQueue, &request, portMAX_DELAY);
 }

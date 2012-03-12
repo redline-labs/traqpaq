@@ -71,6 +71,8 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_LONG_SELECT):
+			lcd_force_redraw();
+			lcd_change_screens( LCDFSM_POWEROFF );
 			break;
 			
 		case(BUTTON_LONG_BACK):

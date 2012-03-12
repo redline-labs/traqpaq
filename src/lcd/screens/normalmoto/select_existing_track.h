@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Main Menu
+ * Record New Session -> Select Existing Track
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -29,16 +29,22 @@
 
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
-	menu_addItem(&mainMenu, "Record A New Session", LCDFSM_SELECT_EXISTING_TRACK);
-	menu_addItem(&mainMenu, "Timed Moto",			LCDFSM_TIMED_MOTO);
-	menu_addItem(&mainMenu, "Review Session",		LCDFSM_REVIEW_SESSION);
-	menu_addItem(&mainMenu, "Settings",				LCDFSM_OPTIONS);
-	menu_addItem(&mainMenu, "Help",					LCDFSM_HELP);
 	
+	responseU8 = 0;		// Number of tracks loaded
+
+	dataflash_send_request(DFMAN_REQUEST_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
+	while( trackList.isEmpty == FALSE){
+		menu_addItem(&mainMenu, &trackList.name, responseU8);
+		responseU8++;
+		dataflash_send_request(DFMAN_REQUEST_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
+	}
+	
+	if( responseU8 == 0 ){
+		menu_addItem(&mainMenu, "No Tracks Found", LCDFSM_MAINMENU);
+	}
+
 	lcd_redraw_complete();
 }
-
-
 
 if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 	switch(button){
@@ -55,12 +61,15 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_SELECT):
+			gps_send_request(GPS_REQUEST_SET_FINISH_POINT, NULL, (unsigned char)menu_readCallback(&mainMenu), pdFALSE);
+			
 			lcd_force_redraw();
-			lcd_change_screens( menu_readCallback(&mainMenu) );
+			lcd_change_screens( LCDFSM_START_RECORD );
 			break;
 			
 		case(BUTTON_BACK):
-			asm("nop");
+			lcd_force_redraw();
+			lcd_change_screens( LCDFSM_MAINMENU );
 			break;
 			
 			

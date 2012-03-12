@@ -174,7 +174,7 @@ void lcd_gui_task_normal( void *pvParameters ){
 					
 				case(LCD_REQUEST_UPDATE_OLDLAPTIME):
 					lcd_updateLapTimer( request.data, &oldLapHourLabel, &oldLapMinuteLabel, &oldLapSecondLabel, &oldLapMilliLabel );
-					break;					
+					break;
 			}
 		}
 		
@@ -273,7 +273,7 @@ void lcd_gui_task_normal( void *pvParameters ){
 			// Main Menu -> Record New Session
 			// ---------------------------------
 			case(LCDFSM_SELECT_EXISTING_TRACK):
-				#include "screens/recording/select_existing_track.h"
+				#include "screens/normalmoto/select_existing_track.h"
 				break;
 				
 			
@@ -293,7 +293,7 @@ void lcd_gui_task_normal( void *pvParameters ){
 			// Main Menu -> Timed Moto / Record New Session -> Start Record
 			// ---------------------------------
 			case(LCDFSM_START_RECORD):
-				#include "screens/recording/start_recording.h"
+				#include "screens/normalmoto/start_recording.h"
 				break;
 				
 				
@@ -315,6 +315,19 @@ void lcd_gui_task_normal( void *pvParameters ){
 			case(LCDFSM_REVIEW_DETAILED_INFO):
 				#include "screens/review/detailed_info.h"
 				break;
+				
+			// ---------------------------------
+			// Main Menu -> Review Session -> Detailed Info
+			// ---------------------------------
+			case(LCDFSM_POWEROFF):
+				#include "screens/poweroff.h"
+				break;
+				
+			case(LCDFSM_POWEROFF_CONFIRMED):
+				#include "screens/poweroff_confirmed.h"
+				break;
+				
+				
 			
 			// ---------------------------------
 			// Error screen - should never reach

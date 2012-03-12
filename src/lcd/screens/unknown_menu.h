@@ -30,9 +30,6 @@
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
 	menu_addItem(&mainMenu, "Unknown Menu!",	LCDFSM_MAINMENU);
-	menu_addItem(&mainMenu, "Please...",		LCDFSM_MAINMENU);
-	menu_addItem(&mainMenu, "Go...",			LCDFSM_MAINMENU);
-	menu_addItem(&mainMenu, "BACK!!!",			LCDFSM_MAINMENU);
 	
 	lcd_redraw_complete();
 }
@@ -57,7 +54,6 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_BACK):
-			asm("nop");
 			break;
 			
 			
@@ -65,19 +61,17 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 		// Long duration button presses
 		// ---------------------------------
 		case(BUTTON_LONG_UP):
-			menu_scrollUp(&mainMenu);
 			break;
 			
 		case(BUTTON_LONG_DOWN):
-			menu_scrollDown(&mainMenu);
 			break;
 			
 		case(BUTTON_LONG_SELECT):
-			asm("nop");
+			lcd_force_redraw();
+			lcd_change_screens( LCDFSM_POWEROFF );
 			break;
 			
 		case(BUTTON_LONG_BACK):
-			asm("nop");
 			break;
 	}
 }

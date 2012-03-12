@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Record New Session -> Select Existing Track
+ * Power Down
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -29,20 +29,9 @@
 
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
+	menu_addItem(&mainMenu, "Back",			LCDFSM_MAINMENU);
+	menu_addItem(&mainMenu, "Power Off",	LCDFSM_POWEROFF_CONFIRMED);
 	
-	responseU8 = 0;		// Number of tracks loaded
-
-	dataflash_send_request(DFMAN_REQUEST_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
-	while( trackList.isEmpty == FALSE){
-		menu_addItem(&mainMenu, &trackList.name, responseU8);
-		responseU8++;
-		dataflash_send_request(DFMAN_REQUEST_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
-	}
-	
-	if( responseU8 == 0 ){
-		menu_addItem(&mainMenu, "No Tracks Found", LCDFSM_MAINMENU);
-	}
-
 	lcd_redraw_complete();
 }
 
@@ -61,15 +50,11 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_SELECT):
-			gps_send_request(GPS_REQUEST_SET_FINISH_POINT, NULL, (unsigned char)menu_readCallback(&mainMenu), pdFALSE);
-			
 			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_START_RECORD );
+			lcd_change_screens( menu_readCallback(&mainMenu) );
 			break;
 			
 		case(BUTTON_BACK):
-			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_MAINMENU );
 			break;
 			
 			
@@ -77,19 +62,15 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 		// Long duration button presses
 		// ---------------------------------
 		case(BUTTON_LONG_UP):
-			menu_scrollUp(&mainMenu);
 			break;
 			
 		case(BUTTON_LONG_DOWN):
-			menu_scrollDown(&mainMenu);
 			break;
 			
 		case(BUTTON_LONG_SELECT):
-			asm("nop");
 			break;
 			
 		case(BUTTON_LONG_BACK):
-			asm("nop");
 			break;
 	}
 }

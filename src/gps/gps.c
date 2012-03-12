@@ -125,6 +125,15 @@ void gps_task( void *pvParameters ){
 					trackList.reserved = 0xA5;
 					dataflash_send_request(DFMAN_REQUEST_ADD_TRACK, &trackList, NULL, NULL, FALSE, pdFALSE);
 					break;
+					
+				case(GPS_REQUEST_SHUTDOWN):
+					xTimerStop(xMessageTimer, pdFALSE);
+					gpio_clr_gpio_pin(GPS_RESET);	// Put the GPS into reset
+					debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Task shut down");
+					wdt_send_request(WDT_REQUEST_GPS_SHUTDOWN_COMPLETE, NULL);
+					vTaskSuspend(NULL);
+					break;
+					
 			}
 		}
 		

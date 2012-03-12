@@ -32,6 +32,8 @@
 
 #define FUEL_VERSION				"1.00"
 
+#define FUEL_QUEUE_SIZE			5
+
 #define BATTERY_SUPPLIER_STRLEN		10
 #define BATTERY_PARTNUMBER_STRLEN	10
 
@@ -177,6 +179,15 @@ struct __attribute__ ((packed)) tBatteryInfo{
 };	// tBatteryInfo - 16 Bytes
 
 
+
+#define FUEL_REQUEST_SHUTDOWN					0
+
+
+struct tFuelRequest {
+	unsigned char command;
+	unsigned char data;
+};
+
 void fuel_task_init( void );
 void fuel_task( void *pvParameters );
 void fuel_read_register(unsigned char command, unsigned char *pointer, unsigned char length);
@@ -196,6 +207,8 @@ struct tBatteryInfo fuel_readBatteryInfo( void );
 void fuel_updateAccumulatedCurrent(unsigned short value);
 void fuel_writeShadowRAM( void );
 unsigned char fuel_isBusy( void );
+
+unsigned char fuel_send_request(unsigned char command, unsigned char data);
 
 
 #endif /* FUEL_H_ */

@@ -111,11 +111,6 @@ void buttons_task_normal( void *pvParameters ){
 			button |= BUTTON_LONG_PRESS_MASK;
 		}
 		
-		// Power Off Condition
-		if(button == BUTTON_LONG_SELECT){
-			main_supply_off();
-		}
-		
 		// Send button press and request the backlight on!
 		if( !displayStatus.isOff ){
 			lcd_sendButtonRequest(button);
@@ -123,7 +118,7 @@ void buttons_task_normal( void *pvParameters ){
 		
 		if( displayStatus.isReady ){
 			backlight_resetTimer();
-		}			
+		}
 			
 		// Clear any pending EXTINT interrupts and re-enable them
 		eic_clear_interrupt_lines(&AVR32_EIC, (1<<EXTINT_BUTTON0) | (1<<EXTINT_BUTTON1) | (1<<EXTINT_BUTTON2) | (1<<EXTINT_BUTTON3));

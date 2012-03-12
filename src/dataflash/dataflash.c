@@ -227,6 +227,17 @@ void dataflash_task( void *pvParameters ){
 			case(DFMAN_REQUEST_SET_TRACK):
 				recordTable.trackID = (unsigned char)request.index;
 				break;
+				
+			case(DFMAN_REQUEST_SHUTDOWN):
+				if(recordTable.startAddress != recordTable.endAddress){
+					// Need to close current record
+					recordTable.recordEmpty = FALSE;
+					dataflash_UpdateSector(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
+				}
+				debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_DATAFLASH, "Task shut down");
+				wdt_send_request(WDT_REQUEST_DATAFLASH_SHUTDOWN_COMPLETE, NULL);
+				vTaskSuspend(NULL);
+				break;
 		}
 		
 		dataflash_clr_wp();

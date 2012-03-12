@@ -108,6 +108,12 @@
 // ---------------------------------
 #define LCDFSM_REVIEW_DETAILED_INFO		600
 
+// ---------------------------------
+// Power Off
+// ---------------------------------
+#define LCDFSM_POWEROFF					700
+#define LCDFSM_POWEROFF_CONFIRMED		701
+
 
 
 
