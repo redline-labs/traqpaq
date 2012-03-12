@@ -30,7 +30,7 @@
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
 	menu_addItem(&mainMenu, "Create New Track",			LCDFSM_OPTIONS_CREATE_NEW_TRACK);
-	menu_addItem(&mainMenu, "Modify Existing Track",	LCDFSM_MODIFY_EXISTING_TRACK);
+	//menu_addItem(&mainMenu, "Modify Existing Track",	LCDFSM_MODIFY_EXISTING_TRACK);
 	menu_addItem(&mainMenu, "Display",					LCDFSM_DISPLAY);
 	menu_addItem(&mainMenu, "Date and Time",			LCDFSM_DATE_AND_TIME);
 	menu_addItem(&mainMenu, "Memory",					LCDFSM_OPTIONS_MEMORY);

@@ -29,7 +29,7 @@
 
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
-	menu_addItem(&mainMenu, "Record A New Session", LCDFSM_RECORD_NEW_SESSION);
+	menu_addItem(&mainMenu, "Record A New Session", LCDFSM_SELECT_EXISTING_TRACK);
 	menu_addItem(&mainMenu, "Timed Moto",			LCDFSM_TIMED_MOTO);
 	menu_addItem(&mainMenu, "Review Session",		LCDFSM_REVIEW_SESSION);
 	menu_addItem(&mainMenu, "Settings",				LCDFSM_OPTIONS);

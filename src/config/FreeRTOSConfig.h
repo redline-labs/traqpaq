@@ -185,13 +185,6 @@ to exclude the API function. */
 #define configTSK_DATAFLASH_TASK_PERIOD		20
 #define configTSK_DATAFLASH_TASK_HANDLE		NULL
 
-/* Fuel Task */
-#define configTSK_FUEL_TASK_NAME			((const signed portCHAR *)"Fuel")
-#define configTSK_FUEL_TASK_STACK_SIZE		256
-#define configTSK_FUEL_TASK_PRIORITY		TASK_PRIORITY_MEDIUM
-#define configTSK_FUEL_TASK_PERIOD			20
-#define configTSK_FUEL_TASK_HANDLE			NULL
-
 /* GPS Task */
 #define configTSK_GPS_TASK_NAME				((const signed portCHAR *)"GPS")
 #define configTSK_GPS_TASK_STACK_SIZE		512
@@ -199,19 +192,26 @@ to exclude the API function. */
 #define configTSK_GPS_TASK_PERIOD			20
 #define configTSK_GPS_TASK_HANDLE			NULL
 
-/* Charge Task */
-#define configTSK_CHARGE_TASK_NAME			((const signed portCHAR *)"Charge")
-#define configTSK_CHARGE_TASK_STACK_SIZE	256
-#define configTSK_CHARGE_TASK_PRIORITY		TASK_PRIORITY_MEDIUM
-#define configTSK_CHARGE_TASK_PERIOD		20
-#define configTSK_CHARGE_TASK_HANDLE		NULL
-
 /* Buttons Task */
 #define configTSK_BUTTONS_TASK_NAME			((const signed portCHAR *)"Buttons")
 #define configTSK_BUTTONS_TASK_STACK_SIZE	256
 #define configTSK_BUTTONS_TASK_PRIORITY		TASK_PRIORITY_MEDIUM
 #define configTSK_BUTTONS_TASK_PERIOD		20
 #define configTSK_BUTTONS_TASK_HANDLE		NULL
+
+/* Charge Task */
+#define configTSK_CHARGE_TASK_NAME			((const signed portCHAR *)"Charge")
+#define configTSK_CHARGE_TASK_STACK_SIZE	256
+#define configTSK_CHARGE_TASK_PRIORITY		TASK_PRIORITY_LOW
+#define configTSK_CHARGE_TASK_PERIOD		20
+#define configTSK_CHARGE_TASK_HANDLE		NULL
+
+/* Fuel Task */
+#define configTSK_FUEL_TASK_NAME			((const signed portCHAR *)"Fuel")
+#define configTSK_FUEL_TASK_STACK_SIZE		256
+#define configTSK_FUEL_TASK_PRIORITY		TASK_PRIORITY_LOW
+#define configTSK_FUEL_TASK_PERIOD			20
+#define configTSK_FUEL_TASK_HANDLE			NULL
 
 /* ADC Task */
 #define configTSK_ADC_TASK_NAME				((const signed portCHAR *)"Analog")

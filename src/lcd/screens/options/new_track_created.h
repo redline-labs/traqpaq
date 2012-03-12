@@ -41,13 +41,9 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 		// Short duration button presses
 		// ---------------------------------
 		case(BUTTON_UP):
-			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_OPTIONS );
 			break;
 			
 		case(BUTTON_DOWN):
-			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_OPTIONS );
 			break;
 			
 		case(BUTTON_SELECT):
@@ -65,19 +61,15 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 		// Long duration button presses
 		// ---------------------------------
 		case(BUTTON_LONG_UP):
-			menu_scrollUp(&mainMenu);
 			break;
 			
 		case(BUTTON_LONG_DOWN):
-			menu_scrollDown(&mainMenu);
 			break;
 			
 		case(BUTTON_LONG_SELECT):
-			asm("nop");
 			break;
 			
 		case(BUTTON_LONG_BACK):
-			asm("nop");
 			break;
 	}
 }

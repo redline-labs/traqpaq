@@ -276,20 +276,16 @@ void lcd_gui_task_normal( void *pvParameters ){
 				#include "screens/recording/select_existing_track.h"
 				break;
 				
-			case(LCDFSM_CREATE_NEW_TRACK):
-				#include "screens/recording/create_new_track.h"
-				break;
-				
 			
 			// ---------------------------------
 			// Main Menu -> Timed Moto
 			// ---------------------------------
 			case(LCDFSM_LAP_BASED):
-				#include "screens/recording/timed_moto_laps.h"
+				#include "screens/timedmoto/timed_moto_laps.h"
 				break;
 				
 			case(LCDFSM_TIME_BASED):
-				#include "screens/recording/timed_moto_time.h"
+				#include "screens/timedmoto/timed_moto_time.h"
 				break;
 			
 			

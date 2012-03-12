@@ -132,10 +132,11 @@ struct tGPSRequest {
 	unsigned int *pointer;
 };
 
-#define GPS_REQUEST_DATE			0
-#define GPS_REQUEST_START_RECORDING	1
-#define GPS_REQUEST_STOP_RECORDING	2
-#define GPS_SET_FINISH_POINT		3
+#define GPS_REQUEST_DATE				0
+#define GPS_REQUEST_START_RECORDING		1
+#define GPS_REQUEST_STOP_RECORDING		2
+#define GPS_REQUEST_SET_FINISH_POINT	3
+#define GPS_REQUEST_CREATE_NEW_TRACK	4
 
 
 struct tGPSPoint {

@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Options -> Create New Track
+ * Record A New Session -> Create New Track
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.1
@@ -53,6 +53,7 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_SELECT):
+			gps_send_request(GPS_REQUEST_CREATE_NEW_TRACK, NULL, NULL, pdFALSE);
 			lcd_force_redraw();
 			lcd_change_screens( LCDFSM_OPTIONS_NEW_TRACK_CREATED );
 			break;

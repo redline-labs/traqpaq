@@ -128,12 +128,16 @@ void dataflash_task( void *pvParameters ){
 		trackCount++;
 	}
 	
+	dataflash_set_wp();
+	dataflash_set_hold();
 	dataflash_clr_busy_flag();
 	
 	while(TRUE){
 		xQueueReceive(dataflashManagerQueue, &request, portMAX_DELAY);
 		
 		dataflash_set_busy_flag();
+		dataflash_clr_wp();
+		dataflash_clr_hold();
 		
 		switch(request.command){
 			case(DFMAN_REQUEST_END_CURRENT_RECORD):
@@ -225,6 +229,8 @@ void dataflash_task( void *pvParameters ){
 				break;
 		}
 		
+		dataflash_clr_wp();
+		dataflash_clr_hold();
 		dataflash_clr_busy_flag();
 		
 		// Resume requesting task if it has been suspended

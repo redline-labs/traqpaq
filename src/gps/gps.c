@@ -30,6 +30,7 @@
 #include "hal.h"
 #include "dataflash/dataflash_manager_request.h"
 #include "math.h"
+#include "lcd/itoa.h"
 
 xQueueHandle gpsRxdQueue;
 xQueueHandle gpsManagerQueue;
@@ -108,11 +109,21 @@ void gps_task( void *pvParameters ){
 					dataflash_send_request(DFMAN_REQUEST_END_CURRENT_RECORD, NULL, NULL, NULL, FALSE, 20);
 					break;
 					
-				case(GPS_SET_FINISH_POINT):
+				case(GPS_REQUEST_SET_FINISH_POINT):
 					// Load the track, and then tell the dataflash that we are using it
 					dataflash_send_request(DFMAN_REQUEST_READ_TRACK, &trackList, sizeof(trackList), request.data, TRUE, 20);
 					dataflash_send_request(DFMAN_REQUEST_SET_TRACK, NULL, NULL, request.data, FALSE, 20);
 					finishLine = gps_find_finish_line(trackList.latitude, trackList.longitude, trackList.course);
+					break;
+					
+				case(GPS_REQUEST_CREATE_NEW_TRACK):
+					itoa(gpsData.data[recordIndex].utc, &(trackList.name), 10, FALSE);
+					trackList.course = gpsData.data[recordIndex].course;
+					trackList.longitude = gpsData.data[recordIndex].longitude;
+					trackList.latitude = gpsData.data[recordIndex].latitude;
+					trackList.isEmpty = FALSE;
+					trackList.reserved = 0xA5;
+					dataflash_send_request(DFMAN_REQUEST_ADD_TRACK, &trackList, NULL, NULL, FALSE, pdFALSE);
 					break;
 			}
 		}

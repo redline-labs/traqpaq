@@ -31,6 +31,7 @@
 #include "asf.h"
 #include "hal.h"
 #include "battery.h"
+#include "lcd/itoa.h"
 
 void fuel_task_init( void ){
 	xTaskCreate(fuel_task, configTSK_FUEL_TASK_NAME, configTSK_FUEL_TASK_STACK_SIZE, NULL, configTSK_FUEL_TASK_PRIORITY, configTSK_FUEL_TASK_HANDLE);
@@ -44,6 +45,11 @@ void fuel_task( void *pvParameters ){
 	struct tBatteryInfo batteryInfo;
 	struct tFuelStatus fuelStatus;
 	struct tFuelEEStatus fuelEEStatus;
+	
+	#if (TRAQPAQ_HW_BATTERY_TEST_MODE == TRUE)
+	unsigned char tempString[10];
+	unsigned short voltage;
+	#endif
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Task Started");
 	
@@ -63,7 +69,15 @@ void fuel_task( void *pvParameters ){
 	}
 	
 	while(1){
-		accumulated_current = fuel_read_current( FUEL_CURRENT_ACCUMULATED ) >> 2;
+		accumulated_current = fuel_read_current( FUEL_CURRENT_ACCUMULATED );
+		
+		#if (TRAQPAQ_HW_BATTERY_TEST_MODE == TRUE)
+			debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_BATTERY_ACCUM, itoa(accumulated_current, &tempString, 10, FALSE));
+			
+			voltage = fuel_read_voltage();
+			debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_BATTERY_VOLT, itoa(voltage, &tempString, 10, FALSE));
+		#endif
+		
 		
 		if(accumulated_current < 0){
 			accumulated_current = 0;

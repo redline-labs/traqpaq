@@ -61,7 +61,7 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_SELECT):
-			gps_send_request(GPS_SET_FINISH_POINT, NULL, (unsigned char)menu_readCallback(&mainMenu), pdFALSE);
+			gps_send_request(GPS_REQUEST_SET_FINISH_POINT, NULL, (unsigned char)menu_readCallback(&mainMenu), pdFALSE);
 			
 			lcd_force_redraw();
 			lcd_change_screens( LCDFSM_START_RECORD );
@@ -69,7 +69,7 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			
 		case(BUTTON_BACK):
 			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_RECORD_NEW_SESSION );
+			lcd_change_screens( LCDFSM_MAINMENU );
 			break;
 			
 			
