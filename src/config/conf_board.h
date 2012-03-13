@@ -3,7 +3,7 @@
  * Board Configuration File
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -31,7 +31,7 @@
 #define CONF_BOARD_H
 
 // Configure/Deconfigure hardware on the module
-#define TRAQPAQ_HW_PWM_ENABLED			TRUE
+/*#define TRAQPAQ_HW_PWM_ENABLED			TRUE
 #define TRAQPAQ_HW_EBI_ENABLED			TRUE
 #define TRAQPAQ_HW_GPS_ENABLED			TRUE
 #define TRAQPAQ_HW_SPI_ENABLED			TRUE
@@ -40,9 +40,12 @@
 #define TRAQPAQ_HW_USB_ENABLED			TRUE
 #define TRAQPAQ_HW_DEBUG_ENABLED		TRUE
 #define TRAQPAQ_HW_PLL_ENABLED			TRUE
-#define TRAQPAQ_HW_WDT_ENABLED			TRUE
+#define TRAQPAQ_HW_WDT_ENABLED			TRUE*/
 
 #define TRAQPAQ_NORMAL_MODE_ON_USB		TRUE
-#define TRAQPAQ_HW_BATTERY_TEST_MODE	TRUE
+#define TRAQPAQ_GPS_EXTERNAL_LOGGING	FALSE
+#define TRAQPAQ_DEBUG_ENABLED			TRUE
+#define TRAQPAQ_BATTERY_TEST_MODE		TRUE
+
 
 #endif // CONF_BOARD_H

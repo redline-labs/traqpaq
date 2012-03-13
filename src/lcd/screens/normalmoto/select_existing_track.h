@@ -3,7 +3,7 @@
  * Record New Session -> Select Existing Track
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -32,11 +32,11 @@ if(lcd_redraw_required()){
 	
 	responseU8 = 0;		// Number of tracks loaded
 
-	dataflash_send_request(DFMAN_REQUEST_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
+	flash_send_request(FLASH_REQUEST_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
 	while( trackList.isEmpty == FALSE){
 		menu_addItem(&mainMenu, &trackList.name, responseU8);
 		responseU8++;
-		dataflash_send_request(DFMAN_REQUEST_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
+		flash_send_request(FLASH_REQUEST_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
 	}
 	
 	if( responseU8 == 0 ){

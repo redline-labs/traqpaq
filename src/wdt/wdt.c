@@ -3,7 +3,7 @@
  * Watchdog Routines
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -28,7 +28,6 @@
  ******************************************************************************/
 #include "asf.h"
 #include "hal.h"
-#include "dataflash/dataflash_manager_request.h"
 
 xQueueHandle wdtManagerQueue;
 
@@ -63,7 +62,7 @@ void wdt_task( void *pvParameters ){
 				case(WDT_REQUEST_POWEROFF):
 					debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_WDT, "Shutdown requested");
 					fuel_send_request(FUEL_REQUEST_SHUTDOWN, NULL);
-					dataflash_send_request(DFMAN_REQUEST_SHUTDOWN, NULL, NULL, NULL, NULL, NULL);
+					flash_send_request(FLASH_REQUEST_SHUTDOWN, NULL, NULL, NULL, NULL, NULL);
 					gps_send_request(GPS_REQUEST_SHUTDOWN, NULL, NULL, NULL);		
 					break;
 					

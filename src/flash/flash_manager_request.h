@@ -3,7 +3,7 @@
  * Dataflash Manager
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -33,43 +33,43 @@
 
 #include "hal.h"
 
-
-
-#define DFMAN_REQUEST_END_CURRENT_RECORD		0
-#define DFMAN_REQUEST_ADD_TRACK					1
-#define DFMAN_REQUEST_ADD_RECORDDATA			2
-#define DFMAN_REQUEST_ERASE_RECORD				3
-#define DFMAN_REQUEST_READ_RECORDTABLE			4
-#define DFMAN_REQUEST_READ_OTP					5
-#define DFMAN_REQUEST_SECTOR_ERASE				6
-#define DFMAN_REQUEST_BUSY						7
-#define DFMAN_REQUEST_CHIP_ERASE				8
-#define DFMAN_REQUEST_READ_RECORDDATA			9
-#define DFMAN_REQUEST_IS_FLASH_FULL				10
-#define DFMAN_REQUEST_USED_SPACE				11
+#define FLASH_REQUEST_END_CURRENT_RECORD		0
+#define FLASH_REQUEST_ADD_TRACK					1
+#define FLASH_REQUEST_ADD_RECORDDATA			2
+#define FLASH_REQUEST_ERASE_RECORD				3
+#define FLASH_REQUEST_READ_RECORDTABLE			4
+#define FLASH_REQUEST_READ_OTP					5
+#define FLASH_REQUEST_SECTOR_ERASE				6
+#define FLASH_REQUEST_BUSY						7
+#define FLASH_REQUEST_CHIP_ERASE				8
+#define FLASH_REQUEST_READ_RECORDDATA			9
+#define FLASH_REQUEST_IS_FLASH_FULL				10
+#define FLASH_REQUEST_USED_SPACE				11
 #define DFMAN_REQUEST_UPDATE_DATE				12
-#define DFMAN_REQUEST_READ_TRACK				13
-#define DFMAN_REQUEST_ERASE_RECORDED_DATA		14
-#define DFMAN_REQUEST_WRITE_USER_PREFS			15
-#define DFMAN_REQUEST_SET_TRACK					16
-#define DFMAN_REQUEST_ERASE_TRACKS				17
+#define FLASH_REQUEST_READ_TRACK				13
+#define FLASH_REQUEST_ERASE_RECORDED_DATA		14
+#define FLASH_REQUEST_WRITE_USER_PREFS			15
+#define FLASH_REQUEST_SET_TRACK					16
+#define FLASH_REQUEST_ERASE_TRACKS				17
 
-#define DFMAN_REQUEST_SHUTDOWN					18
+#define FLASH_REQUEST_SHUTDOWN					18
+
+#define FLASH_REQUEST_SET_DATESTAMP				19
 
 
 #define DFMAN_STATUS_BUSY						0
 #define DFMAN_STATUS_READY						1
 
-struct tDataflashRequest {
+struct tFlashRequest {
 	unsigned char command;		// Define the request
 	unsigned char *pointer;		// Pointer for data to be written
 	unsigned short length;		// Length of data to be written
-	unsigned long index;		// Used for reading requests
+	unsigned int index;			// Used for reading requests
 	unsigned char resume;		// Flag to resume the calling task
 	xTaskHandle handle;			// Handle of task to resume after completion
 };
 
 
-#define DFMAN_QUEUE_SIZE		5							// Items to buffer in queue
+#define FLASH_MANAGER_QUEUE_SIZE		5							// Items to buffer in queue
 
 #endif /* DATAFLASH_MANAGER_REQUEST_H_ */

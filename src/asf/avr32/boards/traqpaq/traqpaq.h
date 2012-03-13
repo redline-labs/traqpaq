@@ -3,7 +3,7 @@
  * Board defines
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -40,8 +40,8 @@
 // Versions
 // ------------------------------------------------------------
 #define TRAQPAQ_SW_LEVEL_MAJOR		1
-#define TRAQPAQ_SW_LEVEL_MINOR		0
-#define TRAQPAQ_SW_LEVEL_ASCII		"1.10"
+#define TRAQPAQ_SW_LEVEL_MINOR		2
+#define TRAQPAQ_SW_LEVEL_ASCII		"1.20"
 #define TRAQPAQ_SW_BUILD_DATE		__DATE__
 #define TRAQPAQ_SW_SUPPORT_VER		__VERSION__
 

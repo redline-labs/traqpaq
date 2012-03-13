@@ -45,10 +45,7 @@
 #include "udi.h"
 #include "udc.h"
 
-
-#include "dataflash/dataflash_otp_layout.h"
-
-extern struct tDataflashOTP dataflashOTP;
+extern struct tFlashOTP flashOTP;
 
 /**
  * \addtogroup udc_group

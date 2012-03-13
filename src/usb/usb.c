@@ -3,7 +3,7 @@
  * USB Interface
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -29,8 +29,6 @@
 
 #include "asf.h"
 #include "hal.h"
-#include "dataflash/dataflash_manager_request.h"
-#include "dataflash/dataflash_otp_layout.h"
 #include "string.h"
 
 void main_vendor_bulk_in_received(udd_ep_status_t status, iram_size_t nb_transfered);
@@ -43,8 +41,8 @@ static uint8_t usbTxBuffer[USB_TX_BUFFER_SIZE];
 
 xQueueHandle usbManagerQueue;
 
-extern struct tDataflashOTP dataflashOTP;
-extern struct tDataflashFlags dataflashFlags;
+extern struct tFlashOTP flashOTP;
+extern struct tFlashFlags flashFlags;
 extern struct tUserPrefs userPrefs;
 
 // Create task for FreeRTOS
@@ -79,17 +77,17 @@ void usb_task( void *pvParameters ){
 				break;
 				
 			case(USB_CMD_REQ_HARDWARE_VER):
-				usbTxBuffer[data_length++] = dataflashOTP.pcb_rev;
+				usbTxBuffer[data_length++] = flashOTP.pcb_rev;
 				break;
 				
 			case(USB_CMD_REQ_SERIAL_NUMBER):
 				for(i = 0; i < OTP_SERIAL_LENGTH; i++){
-					usbTxBuffer[data_length++] = dataflashOTP.serial[i];
+					usbTxBuffer[data_length++] = flashOTP.serial[i];
 				}					
 				break;
 				
 			case(USB_CMD_REQ_TESTER_ID):
-				usbTxBuffer[data_length++] = dataflashOTP.tester_id;				
+				usbTxBuffer[data_length++] = flashOTP.tester_id;				
 				break;
 
 			case(USB_CMD_REQ_BATTINFO):
@@ -112,50 +110,50 @@ void usb_task( void *pvParameters ){
 					
 			case(USB_CMD_READ_OTP):
 				data_length = usbRxBuffer[1];
-				dataflash_send_request(DFMAN_REQUEST_READ_OTP, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
+				flash_send_request(FLASH_REQUEST_READ_OTP, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
 				break;
 
 			case(USB_CMD_READ_RECORDTABLE):
 				data_length = usbRxBuffer[1];
-				dataflash_send_request(DFMAN_REQUEST_READ_RECORDTABLE, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
+				flash_send_request(FLASH_REQUEST_READ_RECORDTABLE, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
 				break;
 					
 			case(USB_CMD_READ_RECORDDATA):
-				data_length = DATAFLASH_PAGE_SIZE;
-				dataflash_send_request(DFMAN_REQUEST_READ_RECORDDATA, &usbTxBuffer, DATAFLASH_PAGE_SIZE, (usbRxBuffer[2] << 8) + (usbRxBuffer[3] << 0), TRUE, pdFALSE);
+				data_length = FLASH_PAGE_SIZE;
+				flash_send_request(FLASH_REQUEST_READ_RECORDDATA, &usbTxBuffer, FLASH_PAGE_SIZE, (usbRxBuffer[2] << 8) + (usbRxBuffer[3] << 0), TRUE, pdFALSE);
 				break;
 				
 			case(USB_DBG_DF_SECTOR_ERASE):
 				usbTxBuffer[0] = TRUE;
 				data_length = 1;
-				dataflash_send_request(DFMAN_REQUEST_SECTOR_ERASE, NULL, NULL, usbRxBuffer[1], FALSE, pdFALSE);
+				flash_send_request(FLASH_REQUEST_SECTOR_ERASE, NULL, NULL, usbRxBuffer[1], FALSE, pdFALSE);
 				break;
 				
 			case(USB_DBG_DF_BUSY):
 				data_length = 1;
-				usbTxBuffer[0] = dataflash_is_busy();
+				usbTxBuffer[0] = flash_is_busy();
 				
 				break;
 				
 			case(USB_CMD_ERASE_RECORDDATA):
 				data_length = 1;
-				dataflash_send_request(DFMAN_REQUEST_ERASE_RECORDED_DATA, NULL, NULL, NULL, FALSE, pdFALSE);
+				flash_send_request(FLASH_REQUEST_ERASE_RECORDED_DATA, NULL, NULL, NULL, FALSE, pdFALSE);
 				usbTxBuffer[0] = TRUE;
 				break;
 					
 			case(USB_DBG_DF_IS_FLASH_FULL):
 				data_length = 1;
-				usbTxBuffer[0] = dataflash_full_flag();
+				usbTxBuffer[0] = flash_full_flag();
 				break;
 					
 			case(USB_DBG_DF_USED_SPACE):
 				data_length = 1;
-				dataflash_send_request(DFMAN_REQUEST_USED_SPACE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
+				flash_send_request(FLASH_REQUEST_USED_SPACE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
 				break;
 				
 			case(USB_DBG_DF_CHIP_ERASE):
 				data_length = 1;
-				dataflash_send_request(DFMAN_REQUEST_CHIP_ERASE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
+				flash_send_request(FLASH_REQUEST_CHIP_ERASE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
 				break;
 				
 			case(USB_CMD_WRITE_OTP):
@@ -185,11 +183,11 @@ void usb_task( void *pvParameters ){
 				usbTxBuffer[data_length++] = (responseU16 >> 8) & 0xFF;
 				usbTxBuffer[data_length++] = (responseU16 >> 0) & 0xFF;
 
-				dataflash_WriteOTP(0, 18, &usbTxBuffer);
+				flash_WriteOTP(0, 18, &usbTxBuffer);
 				break;
 				
 			case(USB_CMD_WRITE_SAVEDTRACKS):
-				dataflash_send_request(DFMAN_REQUEST_ERASE_TRACKS, NULL, NULL, NULL, TRUE, pdFALSE);
+				flash_send_request(FLASH_REQUEST_ERASE_TRACKS, NULL, NULL, NULL, TRUE, pdFALSE);
 			
 				strlcpy(&trackList.name, "Burn Pit", TRACKLIST_MAX_STRLEN);
 				trackList.course = 900;
@@ -197,7 +195,7 @@ void usb_task( void *pvParameters ){
 				trackList.latitude = 42558193;
 				trackList.isEmpty = FALSE;
 				trackList.reserved = 0xA5;
-				dataflash_send_request(DFMAN_REQUEST_ADD_TRACK, &trackList, NULL, NULL, TRUE, pdFALSE);
+				flash_send_request(FLASH_REQUEST_ADD_TRACK, &trackList, NULL, NULL, TRUE, pdFALSE);
 				
 				strlcpy(&trackList.name, "Oakley Park", TRACKLIST_MAX_STRLEN);
 				trackList.course = 2666;
@@ -205,7 +203,7 @@ void usb_task( void *pvParameters ){
 				trackList.latitude = 42570383;
 				trackList.isEmpty = FALSE;
 				trackList.reserved = 0xA5;
-				dataflash_send_request(DFMAN_REQUEST_ADD_TRACK, &trackList, NULL, NULL, TRUE, pdFALSE);
+				flash_send_request(FLASH_REQUEST_ADD_TRACK, &trackList, NULL, NULL, TRUE, pdFALSE);
 				
 				data_length = 1;
 				usbTxBuffer[0] = TRUE;
@@ -213,7 +211,7 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_CMD_READ_SAVEDTRACKS):
 				data_length = sizeof(trackList);
-				dataflash_send_request(DFMAN_REQUEST_READ_TRACK, &usbTxBuffer, NULL, (usbRxBuffer[1] << 8) + (usbRxBuffer[2] << 0), TRUE, pdFALSE);
+				flash_send_request(FLASH_REQUEST_READ_TRACK, &usbTxBuffer, NULL, (usbRxBuffer[1] << 8) + (usbRxBuffer[2] << 0), TRUE, pdFALSE);
 				break;
 				
 			case(USB_CMD_WRITE_USERPREFS):
@@ -223,7 +221,7 @@ void usb_task( void *pvParameters ){
 				userPrefs.screenOffTime = BACKLIGHT_DEFAULT_OFFTIME;
 				userPrefs.screenPWMMax = BACKLIGHT_DEFAULT_MAX;
 				userPrefs.screenPWMMin = BACKLIGHT_DEFAULT_MIN;
-				dataflash_send_request(DFMAN_REQUEST_WRITE_USER_PREFS, NULL, NULL, NULL, FALSE, pdFALSE);
+				flash_send_request(FLASH_REQUEST_WRITE_USER_PREFS, NULL, NULL, NULL, FALSE, pdFALSE);
 				break;
 
 

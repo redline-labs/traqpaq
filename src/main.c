@@ -3,7 +3,7 @@
  * Main Application for traq|paq
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -33,47 +33,38 @@
 // Main
 // ------------------------------------------------------------
 int main( void ){	
+	//--------------------------
+	// Initialization
+	//--------------------------
 	wdt_disable();
-	
-	// Initialization ---------------------------------------------
 	Disable_global_exception();
 	Disable_global_interrupt();
 	
 	INTC_init_interrupts();
 	board_init();
 	
-	#if( TRAQPAQ_HW_DEBUG_ENABLED )
+	
+	//--------------------------
+	// Schedule the tasks
+	//--------------------------
+	#if( TRAQPAQ_DEBUG_ENABLED )
 	debug_task_init();
 	#endif
 	
 	#if( TRAQPAQ_NORMAL_MODE_ON_USB == FALSE )
-	// Enter special mode if powered on by USB
 	if( !gpio_get_pin_value(GPIO_BUTTON2) ){
+		
 		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Powered on via USB");
 		
-		#if( TRAQPAQ_HW_SPI_ENABLED )
-		dataflash_task_init();
-		#endif
-		
-		#if( TRAQPAQ_HW_EBI_ENABLED )
+		flash_task_init();
 		lcd_task_init(TASK_MODE_USB);
-		#endif
-	
-		#if( TRAQPAQ_HW_USB_ENABLED )
 		usb_task_init();
-		#endif
-		
-		#if( TRAQPAQ_HW_TWI_ENABLED )
 		fuel_task_init();
-		#endif
-		
-		#if( TRAQPAQ_HW_EXINT_ENABLED )
 		buttons_task_init(TASK_MODE_USB);
-		#endif
 		
 	}else{
 	#endif
-		// Kick the power supply on
+
 		main_supply_on();
 		
 		#if( TRAQPAQ_NORMAL_MODE_ON_USB )
@@ -82,49 +73,33 @@ int main( void ){
 		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Powered on via button");
 		#endif
 		
-		// Schedule Tasks ---------------------------------------------
-		#if( TRAQPAQ_HW_SPI_ENABLED )
-		dataflash_task_init();
-		#endif
-	
-		#if( TRAQPAQ_HW_EBI_ENABLED )
+		flash_task_init();
 		lcd_task_init(TASK_MODE_NORMAL);
-		#endif
-	
-		#if( TRAQPAQ_HW_USB_ENABLED )
 		usb_task_init();
-		#endif
-	
-		#if( TRAQPAQ_HW_TWI_ENABLED )
 		fuel_task_init();
-		#endif
-	
-		#if( TRAQPAQ_HW_GPS_ENABLED )
-		gps_task_init();
-		#else
-		// Kick the GPS out of reset so we can use it for external datalogging
-		gpio_set_gpio_pin(GPS_RESET);
-		#endif
-	
-		#if( TRAQPAQ_HW_EXINT_ENABLED )
 		buttons_task_init(TASK_MODE_NORMAL);
-		#endif
-	
-		#if( TRAQPAQ_HW_WDT_ENABLED )
 		wdt_task_init();
+		
+		#if( TRAQPAQ_GPS_EXTERNAL_LOGGING )
+		gpio_set_gpio_pin(GPS_RESET);
+		#else
+		gps_task_init();
 		#endif
 		
 	#if( TRAQPAQ_NORMAL_MODE_ON_USB == FALSE )
 	}
 	#endif
 
+	//--------------------------
+	// Start the scheduler!
+	//--------------------------
 	Enable_global_interrupt();
-
-	// Start the scheduler! ---------------------------------------
 	vTaskStartScheduler();
 	
-	debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_WDT, "Scheduler Failed");
 	
-	// Should never reach this!
+	//--------------------------
+	// Should never get to here!
+	//--------------------------
+	debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_WDT, "Scheduler Failed");
 	while (TRUE);	
 }

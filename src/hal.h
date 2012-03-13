@@ -3,7 +3,7 @@
  * Hardware Abstraction Includes
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -34,10 +34,18 @@
 #define TASK_MODE_NORMAL		0
 #define TASK_MODE_USB			1
 
+// FreeRTOS
+#include "FreeRTOS.h"
+#include "timers.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
 
 // Dataflash
-#include "dataflash/dataflash.h"
-#include "dataflash/dataflash_layout.h"
+#include "flash/flash.h"
+#include "flash/flash_layout.h"
+#include "flash/flash_otp_layout.h"
+#include "flash/flash_manager_request.h"
 
 // Fuel Gauge
 #include "fuel/fuel.h"
@@ -67,13 +75,6 @@
 
 // USB
 #include "usb/usb.h"
-
-// FreeRTOS
-#include "FreeRTOS.h"
-#include "timers.h"
-#include "task.h"
-#include "queue.h"
-#include "semphr.h"
 
 // CRC
 #include "crc/crc.h"

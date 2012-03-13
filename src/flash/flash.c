@@ -3,7 +3,7 @@
  * Memory Interface
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -29,52 +29,50 @@
 
 #include <asf.h>
 #include "hal.h"
-#include "dataflash_otp_layout.h"
-#include "dataflash_manager_request.h"
 
 //--------------------------
 // Queues
 //--------------------------
-xQueueHandle dataflashManagerQueue;
+xQueueHandle flashManagerQueue;
 
 //--------------------------
 // Structs
 //--------------------------
-struct tDataflashOTP		dataflashOTP;
-struct tDataflashRequest	request;
-struct tUserPrefs			userPrefs;
-struct tDataflashFlags		dataflashFlags;
+struct tFlashOTP		flashOTP;
+struct tFlashRequest	request;
+struct tUserPrefs		userPrefs;
+struct tFlashFlags		flashFlags;
 
 
-void dataflash_task_init( void ){
+void flash_task_init( void ){
 	unsigned char i;
 	
-	dataflash_set_busy_flag();
-	dataflash_clr_full_flag();
+	flash_set_busy_flag();
+	flash_clr_full_flag();
 	
-	dataflashManagerQueue = xQueueCreate(DFMAN_QUEUE_SIZE, sizeof(request));
+	flashManagerQueue = xQueueCreate(FLASH_MANAGER_QUEUE_SIZE, sizeof(request));
 	
-	dataflash_clr_wp();
-	dataflash_clr_hold();
+	flash_clr_wp();
+	flash_clr_hold();
 	
 	// Check the dataflash device ID
-	if( !dataflash_checkID() ){
-		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Incorrect Device ID");
+	if( !flash_checkID() ){
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Incorrect Device ID");
 	}
 	
 	// Read out the OTP registers
-	dataflash_ReadOTP(OTP_START_INDEX, OTP_LENGTH, &dataflashOTP);
+	flash_ReadOTP(OTP_START_INDEX, OTP_LENGTH, &flashOTP);
 	
 	// Check validity of OTP
-	if( dataflash_calculate_otp_crc() != dataflashOTP.crc ){
-		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Invalid OTP CRC");
+	if( flash_calculate_otp_crc() != flashOTP.crc ){
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Invalid OTP CRC");
 	}
 	
 	// Load user preferences!
-	dataflash_ReadToBuffer(DATAFLASH_ADDR_USERPREFS_START, sizeof(userPrefs), &userPrefs);
-	if(dataflash_calculate_userPrefs_crc() != userPrefs.crc){
+	flash_ReadToBuffer(FLASH_ADDR_USERPREFS_START, sizeof(userPrefs), &userPrefs);
+	if(flash_calculate_userPrefs_crc() != userPrefs.crc){
 		// If CRC is bad, load defaults!
-		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Invalid User Prefs CRC");
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Invalid User Prefs CRC");
 		userPrefs.screenPWMMax = BACKLIGHT_DEFAULT_MAX;
 		userPrefs.screenPWMMin = BACKLIGHT_DEFAULT_MIN;
 		userPrefs.screenFadeTime = BACKLIGHT_DEFAULT_FADETIME;
@@ -82,10 +80,10 @@ void dataflash_task_init( void ){
 	}
 	
 	// Finally schedule the dataflash task
-	xTaskCreate(dataflash_task, configTSK_DATAFLASH_TASK_NAME, configTSK_DATAFLASH_TASK_STACK_SIZE, NULL, configTSK_DATAFLASH_TASK_PRIORITY, configTSK_DATAFLASH_TASK_HANDLE);
+	xTaskCreate(flash_task, configTSK_DATAFLASH_TASK_NAME, configTSK_DATAFLASH_TASK_STACK_SIZE, NULL, configTSK_DATAFLASH_TASK_PRIORITY, configTSK_DATAFLASH_TASK_HANDLE);
 }
 
-void dataflash_task( void *pvParameters ){
+void flash_task( void *pvParameters ){
 	unsigned char recordTableIndex = 0;	// Index of first empty record table
 	unsigned char trackCount = 0;		// Count the number of tracks
 	struct tRecordsEntry recordTable, prevRecordTable;
@@ -93,16 +91,16 @@ void dataflash_task( void *pvParameters ){
 
 	unsigned char flashIsFull = FALSE;
 	
-	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_DATAFLASH, "Task Started");
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FLASH, "Task Started");
 	
-	dataflash_GlobalUnprotect();
-	dataflash_WriteEnable();
+	flash_GlobalUnprotect();
+	flash_WriteEnable();
 	
 	//--------------------------
 	// Record Table Initialization
 	//--------------------------
 	while( recordTableIndex < RECORDS_TOTAL_POSSIBLE ){
-		dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
+		flash_ReadToBuffer(FLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
 		if(recordTable.recordEmpty) break;
 		recordTableIndex++;
 	}
@@ -110,11 +108,11 @@ void dataflash_task( void *pvParameters ){
 	// Figure out the start address of the new record table entry
 	if(recordTableIndex == 0){
 		// There is no previous record table entry
-		recordTable.startAddress = DATAFLASH_ADDR_RECORDDATA_START;
-		recordTable.endAddress = DATAFLASH_ADDR_RECORDDATA_START;
+		recordTable.startAddress = FLASH_ADDR_RECORDDATA_START;
+		recordTable.endAddress = FLASH_ADDR_RECORDDATA_START;
 	}else{
 		// Peek at the last available record
-		dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(prevRecordTable) * (recordTableIndex - 1)), sizeof(prevRecordTable), &prevRecordTable);
+		flash_ReadToBuffer(FLASH_ADDR_RECORDTABLE_START + (sizeof(prevRecordTable) * (recordTableIndex - 1)), sizeof(prevRecordTable), &prevRecordTable);
 		recordTable.startAddress = (prevRecordTable.endAddress + 1);
 		recordTable.endAddress = recordTable.startAddress;
 	}
@@ -123,27 +121,27 @@ void dataflash_task( void *pvParameters ){
 	// Track Initialization
 	//--------------------------
 	while( trackCount < TRACKLIST_TOTAL_NUM ){
-		dataflash_ReadToBuffer(DATAFLASH_ADDR_TRACKLIST_START + (sizeof(trackList) * trackCount), sizeof(trackList), &trackList);
+		flash_ReadToBuffer(FLASH_ADDR_TRACKLIST_START + (sizeof(trackList) * trackCount), sizeof(trackList), &trackList);
 		if(trackList.isEmpty) break;
 		trackCount++;
 	}
 	
-	dataflash_set_wp();
-	dataflash_set_hold();
-	dataflash_clr_busy_flag();
+	flash_set_wp();
+	flash_set_hold();
+	flash_clr_busy_flag();
 	
 	while(TRUE){
-		xQueueReceive(dataflashManagerQueue, &request, portMAX_DELAY);
+		xQueueReceive(flashManagerQueue, &request, portMAX_DELAY);
 		
-		dataflash_set_busy_flag();
-		dataflash_clr_wp();
-		dataflash_clr_hold();
+		flash_set_busy_flag();
+		flash_clr_wp();
+		flash_clr_hold();
 		
 		switch(request.command){
-			case(DFMAN_REQUEST_END_CURRENT_RECORD):
+			case(FLASH_REQUEST_END_CURRENT_RECORD):
 				
 				recordTable.recordEmpty = FALSE;
-				dataflash_UpdateSector(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
+				flash_UpdateSector(FLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
 				
 				// Get the new record table ready!
 				recordTableIndex++;
@@ -153,96 +151,102 @@ void dataflash_task( void *pvParameters ){
 					
 				break;
 				
-			case(DFMAN_REQUEST_ADD_RECORDDATA):
-				dataflash_WriteFromBuffer(recordTable.endAddress, request.length, request.pointer);
-				recordTable.endAddress += DATAFLASH_PAGE_SIZE;
+			case(FLASH_REQUEST_ADD_RECORDDATA):
+				if(recordTable.endAddress < FLASH_ADDR_RECORDDATA_END){
+					flash_WriteFromBuffer(recordTable.endAddress, request.length, request.pointer);
+					recordTable.endAddress += FLASH_PAGE_SIZE;
+				}				
 				break;
 				
-			case(DFMAN_REQUEST_ERASE_RECORD):
+			case(FLASH_REQUEST_ERASE_RECORD):
 				 // Not implemented yet!
 				break;
 				
-			case(DFMAN_REQUEST_READ_RECORDTABLE):
-				dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDTABLE_START + ( request.index * sizeof(recordTable) ), sizeof(recordTable), request.pointer);
+			case(FLASH_REQUEST_READ_RECORDTABLE):
+				flash_ReadToBuffer(FLASH_ADDR_RECORDTABLE_START + ( request.index * sizeof(recordTable) ), sizeof(recordTable), request.pointer);
 				break;
 				
-			case(DFMAN_REQUEST_READ_RECORDDATA):
-				dataflash_ReadToBuffer(DATAFLASH_ADDR_RECORDDATA_START + (request.index * DATAFLASH_PAGE_SIZE), DATAFLASH_PAGE_SIZE, request.pointer);
+			case(FLASH_REQUEST_READ_RECORDDATA):
+				flash_ReadToBuffer(FLASH_ADDR_RECORDDATA_START + (request.index * FLASH_PAGE_SIZE), FLASH_PAGE_SIZE, request.pointer);
 				break;
 				
-			case(DFMAN_REQUEST_READ_TRACK):
-				dataflash_ReadToBuffer(DATAFLASH_ADDR_TRACKLIST_START + (request.index * sizeof(trackList)), sizeof(trackList), request.pointer);
+			case(FLASH_REQUEST_READ_TRACK):
+				flash_ReadToBuffer(FLASH_ADDR_TRACKLIST_START + (request.index * sizeof(trackList)), sizeof(trackList), request.pointer);
 				break;
 				
-			case(DFMAN_REQUEST_ADD_TRACK):
-				dataflash_UpdateSector(DATAFLASH_ADDR_TRACKLIST_START + (trackCount * sizeof(trackList)), sizeof(trackList), request.pointer);
+			case(FLASH_REQUEST_ADD_TRACK):
+				flash_UpdateSector(FLASH_ADDR_TRACKLIST_START + (trackCount * sizeof(trackList)), sizeof(trackList), request.pointer);
 				trackCount++;
 				break;
 				
-			case(DFMAN_REQUEST_ERASE_TRACKS):
-				dataflash_eraseTracks();
+			case(FLASH_REQUEST_ERASE_TRACKS):
+				flash_eraseTracks();
 				trackCount = 0;
 				break;
 				
-			case(DFMAN_REQUEST_READ_OTP):
-				dataflash_ReadOTP(request.index, request.length, request.pointer);
+			case(FLASH_REQUEST_READ_OTP):
+				flash_ReadOTP(request.index, request.length, request.pointer);
 				break;
 				
-			case(DFMAN_REQUEST_SECTOR_ERASE):
-				dataflash_eraseBlock(DATAFLASH_CMD_BLOCK_ERASE_4KB, (request.index * DATAFLASH_4KB) );
+			case(FLASH_REQUEST_SECTOR_ERASE):
+				flash_eraseBlock(FLASH_CMD_BLOCK_ERASE_4KB, (request.index * FLASH_4KB) );
 				break;
 				
-			case(DFMAN_REQUEST_BUSY):
-				*(request.pointer) = dataflash_is_busy();
+			case(FLASH_REQUEST_BUSY):
+				*(request.pointer) = flash_is_busy();
 				break;
 				
-			case(DFMAN_REQUEST_CHIP_ERASE):
-				*(request.pointer) = dataflash_chipErase();
+			case(FLASH_REQUEST_CHIP_ERASE):
+				*(request.pointer) = flash_chipErase();
 				recordTableIndex = 0;
-				recordTable.startAddress = DATAFLASH_ADDR_RECORDDATA_START;
-				recordTable.endAddress = DATAFLASH_ADDR_RECORDDATA_START;
+				recordTable.startAddress = FLASH_ADDR_RECORDDATA_START;
+				recordTable.endAddress = FLASH_ADDR_RECORDDATA_START;
 				break;
 				
-			case(DFMAN_REQUEST_IS_FLASH_FULL):
+			case(FLASH_REQUEST_IS_FLASH_FULL):
 				*(request.pointer) = flashIsFull;
 				break;
 				
-			case(DFMAN_REQUEST_USED_SPACE):				
-				*(request.pointer) = (((recordTable.endAddress - DATAFLASH_ADDR_RECORDDATA_START) * 100) / (DATAFLASH_ADDR_RECORDDATA_END - DATAFLASH_ADDR_RECORDDATA_START));
+			case(FLASH_REQUEST_USED_SPACE):				
+				*(request.pointer) = (((recordTable.endAddress - FLASH_ADDR_RECORDDATA_START) * 100) / (FLASH_ADDR_RECORDDATA_END - FLASH_ADDR_RECORDDATA_START));
 				break;
 				
-			case(DFMAN_REQUEST_ERASE_RECORDED_DATA):
+			case(FLASH_REQUEST_ERASE_RECORDED_DATA):
 				recordTableIndex = 0;
-				recordTable.startAddress = DATAFLASH_ADDR_RECORDDATA_START;
-				recordTable.endAddress = DATAFLASH_ADDR_RECORDDATA_START;
+				recordTable.startAddress = FLASH_ADDR_RECORDDATA_START;
+				recordTable.endAddress = FLASH_ADDR_RECORDDATA_START;
 
-				dataflash_eraseRecordedData();
+				flash_eraseRecordedData();
 				break;
 				
-			case(DFMAN_REQUEST_WRITE_USER_PREFS):
-				userPrefs.crc = dataflash_calculate_userPrefs_crc();
-				dataflash_UpdateSector(DATAFLASH_ADDR_USERPREFS_START, sizeof(userPrefs), &userPrefs);
+			case(FLASH_REQUEST_WRITE_USER_PREFS):
+				userPrefs.crc = flash_calculate_userPrefs_crc();
+				flash_UpdateSector(FLASH_ADDR_USERPREFS_START, sizeof(userPrefs), &userPrefs);
 				break;
 			
-			case(DFMAN_REQUEST_SET_TRACK):
+			case(FLASH_REQUEST_SET_TRACK):
 				recordTable.trackID = (unsigned char)request.index;
 				break;
 				
-			case(DFMAN_REQUEST_SHUTDOWN):
+			case(FLASH_REQUEST_SET_DATESTAMP):
+				recordTable.datestamp = request.index;
+				break;
+				
+			case(FLASH_REQUEST_SHUTDOWN):
 				if(recordTable.startAddress != recordTable.endAddress){
 					// Need to close current record
 					recordTable.recordEmpty = FALSE;
-					dataflash_UpdateSector(DATAFLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
+					flash_UpdateSector(FLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
 				}
-				debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_DATAFLASH, "Task shut down");
+				debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FLASH, "Task shut down");
 				wdt_send_request(WDT_REQUEST_DATAFLASH_SHUTDOWN_COMPLETE, NULL);
 				vTaskSuspend(NULL);
 				break;
 		}
 		
-		dataflash_clr_wp();
-		dataflash_clr_hold();
-		dataflash_clr_busy_flag();
+		flash_clr_wp();
+		flash_clr_hold();
+		flash_clr_busy_flag();
 		
 		// Resume requesting task if it has been suspended
 		if(request.resume == TRUE){
@@ -253,7 +257,7 @@ void dataflash_task( void *pvParameters ){
 }
 
 
-unsigned char dataflash_checkID(void){
+unsigned char flash_checkID(void){
 	unsigned short spiResponse[3];
 		
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
@@ -278,7 +282,7 @@ unsigned char dataflash_checkID(void){
 }
 
 
-union tDataflashStatus dataflash_readStatus(void){
+union tDataflashStatus flash_readStatus(void){
 	unsigned short spiResponse[2];
 	union tDataflashStatus result;
 
@@ -300,8 +304,8 @@ union tDataflashStatus dataflash_readStatus(void){
 }
 
 
-unsigned char dataflash_GlobalUnprotect(void){
-	dataflash_WriteEnable();
+unsigned char flash_GlobalUnprotect(void){
+	flash_WriteEnable();
 	
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_WRITE_STATUS1);
@@ -312,7 +316,7 @@ unsigned char dataflash_GlobalUnprotect(void){
 }
 
 
-unsigned char dataflash_WriteEnable(void){
+unsigned char flash_WriteEnable(void){
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_WRITE_ENABLE);
 	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
@@ -321,7 +325,7 @@ unsigned char dataflash_WriteEnable(void){
 }
 
 
-unsigned char dataflash_WriteDisable(void){
+unsigned char flash_WriteDisable(void){
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_WRITE_DISABLE);
 	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
@@ -330,19 +334,19 @@ unsigned char dataflash_WriteDisable(void){
 }
 
 
-unsigned char dataflash_UpdateSector(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){
-	unsigned char sectorBuffer[DATAFLASH_4KB];
+unsigned char flash_UpdateSector(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){
+	unsigned char sectorBuffer[FLASH_4KB];
 	unsigned long sectorAddress = startAddress & 0xFFFFF000; // Mask off address bits A11 through A0 for 4KB sector address
 	unsigned short offset = startAddress & 0x0FFF;
 	unsigned short i;
 	
 	union tDataflashStatus status;
 	
-	dataflash_ReadToBuffer(sectorAddress, DATAFLASH_4KB, &sectorBuffer);
+	flash_ReadToBuffer(sectorAddress, FLASH_4KB, &sectorBuffer);
 	
 	// Erase the sector
-	if( dataflash_eraseBlock(DATAFLASH_CMD_BLOCK_ERASE_4KB, sectorAddress) == DATAFLASH_RESPONSE_FAILURE ){
-		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Erase Failed");
+	if( flash_eraseBlock(FLASH_CMD_BLOCK_ERASE_4KB, sectorAddress) == DATAFLASH_RESPONSE_FAILURE ){
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Erase Failed");
 	}
 	
 	// Copy new data to buffer
@@ -351,9 +355,9 @@ unsigned char dataflash_UpdateSector(unsigned long startAddress, unsigned short 
 	}
 	
 	// Write new data back
-	for(i = 0; i < DATAFLASH_4KB; i += DATAFLASH_PAGE_SIZE){
-		if( dataflash_WriteFromBuffer(sectorAddress + i, DATAFLASH_PAGE_SIZE, &(sectorBuffer[i])) == DATAFLASH_RESPONSE_FAILURE ){
-			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Write Failed");
+	for(i = 0; i < FLASH_4KB; i += FLASH_PAGE_SIZE){
+		if( flash_WriteFromBuffer(sectorAddress + i, FLASH_PAGE_SIZE, &(sectorBuffer[i])) == DATAFLASH_RESPONSE_FAILURE ){
+			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Write Failed");
 		}
 	}	
 	
@@ -361,50 +365,50 @@ unsigned char dataflash_UpdateSector(unsigned long startAddress, unsigned short 
 }
 
 
-unsigned char dataflash_eraseTracks(){
+unsigned char flash_eraseTracks(){
 	unsigned short i;
-	unsigned char userPrefsBuffer[DATAFLASH_ADDR_USERPREFS_END - DATAFLASH_ADDR_USERPREFS_START + 1];
+	unsigned char userPrefsBuffer[FLASH_ADDR_USERPREFS_END - FLASH_ADDR_USERPREFS_START + 1];
 	
 	// Copy the user prefs to buffer
-	dataflash_ReadToBuffer(DATAFLASH_ADDR_USERPREFS_START, DATAFLASH_ADDR_USERPREFS_END - DATAFLASH_ADDR_USERPREFS_START + 1, &userPrefsBuffer);
+	flash_ReadToBuffer(FLASH_ADDR_USERPREFS_START, FLASH_ADDR_USERPREFS_END - FLASH_ADDR_USERPREFS_START + 1, &userPrefsBuffer);
 	
 	// Erase the sector
-	if( dataflash_eraseBlock(DATAFLASH_CMD_BLOCK_ERASE_4KB, DATAFLASH_ADDR_USERPREFS_START) == DATAFLASH_RESPONSE_FAILURE ){
-		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Erase Failed");
+	if( flash_eraseBlock(FLASH_CMD_BLOCK_ERASE_4KB, FLASH_ADDR_USERPREFS_START) == DATAFLASH_RESPONSE_FAILURE ){
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Erase Failed");
 	}
 	
-	for(i = DATAFLASH_ADDR_USERPREFS_START; i < DATAFLASH_ADDR_USERPREFS_END; i += DATAFLASH_PAGE_SIZE){
-		if( dataflash_WriteFromBuffer(i, DATAFLASH_PAGE_SIZE, &(userPrefsBuffer[i])) == DATAFLASH_RESPONSE_FAILURE ){
-			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Write Failed");
+	for(i = FLASH_ADDR_USERPREFS_START; i < FLASH_ADDR_USERPREFS_END; i += FLASH_PAGE_SIZE){
+		if( flash_WriteFromBuffer(i, FLASH_PAGE_SIZE, &(userPrefsBuffer[i])) == DATAFLASH_RESPONSE_FAILURE ){
+			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Write Failed");
 		}
 	}
 	
 	return DATAFLASH_RESPONSE_OK;
 }
 
-unsigned char dataflash_eraseRecordedData(){
+unsigned char flash_eraseRecordedData(){
 	unsigned short i;
-	unsigned char sectorBuffer[DATAFLASH_4KB];
+	unsigned char sectorBuffer[FLASH_4KB];
 	union tDataflashStatus status;
 	
-	dataflash_ReadToBuffer(DATAFLASH_ADDR_USERPREFS_START, DATAFLASH_4KB, &sectorBuffer);
+	flash_ReadToBuffer(FLASH_ADDR_USERPREFS_START, FLASH_4KB, &sectorBuffer);
 	
 	// Erase the flash
-	if( dataflash_chipErase() == DATAFLASH_RESPONSE_FAILURE){
-		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Erase Failed");
+	if( flash_chipErase() == DATAFLASH_RESPONSE_FAILURE){
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Erase Failed");
 	}
 
 	// Write new data back
-	for(i = 0; i < DATAFLASH_4KB; i += DATAFLASH_PAGE_SIZE){
-		if( dataflash_WriteFromBuffer(DATAFLASH_ADDR_USERPREFS_START + i, DATAFLASH_PAGE_SIZE, &(sectorBuffer[i])) == DATAFLASH_RESPONSE_FAILURE ){
-			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_DATAFLASH, "Write Failed");
+	for(i = 0; i < FLASH_4KB; i += FLASH_PAGE_SIZE){
+		if( flash_WriteFromBuffer(FLASH_ADDR_USERPREFS_START + i, FLASH_PAGE_SIZE, &(sectorBuffer[i])) == DATAFLASH_RESPONSE_FAILURE ){
+			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Write Failed");
 		}
 	}	
 	
 	return TRUE;
 }
 
-unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){
+unsigned char flash_ReadToBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){
 	unsigned short dummyData;
 
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
@@ -432,14 +436,14 @@ unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned short 
 	return DATAFLASH_RESPONSE_OK;
 }
 
-unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){
+unsigned char flash_WriteFromBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){
 	unsigned char i;
 	
-	while( dataflash_is_busy() ){
+	while( flash_is_busy() ){
 		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
 	}
 	
-	dataflash_WriteEnable();
+	flash_WriteEnable();
 	
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	
@@ -461,18 +465,18 @@ unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned sho
 	
 	// Wait for dataflash to become ready again.
 	vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
-	while( dataflash_is_busy() ){
+	while( flash_is_busy() ){
 		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
 	}
 		
-	if(dataflash_operation_failed()){
+	if(flash_operation_failed()){
 		return DATAFLASH_RESPONSE_FAILURE;
 	}
 	
 	return DATAFLASH_RESPONSE_OK;
 }
 
-unsigned char dataflash_ReadOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer){
+unsigned char flash_ReadOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer){
 	unsigned char i;
 	unsigned short temp;
 	
@@ -495,14 +499,14 @@ unsigned char dataflash_ReadOTP(unsigned char startAddress, unsigned char length
 	return DATAFLASH_RESPONSE_OK;
 }
 
-unsigned char dataflash_WriteOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer){
+unsigned char flash_WriteOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer){
 	unsigned char i;
 	
-	while( dataflash_is_busy() ){
+	while( flash_is_busy() ){
 		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
 	}
 	
-	dataflash_WriteEnable();
+	flash_WriteEnable();
 
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_PROGRAM_OTP);
@@ -519,14 +523,14 @@ unsigned char dataflash_WriteOTP(unsigned char startAddress, unsigned char lengt
 	return DATAFLASH_RESPONSE_OK;
 }
 
-unsigned char dataflash_eraseBlock(unsigned char blockSize, unsigned long startAddress){
-	if( (blockSize == DATAFLASH_CMD_BLOCK_ERASE_4KB) | (blockSize == DATAFLASH_CMD_BLOCK_ERASE_32KB) | (blockSize == DATAFLASH_CMD_BLOCK_ERASE_64KB) ){
+unsigned char flash_eraseBlock(unsigned char blockSize, unsigned long startAddress){
+	if( (blockSize == FLASH_CMD_BLOCK_ERASE_4KB) | (blockSize == DATAFLASH_CMD_BLOCK_ERASE_32KB) | (blockSize == DATAFLASH_CMD_BLOCK_ERASE_64KB) ){
 		
-		while( dataflash_is_busy() ){
+		while( flash_is_busy() ){
 			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
 		}
 		
-		dataflash_WriteEnable();
+		flash_WriteEnable();
 		
 		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 		
@@ -539,11 +543,11 @@ unsigned char dataflash_eraseBlock(unsigned char blockSize, unsigned long startA
 		
 		// Wait for dataflash to become ready again.
 		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_ERASE_TIME ) );
-		while( dataflash_is_busy() ){
+		while( flash_is_busy() ){
 			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_ERASE_TIME ) );
 		}
 		
-		if(dataflash_operation_failed()){
+		if(flash_operation_failed()){
 			return DATAFLASH_RESPONSE_FAILURE;
 		}
 		return DATAFLASH_RESPONSE_OK;
@@ -554,12 +558,12 @@ unsigned char dataflash_eraseBlock(unsigned char blockSize, unsigned long startA
 	}
 }
 
-unsigned char dataflash_chipErase( void ){
-	while( dataflash_is_busy() ){
+unsigned char flash_chipErase( void ){
+	while( flash_is_busy() ){
 		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
 	}
 	
-	dataflash_WriteEnable();
+	flash_WriteEnable();
 	
 	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_CHIP_ERASE);
@@ -568,18 +572,18 @@ unsigned char dataflash_chipErase( void ){
 	
 	// Wait for dataflash to become ready again.
 	vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_ERASE_TIME ) );
-	while( dataflash_is_busy() ){
+	while( flash_is_busy() ){
 		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_ERASE_TIME ) );
 	}
 		
-	if(dataflash_operation_failed()){
+	if(flash_operation_failed()){
 		return DATAFLASH_RESPONSE_FAILURE;
 	}
 	return DATAFLASH_RESPONSE_OK;
 }
 
-unsigned char dataflash_powerDown( void ){
-		while( dataflash_is_busy() ){
+unsigned char flash_powerDown( void ){
+		while( flash_is_busy() ){
 			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
 		}
 		
@@ -590,9 +594,9 @@ unsigned char dataflash_powerDown( void ){
 		return DATAFLASH_RESPONSE_OK;
 }
 
-unsigned char dataflash_wakeUp( void ){
+unsigned char flash_wakeUp( void ){
 	
-		while( dataflash_is_busy() ){
+		while( flash_is_busy() ){
 			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
 		}
 		
@@ -604,10 +608,10 @@ unsigned char dataflash_wakeUp( void ){
 }
 
 
-unsigned char dataflash_is_busy( void ){
+unsigned char flash_is_busy( void ){
 	union tDataflashStatus status;
 	
-	status = dataflash_readStatus();
+	status = flash_readStatus();
 	
 	if( status.registers.BSY0 ){
 		return TRUE;
@@ -616,30 +620,30 @@ unsigned char dataflash_is_busy( void ){
 	}		
 }
 
-unsigned char dataflash_operation_failed( void ){
+unsigned char flash_operation_failed( void ){
 	union tDataflashStatus status;
 	
-	status = dataflash_readStatus();
+	status = flash_readStatus();
 	
 	return status.registers.EPE;
 }
 
-unsigned short dataflash_calculate_otp_crc( void ){
+unsigned short flash_calculate_otp_crc( void ){
 	unsigned short crc = 0;
 	unsigned char i;
 	
 	for(i = 0; i < OTP_SERIAL_LENGTH; i++){
-		crc = update_crc_ccitt(crc, dataflashOTP.serial[i]);
+		crc = update_crc_ccitt(crc, flashOTP.serial[i]);
 	}
 	
-	crc = update_crc_ccitt(crc, dataflashOTP.pcb_rev);
-	crc = update_crc_ccitt(crc, dataflashOTP.tester_id);
-	crc = update_crc_ccitt(crc, dataflashOTP.reserved);
+	crc = update_crc_ccitt(crc, flashOTP.pcb_rev);
+	crc = update_crc_ccitt(crc, flashOTP.tester_id);
+	crc = update_crc_ccitt(crc, flashOTP.reserved);
 	
 	return crc;
 }
 
-unsigned short dataflash_calculate_userPrefs_crc( void ){
+unsigned short flash_calculate_userPrefs_crc( void ){
 	unsigned short crc = 0;
 
 	crc = update_crc_ccitt(crc, userPrefs.screenPWMMax);
@@ -650,8 +654,8 @@ unsigned short dataflash_calculate_userPrefs_crc( void ){
 	return crc;
 }
 
-unsigned char dataflash_send_request(unsigned char command, unsigned char *pointer, unsigned short length, unsigned long index, unsigned char resume, unsigned char delay){
-	struct tDataflashRequest request;
+unsigned char flash_send_request(unsigned char command, unsigned char *pointer, unsigned short length, unsigned int index, unsigned char resume, unsigned char delay){
+	struct tFlashRequest request;
 	
 	taskENTER_CRITICAL();
 	
@@ -665,7 +669,7 @@ unsigned char dataflash_send_request(unsigned char command, unsigned char *point
 		request.handle = xTaskGetCurrentTaskHandle();
 	}
 	
-	xQueueSend(dataflashManagerQueue, &request, delay);
+	xQueueSend(flashManagerQueue, &request, delay);
 	
 	if(resume == TRUE){
 		vTaskSuspend(NULL);

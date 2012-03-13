@@ -3,7 +3,7 @@
  * PWM Control
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -30,7 +30,6 @@
 /* TODO: Add software framework include drivers below */
 #include "asf.h"
 #include "hal.h"
-#include "dataflash/dataflash_layout.h"
 
 xTimerHandle xBacklightFadeTimer;
 xTimerHandle xBacklightDelayTimer;

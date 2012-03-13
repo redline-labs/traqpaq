@@ -3,7 +3,7 @@
  * Main Menu -> Options -> Memory
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -32,7 +32,7 @@ if(lcd_redraw_required()){
 
 	lcd_writeText_8x16("Used Memory", FONT_SMALL_POINTER, 50, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 50, COLOR_BLACK);
 	progressBar = lcd_createProgressBar(50, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 50, 350, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 100, COLOR_REDLINERED, COLOR_BLACK, COLOR_WHITE);
-	dataflash_send_request(DFMAN_REQUEST_USED_SPACE, &responseU8, NULL, NULL, TRUE, 20);
+	flash_send_request(FLASH_REQUEST_USED_SPACE, &responseU8, NULL, NULL, TRUE, 20);
 	lcd_updateProgressBar(&progressBar, responseU8);
 	
 	lcd_redraw_complete();

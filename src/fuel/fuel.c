@@ -3,7 +3,7 @@
  * Battery Fuel Gauge
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -53,7 +53,7 @@ void fuel_task( void *pvParameters ){
 	struct tADCvalues		adcValues;
 	struct tFuelRequest		request;
 	
-	#if (TRAQPAQ_HW_BATTERY_TEST_MODE == TRUE)
+	#if (TRAQPAQ_BATTERY_TEST_MODE == TRUE)
 	unsigned char tempString[10];
 	unsigned short voltage;
 	#endif
@@ -98,7 +98,7 @@ void fuel_task( void *pvParameters ){
 		// Read accumulated current
 		// ---------------------------------
 		accumulated_current = fuel_read_current( FUEL_CURRENT_ACCUMULATED );
-		#if (TRAQPAQ_HW_BATTERY_TEST_MODE == TRUE)
+		#if (TRAQPAQ_BATTERY_TEST_MODE == TRUE)
 			debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_BATTERY_ACCUM, itoa(accumulated_current, &tempString, 10, FALSE));
 			
 			voltage = fuel_read_voltage();
@@ -139,7 +139,7 @@ void fuel_task( void *pvParameters ){
 		// ---------------------------------
 		// Check for any requests!
 		// ---------------------------------
-		if( xQueueReceive(fuelManagerQueue, &request, pdFALSE) == pdTRUE ){
+		if( xQueueReceive(fuelManagerQueue, &request, (portTickType)TASK_DELAY_MS(FUEL_UPDATE_RATE)) == pdTRUE ){
 			switch(request.command){
 				case(FUEL_REQUEST_SHUTDOWN):
 					debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Task shut down");
@@ -149,11 +149,6 @@ void fuel_task( void *pvParameters ){
 			}
 		}
 		
-		
-		// ---------------------------------
-		// Go to sleep for a while
-		// ---------------------------------
-		vTaskDelay( (portTickType)TASK_DELAY_MS(FUEL_UPDATE_RATE) );
 	}
 }
 

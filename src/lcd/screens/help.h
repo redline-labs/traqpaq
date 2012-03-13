@@ -3,7 +3,7 @@
  * Help
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -33,7 +33,7 @@ if(lcd_redraw_required()){
 	menu_addItem(&mainMenu, "About",				LCDFSM_ABOUT);
 	menu_addItem(&mainMenu, "Disclaimer",			LCDFSM_DISCLAIMER);
 	menu_addItem(&mainMenu, "Module Info",			LCDFSM_MODULE_INFO);
-	#if( TRAQPAQ_HW_DEBUG_ENABLED == TRUE )
+	#if( TRAQPAQ_DEBUG_ENABLED == TRUE )
 	menu_addItem(&mainMenu, "Technical Info",		LCDFSM_TECHNICAL_INFO);
 	#endif
 	

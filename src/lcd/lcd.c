@@ -3,7 +3,7 @@
  * LCD interface
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -31,8 +31,6 @@
 #include "hal.h"
 #include "menu.h"
 #include "control_fsm.h"
-#include "dataflash/dataflash_manager_request.h"
-#include "dataflash/dataflash_otp_layout.h"
 #include "string.h"
 #include "itoa.h"
 
@@ -42,7 +40,7 @@
 // Lookup Table
 const unsigned char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
-extern struct tDataflashOTP dataflashOTP;
+extern struct tFlashOTP flashOTP;
 
 // Queues
 xQueueHandle lcdWidgetsManagerQueue;
@@ -1087,29 +1085,27 @@ void lcd_resetPeripheralTimer( void ){
 }
 
 void lcd_updateLapTimer( unsigned int ticks, struct tLCDLabel *hours, struct tLCDLabel *minutes, struct tLCDLabel *seconds, struct tLCDLabel *milli ){
-	static unsigned char lastHour, lastMinute, lastSecond;
+	static unsigned int lastHour, lastMinute, lastSecond;
 	unsigned char temp;
 	unsigned char tempString[3];	// Two for the digits and one for the null character
 	
 	lcd_updateLabel(milli, itoa( (ticks % 10), &tempString, 10, FALSE));
 					
 	ticks = ticks / 10;		// Lop off the milliseconds
-	temp = ticks % 60;		// Find the seconds
 	if(temp != lastSecond){
-		lcd_updateLabel(seconds, itoa( temp, &tempString, 10, TRUE));
+		lcd_updateLabel(seconds, itoa( temp % 60, &tempString, 10, TRUE));
 		lastSecond = temp;
 	}
 					
 	ticks = ticks / 60;		// Lop off the seconds
-	temp = ticks % 60;		// Find the minutes
-	if(temp != lastMinute){
-		lcd_updateLabel(minutes, itoa( temp, &tempString, 10, TRUE));
-		lastMinute = temp;	
+	if(ticks != lastMinute){
+		lcd_updateLabel(minutes, itoa( ticks % 60, &tempString, 10, TRUE));
+		lastMinute = ticks;	
 	}
 					
 	temp = ticks / 60;		// Lop off the minutes
 	if(temp != lastHour){
 		lcd_updateLabel(hours, itoa( temp, &tempString, 10, TRUE));
-		lastMinute = temp;	
+		lastMinute = ticks;	
 	}
 }

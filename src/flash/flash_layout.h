@@ -3,7 +3,7 @@
  * Memory Layout
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -31,9 +31,10 @@
 #ifndef DATAFLASH_LAYOUT_H_
 #define DATAFLASH_LAYOUT_H_
 
-#define DATAFLASH_LAYOUT_VERSION	"1.00"
+#define FLASH_LAYOUT_VERSION		0x0120
+#define FLASH_LAYOUT_VERSION_ASCII	"1.20"
 
-#define DATAFLASH_PAGE_SIZE		256
+#define FLASH_PAGE_SIZE		256
 
 
 struct __attribute__ ((packed)) tRecordsEntry {
@@ -55,7 +56,6 @@ struct tRecordsEntryPage {
 };
 
 struct __attribute__ ((packed)) tRecordData {
-	unsigned int utc;
 	signed int latitude;
 	signed int longitude;
 	
@@ -65,12 +65,12 @@ struct __attribute__ ((packed)) tRecordData {
 	
 	unsigned short speed;
 	unsigned short course;
-}; // 20 bytes
+}; // 16 bytes
 
-#define RECORD_DATA_PER_PAGE	12
+#define RECORD_DATA_PER_PAGE	15
 
 struct __attribute__ ((packed)) tRecordDataPage {
-	unsigned int date;
+	unsigned int utc;
 	
 	unsigned short hdop;
 	unsigned char currentMode;
@@ -109,17 +109,17 @@ struct __attribute__ ((packed)) tTracklist {
 #define TRACKLIST_TOTAL_NUM			120		// Maximum number of tracks able to be stored
 
 
-#define DATAFLASH_ADDR_USERPREFS_START			0x00000000
-#define DATAFLASH_ADDR_USERPREFS_END			0x000000FF
+#define FLASH_ADDR_USERPREFS_START			0x00000000
+#define FLASH_ADDR_USERPREFS_END			0x000000FF
 
-#define DATAFLASH_ADDR_TRACKLIST_START			0x00000100
-#define DATAFLASH_ADDR_TRACKLIST_END			0x00000FFF	// Align to 4KB sector
+#define FLASH_ADDR_TRACKLIST_START			0x00000100
+#define FLASH_ADDR_TRACKLIST_END			0x00000FFF	// Align to 4KB sector
 
-#define DATAFLASH_ADDR_RECORDTABLE_START		0x00001000
-#define DATAFLASH_ADDR_RECORDTABLE_END			0x00001FFF	// Align to 4KB sector
+#define FLASH_ADDR_RECORDTABLE_START		0x00001000
+#define FLASH_ADDR_RECORDTABLE_END			0x00001FFF	// Align to 4KB sector
 
-#define DATAFLASH_ADDR_RECORDDATA_START			0x00002000	// Size is remainder of 16Mb
-#define DATAFLASH_ADDR_RECORDDATA_END			0x001FFFFF	// Dataflash End Address
+#define FLASH_ADDR_RECORDDATA_START			0x00002000	// Size is remainder of 16Mb
+#define FLASH_ADDR_RECORDDATA_END			0x001FFFFF	// Dataflash End Address
 
 
 #endif /* DATAFLASH_LAYOUT_H_ */

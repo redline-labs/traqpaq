@@ -3,7 +3,7 @@
  * Review Session -> Detailed Info
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -30,8 +30,8 @@
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
 	
-	dataflash_send_request(DFMAN_REQUEST_READ_RECORDTABLE, &recordTable, NULL, screenArgs, TRUE, 20);
-	dataflash_send_request(DFMAN_REQUEST_READ_TRACK, &trackList, NULL, recordTable.trackID, TRUE, 20);
+	flash_send_request(FLASH_REQUEST_READ_RECORDTABLE, &recordTable, NULL, screenArgs, TRUE, 20);
+	flash_send_request(FLASH_REQUEST_READ_TRACK, &trackList, NULL, recordTable.trackID, TRUE, 20);
 	lcd_writeText_16x32("Track", FONT_LARGE_POINTER, LCD_MIN_X, LCD_MAX_Y-LCD_TOPBAR_THICKNESS - 32, COLOR_BLACK);
 	lcd_writeText_16x32(trackList.name, FONT_LARGE_POINTER, LCD_MIN_X + 112, LCD_MAX_Y-LCD_TOPBAR_THICKNESS - 32, COLOR_BLACK);
 	

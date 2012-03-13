@@ -539,12 +539,6 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="src\adc\adc.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\adc\adc.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\asf.h">
       <SubType>compile</SubType>
     </Compile>
@@ -788,12 +782,6 @@
     <Compile Include="src\button\button.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\charge\charge.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\charge\charge.h">
-      <SubType>compile</SubType>
-    </Compile>
     <None Include="src\config\conf_ebi.h">
       <SubType>compile</SubType>
     </None>
@@ -806,16 +794,13 @@
     <None Include="src\config\conf_usb.h">
       <SubType>compile</SubType>
     </None>
+    <Compile Include="src\config\smc_lcd.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\crc\crc.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\crc\crc.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\dataflash\dataflash_manager_request.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\dataflash\dataflash_otp_layout.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\debug\debug.c">
@@ -824,19 +809,25 @@
     <Compile Include="src\debug\debug.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\flash\flash.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\flash\flash_layout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\flash\flash_manager_request.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\flash\flash_otp_layout.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\fuel\adc.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\fuel\charge.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\hal.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\font\Simple16X32.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\font\Simple16X32.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\font\Simple8X16.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\font\Simple8X16.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\fuel\battery.h">
@@ -861,6 +852,24 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\lcd\control_fsm.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcd\font\Console8X16.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcd\font\Console8X16.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcd\font\Simple16X32.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcd\font\Simple16X32.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcd\font\Simple8X16.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcd\font\Simple8X16.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\lcd\itoa.c">
@@ -929,19 +938,16 @@
     <Compile Include="src\lcd\screens\options\view_usage.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\lcd\screens\recording\create_new_track.h">
+    <Compile Include="src\lcd\screens\poweroff.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\lcd\screens\recording\select_existing_track.h">
+    <Compile Include="src\lcd\screens\normalmoto\select_existing_track.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\lcd\screens\recording\start_recording.h">
+    <Compile Include="src\lcd\screens\normalmoto\start_recording.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\lcd\screens\recording\timed_moto_laps.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\lcd\screens\recording\timed_moto_time.h">
+    <Compile Include="src\lcd\screens\poweroff_confirmed.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\lcd\screens\record_new_session.h">
@@ -953,13 +959,16 @@
     <Compile Include="src\lcd\screens\review_session.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\lcd\screens\timedmoto\timed_moto_laps.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\lcd\screens\timedmoto\timed_moto_time.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\lcd\screens\timed_moto.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\lcd\screens\unknown_menu.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\smc_lcd.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\usb\usb.c">
@@ -1055,19 +1064,7 @@
     <Compile Include="src\config\FreeRTOSConfig.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\dataflash\dataflash.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\dataflash\dataflash.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\dataflash\dataflash_layout.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\font\Console8X16.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\font\Console8X16.h">
+    <Compile Include="src\flash\flash.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\fuel\fuel.c">
@@ -1145,23 +1142,22 @@
     <Folder Include="src\asf\thirdparty\freertos\source\portable\gcc\avr32_uc3\" />
     <Folder Include="src\asf\thirdparty\freertos\source\portable\memmang\" />
     <Folder Include="src\config\" />
-    <Folder Include="src\font" />
     <Folder Include="src\fuel" />
-    <Folder Include="src\dataflash" />
+    <Folder Include="src\flash" />
     <Folder Include="src\idle" />
     <Folder Include="src\lcd" />
     <Folder Include="src\crc" />
-    <Folder Include="src\charge" />
     <Folder Include="src\gps" />
     <Folder Include="src\button" />
     <Folder Include="src\debug" />
     <Folder Include="src\lcd\backlight\" />
+    <Folder Include="src\lcd\font\" />
     <Folder Include="src\lcd\screens" />
     <Folder Include="src\lcd\screens\help" />
+    <Folder Include="src\lcd\screens\timedmoto" />
     <Folder Include="src\lcd\screens\review" />
-    <Folder Include="src\lcd\screens\recording" />
+    <Folder Include="src\lcd\screens\normalmoto" />
     <Folder Include="src\lcd\screens\options" />
-    <Folder Include="src\adc" />
     <Folder Include="src\usb" />
     <Folder Include="src\wdt" />
   </ItemGroup>

@@ -3,7 +3,7 @@
  * Main Menu -> Options -> Memory -> Erase Confirmed
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -31,7 +31,7 @@ if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
 	
 	lcd_writeText_16x32("Working...", FONT_LARGE_POINTER, 50, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 64, COLOR_BLACK);
-	dataflash_send_request(DFMAN_REQUEST_ERASE_RECORDED_DATA, NULL, NULL, NULL, TRUE, pdFALSE);
+	flash_send_request(FLASH_REQUEST_ERASE_RECORDED_DATA, NULL, NULL, NULL, TRUE, pdFALSE);
 	lcd_writeText_16x32("Done!", FONT_LARGE_POINTER, 50, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 96, COLOR_GREEN);
 	
 	lcd_redraw_complete();

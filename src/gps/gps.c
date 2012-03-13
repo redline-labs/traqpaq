@@ -3,7 +3,7 @@
  * GPS Interface
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -28,7 +28,6 @@
  ******************************************************************************/
 #include "asf.h"
 #include "hal.h"
-#include "dataflash/dataflash_manager_request.h"
 #include "math.h"
 #include "lcd/itoa.h"
 
@@ -79,6 +78,8 @@ void gps_task( void *pvParameters ){
 	
 	unsigned int lapTime, oldLapTime;
 	
+	unsigned int datestamp;
+	
 	struct tRecordDataPage gpsData;							// Formatted GPS Data
 	struct tGPSLine finishLine;								// Formatted coordinate pairs for "finish line"
 	struct tTracklist trackList;
@@ -98,6 +99,7 @@ void gps_task( void *pvParameters ){
 		if( xQueueReceive(gpsManagerQueue, &request, pdFALSE) == pdTRUE ){
 			switch(request.command){
 				case(GPS_REQUEST_START_RECORDING):
+					flash_send_request(FLASH_REQUEST_SET_DATESTAMP, NULL, NULL, datestamp, FALSE, pdFALSE);
 					lapTime = 0;
 					oldLapTime = 0xFFFFFFFF;
 					recordFlag = TRUE;
@@ -106,24 +108,24 @@ void gps_task( void *pvParameters ){
 				case(GPS_REQUEST_STOP_RECORDING):
 					recordFlag = FALSE;
 					recordIndex = 0;
-					dataflash_send_request(DFMAN_REQUEST_END_CURRENT_RECORD, NULL, NULL, NULL, FALSE, 20);
+					flash_send_request(FLASH_REQUEST_END_CURRENT_RECORD, NULL, NULL, NULL, FALSE, 20);
 					break;
 					
 				case(GPS_REQUEST_SET_FINISH_POINT):
 					// Load the track, and then tell the dataflash that we are using it
-					dataflash_send_request(DFMAN_REQUEST_READ_TRACK, &trackList, sizeof(trackList), request.data, TRUE, 20);
-					dataflash_send_request(DFMAN_REQUEST_SET_TRACK, NULL, NULL, request.data, FALSE, 20);
+					flash_send_request(FLASH_REQUEST_READ_TRACK, &trackList, sizeof(trackList), request.data, TRUE, 20);
+					flash_send_request(FLASH_REQUEST_SET_TRACK, NULL, NULL, request.data, FALSE, 20);
 					finishLine = gps_find_finish_line(trackList.latitude, trackList.longitude, trackList.course);
 					break;
 					
 				case(GPS_REQUEST_CREATE_NEW_TRACK):
-					itoa(gpsData.data[recordIndex].utc, &(trackList.name), 10, FALSE);
+					itoa(gpsData.utc, &(trackList.name), 10, FALSE);
 					trackList.course = gpsData.data[recordIndex].course;
 					trackList.longitude = gpsData.data[recordIndex].longitude;
 					trackList.latitude = gpsData.data[recordIndex].latitude;
 					trackList.isEmpty = FALSE;
 					trackList.reserved = 0xA5;
-					dataflash_send_request(DFMAN_REQUEST_ADD_TRACK, &trackList, NULL, NULL, FALSE, pdFALSE);
+					flash_send_request(FLASH_REQUEST_ADD_TRACK, &trackList, NULL, NULL, FALSE, pdFALSE);
 					break;
 					
 				case(GPS_REQUEST_SHUTDOWN):
@@ -172,8 +174,11 @@ void gps_task( void *pvParameters ){
 					
 					gpsData.currentMode					= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_QUALITY		]]) ) & 0xFFFF;
 					gpsData.satellites					= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_NUM_SATELLITES	]]) ) & 0xFF;
-					gpsData.hdop						= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_HDOP			]]) ) & 0xFFFF;
 					gpsData.data[recordIndex].altitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_ALTITUDE		]]) ) & 0xFFFF;
+					
+					if(recordIndex == 0){
+						gpsData.hdop					= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_HDOP			]]) ) & 0xFFFF;
+					}						
 					
 					// Determine if a lap was detected!
 					gpsData.data[recordIndex].lapDetected = gps_intersection(oldLongitude,							oldLatitude,
@@ -215,11 +220,13 @@ void gps_task( void *pvParameters ){
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_RMC_ID2) ){
 						
 					// More Converting!!
-					gpsData.data[recordIndex].utc		= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_UTC	]]) );
 					gpsData.data[recordIndex].speed		= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_SPEED	]]) ) & 0xFFFF;
 					gpsData.data[recordIndex].course	= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_TRACK	]]) ) & 0xFFFF;
+					datestamp							= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_DATE	]]) );
 					
-					gpsData.date						= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_DATE	]]) );
+					if(recordIndex == 0){
+						gpsData.utc						= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_UTC	]]) );
+					}
 					
 					processedRMC = TRUE;
 
@@ -265,7 +272,7 @@ void gps_task( void *pvParameters ){
 						
 						recordIndex++;
 						if(recordIndex == RECORD_DATA_PER_PAGE){
-							dataflash_send_request(DFMAN_REQUEST_ADD_RECORDDATA, &gpsData, sizeof(gpsData), NULL, TRUE, 20);
+							flash_send_request(FLASH_REQUEST_ADD_RECORDDATA, &gpsData, sizeof(gpsData), NULL, TRUE, 20);
 							recordIndex = 0;
 						}
 						

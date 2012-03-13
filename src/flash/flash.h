@@ -3,7 +3,7 @@
  * Memory Interface Include
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -35,19 +35,19 @@
 
 #define DATAFLASH_VERSION					"1.00"
 
-#define dataflash_clr_wp()					gpio_set_gpio_pin(DATAFLASH_WP)
-#define dataflash_set_wp()					gpio_clr_gpio_pin(DATAFLASH_WP)
+#define flash_clr_wp()					gpio_set_gpio_pin(DATAFLASH_WP)
+#define flash_set_wp()					gpio_clr_gpio_pin(DATAFLASH_WP)
 
-#define dataflash_clr_hold()				gpio_set_gpio_pin(DATAFLASH_HOLD)
-#define dataflash_set_hold()				gpio_clr_gpio_pin(DATAFLASH_HOLD)
+#define flash_clr_hold()				gpio_set_gpio_pin(DATAFLASH_HOLD)
+#define flash_set_hold()				gpio_clr_gpio_pin(DATAFLASH_HOLD)
 
-#define dataflash_set_busy_flag()			dataflashFlags.isBusy = TRUE
-#define dataflash_clr_busy_flag()			dataflashFlags.isBusy = FALSE
-#define dataflash_busy_flag()				dataflashFlags.isBusy
+#define flash_set_busy_flag()			flashFlags.isBusy = TRUE
+#define flash_clr_busy_flag()			flashFlags.isBusy = FALSE
+#define flash_busy_flag()				flashFlags.isBusy
 
-#define dataflash_set_full_flag()			dataflashFlags.isFull = TRUE
-#define dataflash_clr_full_flag()			dataflashFlags.isFull = FALSE
-#define dataflash_full_flag()				dataflashFlags.isFull
+#define flash_set_full_flag()			flashFlags.isFull = TRUE
+#define flash_clr_full_flag()			flashFlags.isFull = FALSE
+#define flash_full_flag()				flashFlags.isFull
 
 // Device IDs for AT25DF161
 #define DATAFLASH_MANUFACTURER_ID			0x1F
@@ -58,7 +58,7 @@
 #define DATAFLASH_CMD_READ_ARRAY			0x03	// Up to 50MHz operation
 
 // Program and Erase Commands
-#define DATAFLASH_CMD_BLOCK_ERASE_4KB		0x20
+#define FLASH_CMD_BLOCK_ERASE_4KB		0x20
 #define DATAFLASH_CMD_BLOCK_ERASE_32KB		0x52
 #define DATAFLASH_CMD_BLOCK_ERASE_64KB		0xD8
 #define DATAFLASH_CMD_CHIP_ERASE			0x60	// 0xC7 is alternate command
@@ -164,7 +164,7 @@
 #define DATAFLASH_STATUS_GLOBAL_UNPROTECT	0x00
 
 
-#define DATAFLASH_4KB						4096	// Number of bytes in 4KB
+#define FLASH_4KB						4096	// Number of bytes in 4KB
 #define DATAFLASH_32KB						32768	// Number of bytes in 32KB
 
 
@@ -196,34 +196,34 @@ union tDataflashStatus {
 	unsigned char raw[2];
 };
 
-struct tDataflashFlags {
+struct tFlashFlags {
 	unsigned char isBusy;
 	unsigned char isFull;	
 };
 	
 
-void dataflash_task_init( void );
-void dataflash_task( void *pvParameters );
-unsigned char dataflash_checkID( void );
-union tDataflashStatus dataflash_readStatus( void );
-unsigned char dataflash_GlobalUnprotect( void );
-unsigned char dataflash_WriteEnable( void );
-unsigned char dataflash_WriteDisable( void );
-unsigned char dataflash_UpdateSector(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer);
-unsigned char dataflash_ReadToBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer);
-unsigned char dataflash_WriteFromBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer);
-unsigned char dataflash_ReadOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer);
-unsigned char dataflash_WriteOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer);
-unsigned char dataflash_eraseBlock(unsigned char blockSize, unsigned long startAddress);
-unsigned char dataflash_chipErase( void );
-unsigned char dataflash_powerDown( void );
-unsigned char dataflash_wakeUp( void );
-unsigned char dataflash_is_busy( void );
-unsigned short dataflash_calculate_otp_crc( void );
-unsigned short dataflash_calculate_userPrefs_crc( void );
-unsigned char dataflash_send_request(unsigned char command, unsigned char *pointer, unsigned short length, unsigned long index, unsigned char resume, unsigned char delay);
-unsigned char dataflash_eraseRecordedData( void );
-unsigned char dataflash_operation_failed( void );
-unsigned char dataflash_eraseTracks( void );
+void flash_task_init( void );
+void flash_task( void *pvParameters );
+unsigned char flash_checkID( void );
+union tDataflashStatus flash_readStatus( void );
+unsigned char flash_GlobalUnprotect( void );
+unsigned char flash_WriteEnable( void );
+unsigned char flash_WriteDisable( void );
+unsigned char flash_UpdateSector(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer);
+unsigned char flash_ReadToBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer);
+unsigned char flash_WriteFromBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer);
+unsigned char flash_ReadOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer);
+unsigned char flash_WriteOTP(unsigned char startAddress, unsigned char length, unsigned char *bufferPointer);
+unsigned char flash_eraseBlock(unsigned char blockSize, unsigned long startAddress);
+unsigned char flash_chipErase( void );
+unsigned char flash_powerDown( void );
+unsigned char flash_wakeUp( void );
+unsigned char flash_is_busy( void );
+unsigned short flash_calculate_otp_crc( void );
+unsigned short flash_calculate_userPrefs_crc( void );
+unsigned char flash_send_request(unsigned char command, unsigned char *pointer, unsigned short length, unsigned int index, unsigned char resume, unsigned char delay);
+unsigned char flash_eraseRecordedData( void );
+unsigned char flash_operation_failed( void );
+unsigned char flash_eraseTracks( void );
 
 #endif /* DATAFLASH_H_ */

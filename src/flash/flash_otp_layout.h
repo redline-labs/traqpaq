@@ -3,7 +3,7 @@
  * Dataflash Layout for OTP registers
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.1
+ * - Supported devices: traq|paq hardware version 1.2
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -48,7 +48,7 @@
 #define OTP_RESERVED_DATA		0xAA
 
 
-struct tDataflashOTP {
+struct tFlashOTP {
 	unsigned char serial[OTP_SERIAL_LENGTH];
 	unsigned char pcb_rev;
 	unsigned char tester_id;
