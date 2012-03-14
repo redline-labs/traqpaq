@@ -1086,15 +1086,14 @@ void lcd_resetPeripheralTimer( void ){
 
 void lcd_updateLapTimer( unsigned int ticks, struct tLCDLabel *hours, struct tLCDLabel *minutes, struct tLCDLabel *seconds, struct tLCDLabel *milli ){
 	static unsigned int lastHour, lastMinute, lastSecond;
-	unsigned char temp;
 	unsigned char tempString[3];	// Two for the digits and one for the null character
 	
 	lcd_updateLabel(milli, itoa( (ticks % 10), &tempString, 10, FALSE));
 					
 	ticks = ticks / 10;		// Lop off the milliseconds
-	if(temp != lastSecond){
-		lcd_updateLabel(seconds, itoa( temp % 60, &tempString, 10, TRUE));
-		lastSecond = temp;
+	if(ticks != lastSecond){
+		lcd_updateLabel(seconds, itoa( ticks % 60, &tempString, 10, TRUE));
+		lastSecond = ticks;
 	}
 					
 	ticks = ticks / 60;		// Lop off the seconds
@@ -1103,9 +1102,9 @@ void lcd_updateLapTimer( unsigned int ticks, struct tLCDLabel *hours, struct tLC
 		lastMinute = ticks;	
 	}
 					
-	temp = ticks / 60;		// Lop off the minutes
-	if(temp != lastHour){
-		lcd_updateLabel(hours, itoa( temp, &tempString, 10, TRUE));
+	ticks = ticks / 60;		// Lop off the minutes
+	if(ticks != lastHour){
+		lcd_updateLabel(hours, itoa( ticks, &tempString, 10, TRUE));
 		lastMinute = ticks;	
 	}
 }

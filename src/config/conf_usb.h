@@ -114,14 +114,14 @@
 
 //! Enpoints size for full speed
 //! Note: Disable the enpoints of a type, if size equal 0
-#define UDI_VENDOR_EPS_SIZE_INT_FS    64
-#define UDI_VENDOR_EPS_SIZE_BULK_FS   64
-#define UDI_VENDOR_EPS_SIZE_ISO_FS   64
+#define UDI_VENDOR_EPS_SIZE_INT_FS		0
+#define UDI_VENDOR_EPS_SIZE_BULK_FS		64
+#define UDI_VENDOR_EPS_SIZE_ISO_FS		0
 
 //! Enpoints size for high speed
-#define UDI_VENDOR_EPS_SIZE_INT_HS    64
-#define UDI_VENDOR_EPS_SIZE_BULK_HS  512
-#define UDI_VENDOR_EPS_SIZE_ISO_HS    64
+#define UDI_VENDOR_EPS_SIZE_INT_HS		0
+#define UDI_VENDOR_EPS_SIZE_BULK_HS		0
+#define UDI_VENDOR_EPS_SIZE_ISO_HS		0
 
 //@}
 

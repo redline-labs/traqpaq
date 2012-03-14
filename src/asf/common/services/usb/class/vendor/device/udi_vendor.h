@@ -98,24 +98,24 @@ extern "C" {
 
 #if UDI_VENDOR_EPS_SIZE_INT_FS
 # define UDI_VENDOR_EPS_INT_DESC \
-	.ep_interrupt_in.bLength           = sizeof(usb_ep_desc_t),\
-	.ep_interrupt_in.bDescriptorType   = USB_DT_ENDPOINT,\
-	.ep_interrupt_in.bEndpointAddress  = UDI_VENDOR_EP_INTERRUPT_IN,\
-	.ep_interrupt_in.bmAttributes      = USB_EP_TYPE_INTERRUPT,\
-	.ep_interrupt_in.bInterval         = 0,\
-	.ep_interrupt_out.bLength          = sizeof(usb_ep_desc_t),\
+	.ep_interrupt_in.bLength           = sizeof(usb_ep_desc_t), \
+	.ep_interrupt_in.bDescriptorType   = USB_DT_ENDPOINT, \
+	.ep_interrupt_in.bEndpointAddress  = UDI_VENDOR_EP_INTERRUPT_IN, \
+	.ep_interrupt_in.bmAttributes      = USB_EP_TYPE_INTERRUPT, \
+	.ep_interrupt_in.bInterval         = 0, \
+	.ep_interrupt_out.bLength          = sizeof(usb_ep_desc_t), \
 	.ep_interrupt_out.bDescriptorType  = USB_DT_ENDPOINT,\
-	.ep_interrupt_out.bEndpointAddress = UDI_VENDOR_EP_INTERRUPT_OUT,\
-	.ep_interrupt_out.bmAttributes     = USB_EP_TYPE_INTERRUPT,\
+	.ep_interrupt_out.bEndpointAddress = UDI_VENDOR_EP_INTERRUPT_OUT, \
+	.ep_interrupt_out.bmAttributes     = USB_EP_TYPE_INTERRUPT, \
 	.ep_interrupt_out.bInterval        = 0
 
 # define UDI_VENDOR_EPS_INT_DESC_FS \
-	.ep_interrupt_in.wMaxPacketSize    = LE16(UDI_VENDOR_EPS_SIZE_INT_FS),\
-	.ep_interrupt_out.wMaxPacketSize   = LE16(UDI_VENDOR_EPS_SIZE_INT_FS)
+	.ep_interrupt_in.wMaxPacketSize    = LE16(UDI_VENDOR_EPS_SIZE_INT_FS), \
+	.ep_interrupt_out.wMaxPacketSize   = LE16(UDI_VENDOR_EPS_SIZE_INT_FS) \
 
 # define UDI_VENDOR_EPS_INT_DESC_HS \
-	.ep_interrupt_in.wMaxPacketSize    = LE16(UDI_VENDOR_EPS_SIZE_INT_HS),\
-	.ep_interrupt_out.wMaxPacketSize   = LE16(UDI_VENDOR_EPS_SIZE_INT_HS)\
+	.ep_interrupt_in.wMaxPacketSize    = LE16(UDI_VENDOR_EPS_SIZE_INT_HS), \
+	.ep_interrupt_out.wMaxPacketSize   = LE16(UDI_VENDOR_EPS_SIZE_INT_HS) \
 
 #else
 # define UDI_VENDOR_EPS_INT_DESC
@@ -125,24 +125,24 @@ extern "C" {
 
 #if UDI_VENDOR_EPS_SIZE_BULK_FS
 # define UDI_VENDOR_EPS_BULK_DESC \
-	.ep_bulk_in.bLength                = sizeof(usb_ep_desc_t),\
-	.ep_bulk_in.bDescriptorType        = USB_DT_ENDPOINT,\
-	.ep_bulk_in.bEndpointAddress       = UDI_VENDOR_EP_BULK_IN,\
-	.ep_bulk_in.bmAttributes           = USB_EP_TYPE_BULK,\
-	.ep_bulk_in.bInterval              = 0,\
-	.ep_bulk_out.bLength               = sizeof(usb_ep_desc_t),\
-	.ep_bulk_out.bDescriptorType       = USB_DT_ENDPOINT,\
-	.ep_bulk_out.bEndpointAddress      = UDI_VENDOR_EP_BULK_OUT,\
-	.ep_bulk_out.bmAttributes          = USB_EP_TYPE_BULK,\
+	.ep_bulk_in.bLength                = sizeof(usb_ep_desc_t), \
+	.ep_bulk_in.bDescriptorType        = USB_DT_ENDPOINT, \
+	.ep_bulk_in.bEndpointAddress       = UDI_VENDOR_EP_BULK_IN, \
+	.ep_bulk_in.bmAttributes           = USB_EP_TYPE_BULK, \
+	.ep_bulk_in.bInterval              = 0, \
+	.ep_bulk_out.bLength               = sizeof(usb_ep_desc_t), \
+	.ep_bulk_out.bDescriptorType       = USB_DT_ENDPOINT, \
+	.ep_bulk_out.bEndpointAddress      = UDI_VENDOR_EP_BULK_OUT, \
+	.ep_bulk_out.bmAttributes          = USB_EP_TYPE_BULK, \
 	.ep_bulk_out.bInterval             = 0
 
 # define UDI_VENDOR_EPS_BULK_DESC_FS \
-	.ep_bulk_in.wMaxPacketSize         = LE16(UDI_VENDOR_EPS_SIZE_BULK_FS),\
-	.ep_bulk_out.wMaxPacketSize        = LE16(UDI_VENDOR_EPS_SIZE_BULK_FS)
+	.ep_bulk_in.wMaxPacketSize         = LE16(UDI_VENDOR_EPS_SIZE_BULK_FS), \
+	.ep_bulk_out.wMaxPacketSize        = LE16(UDI_VENDOR_EPS_SIZE_BULK_FS) \
 
 # define UDI_VENDOR_EPS_BULK_DESC_HS \
-	.ep_bulk_in.wMaxPacketSize         = LE16(UDI_VENDOR_EPS_SIZE_BULK_HS),\
-	.ep_bulk_out.wMaxPacketSize        = LE16(UDI_VENDOR_EPS_SIZE_BULK_HS)\
+	.ep_bulk_in.wMaxPacketSize         = LE16(UDI_VENDOR_EPS_SIZE_BULK_HS), \
+	.ep_bulk_out.wMaxPacketSize        = LE16(UDI_VENDOR_EPS_SIZE_BULK_HS) \
 
 #else
 # define UDI_VENDOR_EPS_BULK_DESC
@@ -153,24 +153,24 @@ extern "C" {
 
 #if UDI_VENDOR_EPS_SIZE_ISO_FS
 # define UDI_VENDOR_EPS_ISO_DESC \
-	.ep_iso_in.bLength                 = sizeof(usb_ep_desc_t),\
-	.ep_iso_in.bDescriptorType         = USB_DT_ENDPOINT,\
-	.ep_iso_in.bEndpointAddress        = UDI_VENDOR_EP_ISO_IN,\
-	.ep_iso_in.bmAttributes            = USB_EP_TYPE_ISOCHRONOUS,\
-	.ep_iso_in.bInterval               = 0,\
-	.ep_iso_out.bLength                = sizeof(usb_ep_desc_t),\
-	.ep_iso_out.bDescriptorType        = USB_DT_ENDPOINT,\
-	.ep_iso_out.bEndpointAddress       = UDI_VENDOR_EP_ISO_OUT,\
-	.ep_iso_out.bmAttributes           = USB_EP_TYPE_ISOCHRONOUS,\
+	.ep_iso_in.bLength                 = sizeof(usb_ep_desc_t), \
+	.ep_iso_in.bDescriptorType         = USB_DT_ENDPOINT, \
+	.ep_iso_in.bEndpointAddress        = UDI_VENDOR_EP_ISO_IN, \
+	.ep_iso_in.bmAttributes            = USB_EP_TYPE_ISOCHRONOUS, \
+	.ep_iso_in.bInterval               = 0, \
+	.ep_iso_out.bLength                = sizeof(usb_ep_desc_t), \
+	.ep_iso_out.bDescriptorType        = USB_DT_ENDPOINT, \
+	.ep_iso_out.bEndpointAddress       = UDI_VENDOR_EP_ISO_OUT, \
+	.ep_iso_out.bmAttributes           = USB_EP_TYPE_ISOCHRONOUS, \
 	.ep_iso_out.bInterval              = 0
 
 # define UDI_VENDOR_EPS_ISO_DESC_FS \
-	.ep_iso_in.wMaxPacketSize          = LE16(UDI_VENDOR_EPS_SIZE_ISO_FS),\
-	.ep_iso_out.wMaxPacketSize         = LE16(UDI_VENDOR_EPS_SIZE_ISO_FS)
+	.ep_iso_in.wMaxPacketSize          = LE16(UDI_VENDOR_EPS_SIZE_ISO_FS), \
+	.ep_iso_out.wMaxPacketSize         = LE16(UDI_VENDOR_EPS_SIZE_ISO_FS) \
 
 # define UDI_VENDOR_EPS_ISO_DESC_HS \
-	.ep_iso_in.wMaxPacketSize          = LE16(UDI_VENDOR_EPS_SIZE_ISO_HS),\
-	.ep_iso_out.wMaxPacketSize         = LE16(UDI_VENDOR_EPS_SIZE_ISO_HS)\
+	.ep_iso_in.wMaxPacketSize          = LE16(UDI_VENDOR_EPS_SIZE_ISO_HS), \
+	.ep_iso_out.wMaxPacketSize         = LE16(UDI_VENDOR_EPS_SIZE_ISO_HS) \
 
 #else
 # define UDI_VENDOR_EPS_ISO_DESC
@@ -220,11 +220,33 @@ typedef struct {
 	UDI_VENDOR_EPS_ISO_DESC, \
 
 //! Content of vendor interface descriptor for full speed only
-#define UDI_VENDOR_DESC_FS {\
+/*#define UDI_VENDOR_DESC_FS {\
 	UDI_VENDOR_DESC \
 	UDI_VENDOR_EPS_INT_DESC_FS, \
 	UDI_VENDOR_EPS_BULK_DESC_FS, \
 	UDI_VENDOR_EPS_ISO_DESC_FS, \
+   }*/
+#define UDI_VENDOR_DESC_FS {\
+	.iface.bLength                     = sizeof(usb_iface_desc_t),\
+	.iface.bDescriptorType             = USB_DT_INTERFACE,\
+	.iface.bInterfaceNumber            = UDI_VENDOR_IFACE_NUMBER,\
+	.iface.bAlternateSetting           = 0,\
+	.iface.bNumEndpoints               = USB_DEVICE_MAX_EP,\
+	.iface.bInterfaceClass             = VENDOR_CLASS,\
+	.iface.bInterfaceSubClass          = VENDOR_SUBCLASS,\
+	.iface.bInterfaceProtocol          = VENDOR_PROTOCOL,\
+	.iface.iInterface                  = UDI_VENDOR_STRING_ID,\
+	.ep_bulk_in.bLength                = sizeof(usb_ep_desc_t),\
+	.ep_bulk_in.bDescriptorType        = USB_DT_ENDPOINT,\
+	.ep_bulk_in.bEndpointAddress       = UDI_VENDOR_EP_BULK_IN,\
+	.ep_bulk_in.bmAttributes           = USB_EP_TYPE_BULK,\
+	.ep_bulk_in.bInterval              = 0,\
+	.ep_bulk_out.bLength               = sizeof(usb_ep_desc_t),\
+	.ep_bulk_out.bDescriptorType       = USB_DT_ENDPOINT,\
+	.ep_bulk_out.bEndpointAddress      = UDI_VENDOR_EP_BULK_OUT,\
+	.ep_bulk_out.bmAttributes          = USB_EP_TYPE_BULK,\
+	.ep_bulk_out.bInterval             = 0, \
+	UDI_VENDOR_EPS_BULK_DESC_FS \
    }
 
 //! Content of vendor interface descriptor for high speed only

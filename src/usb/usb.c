@@ -119,8 +119,8 @@ void usb_task( void *pvParameters ){
 				break;
 					
 			case(USB_CMD_READ_RECORDDATA):
-				data_length = FLASH_PAGE_SIZE;
-				flash_send_request(FLASH_REQUEST_READ_RECORDDATA, &usbTxBuffer, FLASH_PAGE_SIZE, (usbRxBuffer[2] << 8) + (usbRxBuffer[3] << 0), TRUE, pdFALSE);
+				data_length = (usbRxBuffer[1] << 8) + usbRxBuffer[2];
+				flash_send_request(FLASH_REQUEST_READ_RECORDDATA, &usbTxBuffer, (usbRxBuffer[1] << 8) + usbRxBuffer[2], (usbRxBuffer[3] << 8) + usbRxBuffer[4], TRUE, pdFALSE);
 				break;
 				
 			case(USB_DBG_DF_SECTOR_ERASE):
@@ -289,7 +289,7 @@ bool main_setup_in_received(void){
 
 // Receive data into module
 void main_vendor_bulk_in_received(udd_ep_status_t status, iram_size_t nb_transfered) {
-	if (UDD_EP_TRANSFER_OK != status) {
+	if (status != UDD_EP_TRANSFER_OK) {
 		return; // Transfer aborted, then stop loopback
 	}
 	
@@ -300,7 +300,7 @@ void main_vendor_bulk_in_received(udd_ep_status_t status, iram_size_t nb_transfe
 void main_vendor_read_callback(udd_ep_status_t status, iram_size_t nb_transfered){
 	unsigned char flag;
 	
-	if (UDD_EP_TRANSFER_OK != status) {
+	if (status != UDD_EP_TRANSFER_OK) {
 		return; // Transfer aborted, then stop loopback
 	}	
 	

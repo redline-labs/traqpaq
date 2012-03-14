@@ -129,38 +129,19 @@ to exclude the API function. */
 
 /* Debug trace configuration.
    configDBG is a boolean indicating whether to activate the debug trace. */
-#if BOARD == EVK1100
-#define configDBG                     0
-#define configDBG_USART               (&AVR32_USART1)
-#define configDBG_USART_RX_PIN        AVR32_USART1_RXD_0_0_PIN
-#define configDBG_USART_RX_FUNCTION   AVR32_USART1_RXD_0_0_FUNCTION
-#define configDBG_USART_TX_PIN        AVR32_USART1_TXD_0_0_PIN
-#define configDBG_USART_TX_FUNCTION   AVR32_USART1_TXD_0_0_FUNCTION
-#define configDBG_USART_BAUDRATE      57600
-#elif BOARD == EVK1105
-#define configDBG                     0
-#define configDBG_USART               (&AVR32_USART0)
-#define configDBG_USART_RX_PIN        AVR32_USART0_RXD_0_0_PIN
-#define configDBG_USART_RX_FUNCTION   AVR32_USART0_RXD_0_0_FUNCTION
-#define configDBG_USART_TX_PIN        AVR32_USART0_TXD_0_0_PIN
-#define configDBG_USART_TX_FUNCTION   AVR32_USART0_TXD_0_0_FUNCTION
-#define configDBG_USART_BAUDRATE      57600
-#elif BOARD == TRAQPAQ
-#define configDBG                     0
-#define configDBG_USART               GPS_USART
-#define configDBG_USART_RX_PIN        GPS_RXD
-#define configDBG_USART_RX_FUNCTION   GPS_RXD_FUNCTION
-#define configDBG_USART_TX_PIN        GPS_TXD
-#define configDBG_USART_TX_FUNCTION   GPS_TXD_FUNCTION
-#define configDBG_USART_BAUDRATE      GPS_USART_BAUD
-#else
-#error The board USART configuration should be defined here.
-#endif
+#define configDBG                     FALSE
+#define configDBG_USART               DEBUG_USART
+#define configDBG_USART_RX_PIN        DEBUG_RXD
+#define configDBG_USART_RX_FUNCTION   DEBUG_RXD_FUNCTION
+#define configDBG_USART_TX_PIN        DEBUG_TXD
+#define configDBG_USART_TX_FUNCTION   DEBUG_TXD_FUNCTION
+#define configDBG_USART_BAUDRATE      DEBUG_USART_BAUD
+
 
 
 /* USB task definitions. */
 #define configTSK_USB_TASK_NAME				((const signed portCHAR *)"USB")
-#define configTSK_USB_TASK_STACK_SIZE		512
+#define configTSK_USB_TASK_STACK_SIZE		1536
 #define configTSK_USB_TASK_PRIORITY			TASK_PRIORITY_MEDIUM
 #define configTSK_USB_TASK_HANDLE			NULL
 
@@ -179,8 +160,8 @@ to exclude the API function. */
 #define configTSK_WATCHDOG_TASK_HANDLE		NULL
 
 /* Dataflash Task */
-#define configTSK_DATAFLASH_TASK_NAME		((const signed portCHAR *)"Dataflash")
-#define configTSK_DATAFLASH_TASK_STACK_SIZE	2048	// 4.25KB - Required since dataflash_updatePage burns up 4KB!
+#define configTSK_DATAFLASH_TASK_NAME		((const signed portCHAR *)"Flash")
+#define configTSK_DATAFLASH_TASK_STACK_SIZE	1536
 #define configTSK_DATAFLASH_TASK_PRIORITY	TASK_PRIORITY_MEDIUM
 #define configTSK_DATAFLASH_TASK_PERIOD		20
 #define configTSK_DATAFLASH_TASK_HANDLE		NULL
