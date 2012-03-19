@@ -47,6 +47,7 @@
 #define FREERTOS_CONFIG_H
 
 #include "board.h"
+#include "sysclk.h"
 
 
 /*-----------------------------------------------------------

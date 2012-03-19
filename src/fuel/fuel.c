@@ -60,6 +60,9 @@ void fuel_task( void *pvParameters ){
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Task Started");
 	
+	// Check to see if the battery is dead
+	while ( fuel_read_voltage() <= FUEL_VOLTAGE_LOWER_LIMIT );
+	
 	fuelManagerQueue = xQueueCreate(FUEL_QUEUE_SIZE, sizeof(request));
 	
 	// ---------------------------------
@@ -195,7 +198,9 @@ unsigned short fuel_read_voltage( void ){
 	unsigned short battery_voltage;
 	fuel_read_register( FUEL_ADDRESS_VOLTAGE_REGISTER_MSB, &battery_voltage, 2 );
 	
-	return battery_voltage >> FUEL_SHIFTRIGHT_VOLTAGE;
+	battery_voltage = battery_voltage >> FUEL_SHIFTRIGHT_VOLTAGE;
+	
+	return battery_voltage;
 }
 
 

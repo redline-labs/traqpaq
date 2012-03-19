@@ -47,10 +47,6 @@
 #include "intc.h"
 #include "twi.h"
 
-#ifdef FREERTOS_USED
-#include "FreeRTOS.h"
-#include "semphr.h"
-#endif
 
 //! Pointer to the instance of the TWI registers for IT.
 static volatile avr32_twi_t *twi_inst;
@@ -80,9 +76,6 @@ static volatile unsigned long twi_it_mask;
 //! Pointer on TWI slave application routines
 static twi_slave_fct_t twi_slave_fct;
 
-#endif
-#ifdef FREERTOS_USED
-static xSemaphoreHandle xTWIMutex;
 #endif
 
 
@@ -277,9 +270,6 @@ int twi_master_init(volatile avr32_twi_t *twi, const twi_options_t *opt)
   bool global_interrupt_enabled = Is_global_interrupt_enabled();
   int status = TWI_SUCCESS;
 
-	#ifdef FREERTOS_USED
-	vSemaphoreCreateBinary(xTWIMutex);
-	#endif
   // Set pointer to TWIM instance for IT
   twi_inst = twi;
 
@@ -410,9 +400,6 @@ int twi_master_read(volatile avr32_twi_t *twi, const twi_package_t *package)
   while( twi_is_busy() ) {
     cpu_relax();
   };
-  #ifdef FREERTOS_USED
-	while (pdFALSE == xSemaphoreTake(xTWIMutex, 20));
-	#endif
 
   twi_nack = false;
   twi_busy = true;
@@ -461,9 +448,6 @@ int twi_master_read(volatile avr32_twi_t *twi, const twi_package_t *package)
   // Disable master transfer
   twi->cr =  AVR32_TWI_CR_MSDIS_MASK;
 
-	#ifdef FREERTOS_USED
-	xSemaphoreGive(xTWIMutex);
-	#endif
   if( twi_nack )
     return TWI_RECEIVE_NACK;
 
@@ -482,9 +466,6 @@ int twi_master_write(volatile avr32_twi_t *twi, const twi_package_t *package)
   while( twi_is_busy() ) {
     cpu_relax();
   };
-	#ifdef FREERTOS_USED
-	while (pdFALSE == xSemaphoreTake(xTWIMutex, 20));
-	#endif
 
   twi_nack = false;
   twi_busy = true;
@@ -529,9 +510,6 @@ int twi_master_write(volatile avr32_twi_t *twi, const twi_package_t *package)
 
   // Disable master transfer
   twi->cr =  AVR32_TWI_CR_MSDIS_MASK;
-	#ifdef FREERTOS_USED
-	xSemaphoreGive(xTWIMutex);
-	#endif
 
   if( twi_nack )
     return TWI_RECEIVE_NACK;

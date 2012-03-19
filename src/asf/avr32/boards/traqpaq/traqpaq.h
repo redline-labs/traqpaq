@@ -49,17 +49,12 @@
 // ------------------------------------------------------------
 // Clock Definitions
 // ------------------------------------------------------------
-#define FOSC0						12000000
-#define OSC0_STARTUP				AVR32_PM_OSCCTRL0_STARTUP_2048_RCOSC
-
-#define APPL_CPU_SPEED				48000000
-#define APPL_CPU_SPEED_ASCII		"48000000"
-#define APPL_PBA_SPEED				24000000
-#define APPL_PBA_SPEED_ASCII		"24000000"
-
-#define BOARD_OSC0_HZ				FOSC0
+#define BOARD_OSC0_HZ				12000000
 #define BOARD_OSC0_STARTUP_US		17000
 #define BOARD_OSC0_IS_XTAL			TRUE
+
+#define APPL_CPU_SPEED				( sysclk_get_cpu_hz() )
+#define APPL_PBA_SPEED				( sysclk_get_pba_hz() )
 
 
 // ------------------------------------------------------------

@@ -55,28 +55,30 @@ int main( void ){
 	if( !gpio_get_pin_value(GPIO_BUTTON2) ){
 		
 		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Powered on via USB");
-		
+
+		fuel_task_init();		
 		flash_task_init();
 		lcd_task_init(TASK_MODE_USB);
 		usb_task_init();
-		fuel_task_init();
+		
 		buttons_task_init(TASK_MODE_USB);
 		
 	}else{
-	#endif
-
-		main_supply_on();
-		
+	#endif		
 		#if( TRAQPAQ_NORMAL_MODE_ON_USB )
 		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Forcing normal mode on USB powerup");
 		#else
 		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Powered on via button");
 		#endif
 		
+		// Kick on the main supply
+		main_supply_on();
+		
+		fuel_task_init();
 		flash_task_init();
 		lcd_task_init(TASK_MODE_NORMAL);
 		usb_task_init();
-		fuel_task_init();
+		
 		buttons_task_init(TASK_MODE_NORMAL);
 		wdt_task_init();
 		

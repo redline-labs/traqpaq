@@ -33,26 +33,9 @@
 
 void board_init(void){
 	// ------------------------------------------------------------
-	// Clock Initialization (PM)
+	// Clock Initialization
 	// ------------------------------------------------------------
-	const pcl_freq_param_t pcl_freq_param = {
-		.cpu_f			= APPL_CPU_SPEED,
-		.pba_f			= APPL_PBA_SPEED,
-		.osc0_f			= FOSC0,
-		.osc0_startup	= OSC0_STARTUP
-	};
-	
-	if( pm_configure_clocks(&pcl_freq_param) != PM_FREQ_STATUS_OK ){
-		while(1){
-			asm("nop");
-		}
-	}
-	
-	
-	// ------------------------------------------------------------
-	// USB Initialization (PM)
-	// ------------------------------------------------------------
-	pm_configure_usb_clock();
+	sysclk_init();
 
 	// ------------------------------------------------------------
 	// Display Initialization (EBI)
