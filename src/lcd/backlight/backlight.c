@@ -36,12 +36,11 @@ xTimerHandle xBacklightDelayTimer;
 xTimerHandle xBacklightOffTimer;
 
 extern struct tUserPrefs userPrefs;
-struct tDisplayStatus displayStatus;
 
 void backlight_init( unsigned short delay ){
-	displayStatus.isReady = FALSE;
-	displayStatus.isOff = TRUE;
-	displayStatus.isFaded = FALSE;
+	systemFlags.display.isReady = FALSE;
+	systemFlags.display.isOff = TRUE;
+	systemFlags.display.isFaded = FALSE;
 	
 	xBacklightFadeTimer = xTimerCreate( "BacklightFade", userPrefs.screenFadeTime * configTICK_RATE_HZ, pdFALSE, NULL, backlight_fadeTimerCallback );
 	xBacklightOffTimer = xTimerCreate( "BacklightOff", userPrefs.screenOffTime * configTICK_RATE_HZ, pdFALSE, NULL, backlight_offTimerCallback );
@@ -70,22 +69,22 @@ void backlight_resetTimer( void ){
 	xTimerReset( xBacklightOffTimer, 20 );
 	backlight_updateDuty(userPrefs.screenPWMMax);
 	
-	displayStatus.isFaded = FALSE;
-	displayStatus.isOff = FALSE;
-	displayStatus.isReady = TRUE;
+	systemFlags.display.isFaded = FALSE;
+	systemFlags.display.isOff = FALSE;
+	systemFlags.display.isReady = TRUE;
 }
 
 
 void backlight_fadeTimerCallback( void ){
 	backlight_updateDuty(userPrefs.screenPWMMin);
-	displayStatus.isFaded = TRUE;
-	displayStatus.isOff = FALSE;
+	systemFlags.display.isFaded = TRUE;
+	systemFlags.display.isOff = FALSE;
 }
 
 void backlight_offTimerCallback( void ){
 	boost_converter_off();
-	displayStatus.isFaded = FALSE;
-	displayStatus.isOff = TRUE;
+	systemFlags.display.isFaded = FALSE;
+	systemFlags.display.isOff = TRUE;
 }
 
 void backlight_delayTimerCallback( void ){
@@ -95,13 +94,13 @@ void backlight_delayTimerCallback( void ){
 	xTimerStart( xBacklightFadeTimer, pdFALSE);
 	xTimerStart( xBacklightOffTimer, pdFALSE);
 	
-	displayStatus.isOff = FALSE;
-	displayStatus.isFaded = FALSE;
-	displayStatus.isReady = TRUE;
+	systemFlags.display.isOff = FALSE;
+	systemFlags.display.isFaded = FALSE;
+	systemFlags.display.isReady = TRUE;
 }
 
 void backlight_stopTimers( void ){
 	xTimerStop(xBacklightFadeTimer, pdFALSE);
 	xTimerStop(xBacklightOffTimer, pdFALSE);
-	displayStatus.isReady = FALSE;
+	systemFlags.display.isReady = FALSE;
 }

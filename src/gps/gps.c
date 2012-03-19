@@ -49,12 +49,18 @@ __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
 void gps_task_init( void ){
 	struct tGPSRequest request;
 	
-	gpsRxdQueue		= xQueueCreate( GPS_RXD_QUEUE_SIZE,     sizeof(int)     );
-	gpsManagerQueue = xQueueCreate( GPS_MANAGER_QUEUE_SIZE, sizeof(request) );
+	#if( TRAQPAQ_GPS_EXTERNAL_LOGGING == FALSE )
+	if(systemFlags.button.powerOnMethod == POWER_ON_MODE_BUTTON){
+		gpsRxdQueue		= xQueueCreate( GPS_RXD_QUEUE_SIZE,     sizeof(int)     );
+		gpsManagerQueue = xQueueCreate( GPS_MANAGER_QUEUE_SIZE, sizeof(request) );
 
-	INTC_register_interrupt(&ISR_gps_rxd, AVR32_USART3_IRQ, AVR32_INTC_INT0);
+		INTC_register_interrupt(&ISR_gps_rxd, AVR32_USART3_IRQ, AVR32_INTC_INT0);
 	
-	xTaskCreate(gps_task, configTSK_GPS_TASK_NAME, configTSK_GPS_TASK_STACK_SIZE, NULL, configTSK_GPS_TASK_PRIORITY, configTSK_GPS_TASK_HANDLE);
+		xTaskCreate(gps_task, configTSK_GPS_TASK_NAME, configTSK_GPS_TASK_STACK_SIZE, NULL, configTSK_GPS_TASK_PRIORITY, configTSK_GPS_TASK_HANDLE);
+	}
+	#else
+	gpio_set_gpio_pin(GPS_RESET);
+	#endif
 }
 
 
@@ -85,6 +91,9 @@ void gps_task( void *pvParameters ){
 	struct tTracklist trackList;
 	
 	struct tGPSRequest request;
+	
+	// Make sure the battery isn't low before continuing
+	fuel_low_battery_check();
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Task Started");
 

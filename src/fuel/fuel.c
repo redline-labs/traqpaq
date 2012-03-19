@@ -38,6 +38,9 @@
 xQueueHandle fuelManagerQueue;
 
 void fuel_task_init( void ){
+	// Initialize the Fuel system flags
+	systemFlags.fuel.lowBattery = TRUE;
+	
 	xTaskCreate(fuel_task, configTSK_FUEL_TASK_NAME, configTSK_FUEL_TASK_STACK_SIZE, NULL, configTSK_FUEL_TASK_PRIORITY, configTSK_FUEL_TASK_HANDLE);
 }
 
@@ -60,8 +63,10 @@ void fuel_task( void *pvParameters ){
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Task Started");
 	
-	// Check to see if the battery is dead
-	while ( fuel_read_voltage() <= FUEL_VOLTAGE_LOWER_LIMIT );
+	// Check to see if the battery is good
+	if ( fuel_read_voltage() >= FUEL_VOLTAGE_LOWER_LIMIT ){
+		systemFlags.fuel.lowBattery = FALSE;
+	}
 	
 	fuelManagerQueue = xQueueCreate(FUEL_QUEUE_SIZE, sizeof(request));
 	
@@ -128,6 +133,14 @@ void fuel_task( void *pvParameters ){
 		adcValues.vcc	= adc_get_value(ADC, ADC_VCC_CHANNEL);
 		adcValues.vee	= adc_get_value(ADC, ADC_VEE_CHANNEL);
 		gpio_clr_gpio_pin(ADC_VREF_EN);
+		
+		
+		// ---------------------------------
+		// Check if battery low
+		// ---------------------------------
+		if ( fuel_read_voltage() < FUEL_VOLTAGE_LOWER_LIMIT ){
+			wdt_send_request(WDT_REQUEST_POWEROFF, NULL);
+		}		
 		
 		
 		// ---------------------------------

@@ -33,8 +33,6 @@
 
 static xQueueHandle buttonPress;
 
-extern struct tDisplayStatus displayStatus;
-
 //------------------------------
 // ISR's
 //------------------------------
@@ -66,10 +64,27 @@ __attribute__((__interrupt__)) static void ISR_button3(void) {
 //------------------------------
 // Functions
 //------------------------------
-void buttons_task_init( unsigned char mode ){
+void buttons_task_init(){
 	buttonPress = xQueueCreate(1, sizeof(unsigned char));
 	
-	if(mode == TASK_MODE_NORMAL){
+	// Check how the module was powered on
+	if( !gpio_get_pin_value(GPIO_BUTTON2) ){
+		
+		#if( TRAQPAQ_NORMAL_MODE_ON_USB )
+		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_BUTTON, "Forcing normal mode on USB powerup");
+		systemFlags.button.powerOnMethod = POWER_ON_MODE_BUTTON;
+		#else
+		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_BUTTON, "Powered on via button");
+		systemFlags.button.powerOnMethod = POWER_ON_MODE_USB;
+		#endif
+		
+	}else{
+		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_BUTTON, "Powered on via USB");
+		systemFlags.button.powerOnMethod = POWER_ON_MODE_BUTTON;
+	}
+	
+	
+	if(systemFlags.button.powerOnMethod == POWER_ON_MODE_BUTTON){
 		xTaskCreate(buttons_task_normal, configTSK_BUTTONS_TASK_NAME, configTSK_BUTTONS_TASK_STACK_SIZE, NULL, configTSK_BUTTONS_TASK_PRIORITY, configTSK_BUTTONS_TASK_HANDLE);
 	}else{
 		xTaskCreate(buttons_task_usb, configTSK_BUTTONS_TASK_NAME, configTSK_BUTTONS_TASK_STACK_SIZE, NULL, configTSK_BUTTONS_TASK_PRIORITY, configTSK_BUTTONS_TASK_HANDLE);
@@ -81,7 +96,10 @@ void buttons_task_normal( void *pvParameters ){
 	unsigned char button;			// Storage for queue - Holds the ID of the button pressed
 	unsigned short timer;			// Timer for how long a button was pressed
 	
-	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Task Started");
+	// Make sure the battery isn't low before continuing
+	fuel_low_battery_check();
+	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_BUTTON, "Task Started");
 	
 	INTC_register_interrupt(&ISR_button0, EXTINT_BUTTON0_IRQ, EXTINT_BUTTON0); 
 	INTC_register_interrupt(&ISR_button1, EXTINT_BUTTON1_IRQ, EXTINT_BUTTON1); 
@@ -112,11 +130,11 @@ void buttons_task_normal( void *pvParameters ){
 		}
 		
 		// Send button press and request the backlight on!
-		if( !displayStatus.isOff ){
+		if( !systemFlags.display.isOff ){
 			lcd_sendButtonRequest(button);
 		}
 		
-		if( displayStatus.isReady ){
+		if( systemFlags.display.isReady ){
 			backlight_resetTimer();
 		}
 			
@@ -131,7 +149,15 @@ void buttons_task_normal( void *pvParameters ){
 void buttons_task_usb( void *pvParameters ){
 	unsigned char button;			// Storage for queue - Holds the ID of the button pressed
 	
-	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Task Started");
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_BUTTON, "Task Started");
+	
+	// Make sure the battery isn't low before continuing
+	fuel_low_battery_check();
+	
+	INTC_register_interrupt(&ISR_button0, EXTINT_BUTTON0_IRQ, EXTINT_BUTTON0); 
+	INTC_register_interrupt(&ISR_button1, EXTINT_BUTTON1_IRQ, EXTINT_BUTTON1); 
+	INTC_register_interrupt(&ISR_button2, EXTINT_BUTTON2_IRQ, EXTINT_BUTTON2); 
+	INTC_register_interrupt(&ISR_button3, EXTINT_BUTTON3_IRQ, EXTINT_BUTTON3);
 	
 	while(1){
 		// Wait for button press - suspends task
@@ -146,7 +172,9 @@ void buttons_task_usb( void *pvParameters ){
 		}
 		
 		// Request the backlight to be on!
-		backlight_resetTimer();
+		if( systemFlags.display.isReady ){
+			backlight_resetTimer();
+		}
 			
 		// Clear any pending EXTINT interrupts and re-enable them
 		eic_clear_interrupt_lines(&AVR32_EIC, (1<<EXTINT_BUTTON0) | (1<<EXTINT_BUTTON1) | (1<<EXTINT_BUTTON2) | (1<<EXTINT_BUTTON3));

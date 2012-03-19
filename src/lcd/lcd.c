@@ -48,8 +48,8 @@ xQueueHandle lcdButtonsManagerQueue;
 xTimerHandle xPeripherialTimer;
 
 // Create task for FreeRTOS
-void lcd_task_init( unsigned char mode ){
-	if(mode == TASK_MODE_NORMAL){
+void lcd_task_init( void ){
+	if(systemFlags.button.powerOnMethod == POWER_ON_MODE_BUTTON){
 		xPeripherialTimer = xTimerCreate( "PeripheralTimer", LCD_PERIPHERIAL_FADE_TIME * configTICK_RATE_HZ, pdFALSE, NULL, lcd_clearPeripheral );
 		xTaskCreate(lcd_gui_task_normal, configTSK_GUI_TASK_NAME, configTSK_GUI_TASK_STACK_SIZE, NULL, configTSK_GUI_TASK_PRIORITY, configTSK_GUI_TASK_HANDLE);
 		
@@ -86,6 +86,9 @@ void lcd_gui_task_normal( void *pvParameters ){
 	
 	lcdWidgetsManagerQueue = xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(request));
 	lcdButtonsManagerQueue	= xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(unsigned char));
+	
+	// Make sure the battery isn't low before continuing
+	fuel_low_battery_check();
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_LCD, "Task Started");
 	

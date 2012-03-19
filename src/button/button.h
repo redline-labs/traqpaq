@@ -49,9 +49,15 @@
 #define BUTTON_LONG_SELECT			(BUTTON_SELECT	| BUTTON_LONG_PRESS_MASK)
 #define BUTTON_LONG_BACK			(BUTTON_BACK	| BUTTON_LONG_PRESS_MASK)
 
+#define POWER_ON_MODE_BUTTON		0
+#define POWER_ON_MODE_USB			1
+
+struct tButtonStatusFlags{
+	unsigned char powerOnMethod;
+};
 
 
-void buttons_task_init( unsigned char mode );
+void buttons_task_init();
 void buttons_task_normal( void *pvParameters );
 void buttons_task_usb( void *pvParameters );
 

@@ -282,7 +282,7 @@ extern struct tLCDTopBar topBar;
 #define LCD_TASK_SLEEP_TIME			20
 
 unsigned short lcd_readID(void);
-void lcd_task_init( unsigned char mode );
+void lcd_task_init( void );
 void lcd_gui_task_normal( void *pvParameters );
 void lcd_gui_task_usb( void *pvParameters );
 void lcd_reset( void );

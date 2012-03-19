@@ -177,10 +177,16 @@ struct __attribute__ ((packed)) tBatteryInfo{
 	unsigned short crc;				// CRC of tBatteryInfo
 };	// tBatteryInfo - 16 Bytes
 
+struct tFuelStatusFlags {
+	unsigned char lowBattery;
+};
 
 
 #define FUEL_REQUEST_SHUTDOWN					0
 
+#define FUEL_LOW_BATTERY_CHECK_TIME				1000
+
+#define fuel_low_battery_check()				while( systemFlags.fuel.lowBattery ) vTaskDelay( (portTickType)TASK_DELAY_MS( FUEL_LOW_BATTERY_CHECK_TIME ) )
 
 struct tFuelRequest {
 	unsigned char command;

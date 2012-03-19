@@ -31,9 +31,6 @@
 #ifndef HAL_H_
 #define HAL_H_
 
-#define TASK_MODE_NORMAL		0
-#define TASK_MODE_USB			1
-
 // FreeRTOS
 #include "FreeRTOS.h"
 #include "timers.h"
@@ -79,5 +76,12 @@
 // CRC
 #include "crc/crc.h"
 
+struct tSystemFlags{
+	struct tDisplayStatusFlags display;
+	struct tFuelStatusFlags fuel;
+	struct tButtonStatusFlags button;
+};
+
+extern struct tSystemFlags systemFlags;
 
 #endif /* HAL_H_ */

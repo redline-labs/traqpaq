@@ -42,7 +42,7 @@
 #define boost_converter_on()		gpio_set_gpio_pin(PM_SHDN1)
 #define boost_converter_off()		gpio_clr_gpio_pin(PM_SHDN1)
 
-struct tDisplayStatus{
+struct tDisplayStatusFlags{
 	unsigned char isReady;
 	unsigned char isFaded;
 	unsigned char isOff;

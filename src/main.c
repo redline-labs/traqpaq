@@ -29,6 +29,8 @@
 #include "asf.h"
 #include "hal.h"
 
+struct tSystemFlags systemFlags;
+
 // ------------------------------------------------------------
 // Main
 // ------------------------------------------------------------
@@ -47,54 +49,25 @@ int main( void ){
 	//--------------------------
 	// Schedule the tasks
 	//--------------------------
-	#if( TRAQPAQ_DEBUG_ENABLED )
-	debug_task_init();
-	#endif
-	
-	#if( TRAQPAQ_NORMAL_MODE_ON_USB == FALSE )
-	if( !gpio_get_pin_value(GPIO_BUTTON2) ){
-		
-		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Powered on via USB");
 
-		fuel_task_init();		
-		flash_task_init();
-		lcd_task_init(TASK_MODE_USB);
-		usb_task_init();
-		
-		buttons_task_init(TASK_MODE_USB);
-		
-	}else{
-	#endif		
-		#if( TRAQPAQ_NORMAL_MODE_ON_USB )
-		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Forcing normal mode on USB powerup");
-		#else
-		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_EXTINT, "Powered on via button");
-		#endif
-		
-		// Kick on the main supply
-		main_supply_on();
-		
-		fuel_task_init();
-		flash_task_init();
-		lcd_task_init(TASK_MODE_NORMAL);
-		usb_task_init();
-		
-		buttons_task_init(TASK_MODE_NORMAL);
-		wdt_task_init();
-		
-		#if( TRAQPAQ_GPS_EXTERNAL_LOGGING )
-		gpio_set_gpio_pin(GPS_RESET);
-		#else
-		gps_task_init();
-		#endif
-		
-	#if( TRAQPAQ_NORMAL_MODE_ON_USB == FALSE )
-	}
-	#endif
+	debug_task_init();
+	
+	buttons_task_init();	// Needs to go first, sets powerOnMethod flag
+	fuel_task_init();
+	flash_task_init();
+	
+	lcd_task_init();
+	usb_task_init();
+	wdt_task_init();
+	gps_task_init();
 
 	//--------------------------
 	// Start the scheduler!
 	//--------------------------
+	if(systemFlags.button.powerOnMethod == POWER_ON_MODE_BUTTON){
+		main_supply_on();	
+	}		
+	
 	Enable_global_interrupt();
 	vTaskStartScheduler();
 	
