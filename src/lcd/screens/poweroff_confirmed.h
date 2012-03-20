@@ -30,7 +30,7 @@
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
 	
-	lcd_writeText_16x32("Powering Off!", FONT_LARGE_POINTER, 50, LCD_MAX_Y >> 2, COLOR_RED);
+	lcd_writeText_16x32("Powering Off!", FONT_LARGE_POINTER, 50, LCD_MAX_Y >> 1, COLOR_RED);
 	
 	wdt_send_request(WDT_REQUEST_POWEROFF, NULL);
 	vTaskSuspend(NULL);

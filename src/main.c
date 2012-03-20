@@ -53,6 +53,11 @@ int main( void ){
 	debug_task_init();
 	
 	buttons_task_init();	// Needs to go first, sets powerOnMethod flag
+	
+	if(systemFlags.button.powerOnMethod == POWER_ON_MODE_BUTTON){
+		main_supply_on();
+	}
+	
 	fuel_task_init();
 	flash_task_init();
 	
@@ -63,11 +68,7 @@ int main( void ){
 
 	//--------------------------
 	// Start the scheduler!
-	//--------------------------
-	if(systemFlags.button.powerOnMethod == POWER_ON_MODE_BUTTON){
-		main_supply_on();	
-	}		
-	
+	//--------------------------	
 	Enable_global_interrupt();
 	vTaskStartScheduler();
 	

@@ -64,9 +64,13 @@ void fuel_task( void *pvParameters ){
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Task Started");
 	
 	// Check to see if the battery is good
-	if ( fuel_read_voltage() >= FUEL_VOLTAGE_LOWER_LIMIT ){
-		systemFlags.fuel.lowBattery = FALSE;
-	}
+	while ( fuel_read_voltage() <= FUEL_VOLTAGE_POWERUP_LIMIT ){
+		vTaskDelay( (portTickType)TASK_DELAY_MS( FUEL_LOW_BATTERY_CHECK_TIME ) );
+	}		
+	
+	// Set the flag that the battery is good!
+	systemFlags.fuel.lowBattery = FALSE;
+	
 	
 	fuelManagerQueue = xQueueCreate(FUEL_QUEUE_SIZE, sizeof(request));
 	
@@ -138,7 +142,7 @@ void fuel_task( void *pvParameters ){
 		// ---------------------------------
 		// Check if battery low
 		// ---------------------------------
-		if ( fuel_read_voltage() < FUEL_VOLTAGE_LOWER_LIMIT ){
+		if ( fuel_read_voltage() <= FUEL_VOLTAGE_POWERDOWN_LIMIT ){
 			wdt_send_request(WDT_REQUEST_POWEROFF, NULL);
 		}		
 		

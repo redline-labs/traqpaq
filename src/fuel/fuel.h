@@ -122,7 +122,8 @@
 #define FUEL_LIMIT_ACUM_UPPER					0x9000	// TODO: Find real accumulated current limit
 #define FUEL_LIMIT_ACUM_LOWER					0x7000
 
-#define FUEL_VOLTAGE_LOWER_LIMIT				0x0290	// 3.20 Volts
+#define FUEL_VOLTAGE_POWERUP_LIMIT				0x029A	// 3.25 Volts
+#define FUEL_VOLTAGE_POWERDOWN_LIMIT			0x0290	// 3.20 Volts
 
 #define FUEL_UPDATE_RATE						2500	// Time (milliseconds) to update run the fuel task
 
@@ -184,7 +185,7 @@ struct tFuelStatusFlags {
 
 #define FUEL_REQUEST_SHUTDOWN					0
 
-#define FUEL_LOW_BATTERY_CHECK_TIME				1000
+#define FUEL_LOW_BATTERY_CHECK_TIME				250
 
 #define fuel_low_battery_check()				while( systemFlags.fuel.lowBattery ) vTaskDelay( (portTickType)TASK_DELAY_MS( FUEL_LOW_BATTERY_CHECK_TIME ) )
 
