@@ -120,15 +120,19 @@ void flash_task( void *pvParameters ){
 	//--------------------------
 	// Track Initialization
 	//--------------------------
-	while( trackCount < TRACKLIST_TOTAL_NUM ){
+	trackCount = 0;
+	
+	/*while( trackCount < TRACKLIST_TOTAL_NUM ){
 		flash_ReadToBuffer(FLASH_ADDR_TRACKLIST_START + (sizeof(trackList) * trackCount), sizeof(trackList), &trackList);
 		if(trackList.isEmpty) break;
 		trackCount++;
-	}
+	}*/
 	
 	flash_set_wp();
 	flash_set_hold();
 	flash_clr_busy_flag();
+	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FLASH, "Ready for requests");
 	
 	while(TRUE){
 		xQueueReceive(flashManagerQueue, &request, portMAX_DELAY);
@@ -136,6 +140,8 @@ void flash_task( void *pvParameters ){
 		flash_set_busy_flag();
 		flash_clr_wp();
 		flash_clr_hold();
+		
+		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FLASH, "Processing Request");
 		
 		switch(request.command){
 			case(FLASH_REQUEST_END_CURRENT_RECORD):
@@ -251,7 +257,9 @@ void flash_task( void *pvParameters ){
 		// Resume requesting task if it has been suspended
 		if(request.resume == TRUE){
 			vTaskResume(request.handle);
+			debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FLASH, "Requesting task resumed");
 		}
+		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FLASH, "Completed Request");
 		
 	}
 }
@@ -657,8 +665,6 @@ unsigned short flash_calculate_userPrefs_crc( void ){
 unsigned char flash_send_request(unsigned char command, unsigned char *pointer, unsigned short length, unsigned int index, unsigned char resume, unsigned char delay){
 	struct tFlashRequest request;
 	
-	taskENTER_CRITICAL();
-	
 	request.command = command;
 	request.pointer = pointer;
 	request.length = length;
@@ -674,8 +680,6 @@ unsigned char flash_send_request(unsigned char command, unsigned char *pointer, 
 	if(resume == TRUE){
 		vTaskSuspend(NULL);
 	}
-	
-	taskEXIT_CRITICAL();
 	
 	return TRUE;
 }

@@ -185,6 +185,8 @@ struct tGPSLine gps_find_finish_line(signed int latitude, signed int longitude, 
 
 void gps_set_messaging_rate(unsigned char rate);
 void gps_set_messages( void );
+void gps_cold_start( void );
+void gps_warm_start( void );
 
 void gps_send_request(unsigned char command, unsigned int *pointer, unsigned char data, unsigned char delay);
 void gps_messageTimeout( void );

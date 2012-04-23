@@ -96,12 +96,17 @@ void gps_task( void *pvParameters ){
 	fuel_low_battery_check();
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Task Started");
-
-	xMessageTimer = xTimerCreate( "gpsMessageTimer", GPS_MSG_TIMEOUT * portTICK_RATE_MS, pdFALSE, NULL, gps_messageTimeout );
 	
 	// Pull the GPS out of reset and enable the ISR
 	gps_enable_interrupts();
 	gps_reset();
+	
+	#if (TRAQPAQ_GPS_TTF_TEST_MODE == TRUE)
+	gps_warm_start();
+	#endif
+	
+	// Start the GPS message timeout detection
+	xMessageTimer = xTimerCreate( "gpsMessageTimer", GPS_MSG_TIMEOUT * portTICK_RATE_MS, pdFALSE, NULL, gps_messageTimeout );
 	
 	while(TRUE){
 		// Check for pending requests
@@ -212,6 +217,10 @@ void gps_task( void *pvParameters ){
 					if(oldMode != gpsData.currentMode){
 						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_ANTENNA, gpsData.currentMode, pdFALSE);
 						oldMode = gpsData.currentMode;
+						
+						#if (TRAQPAQ_GPS_TTF_TEST_MODE == TRUE)
+						debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "GPS Mode changed");
+						#endif
 					}
 					
 					// Save the last coordinates for detecting the intersection
@@ -474,6 +483,20 @@ void gps_set_messaging_rate(unsigned char rate){
 void gps_set_messages( void ){
 	// Enable GGA and RMC messages only
 	usart_write_line(GPS_USART, "$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28");
+	usart_putchar(GPS_USART, GPS_MSG_CR);
+	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
+}
+
+void gps_cold_start( void ){
+	// $PMTK103*30<CR><LF>
+	usart_write_line(GPS_USART, "$PMTK103*30");
+	usart_putchar(GPS_USART, GPS_MSG_CR);
+	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
+}
+
+void gps_warm_start( void ){
+	// $PMTK102*31<CR><LF>
+	usart_write_line(GPS_USART, "$PMTK102*31");
 	usart_putchar(GPS_USART, GPS_MSG_CR);
 	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
 }

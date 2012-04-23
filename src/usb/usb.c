@@ -148,7 +148,8 @@ void usb_task( void *pvParameters ){
 					
 			case(USB_DBG_DF_USED_SPACE):
 				data_length = 1;
-				flash_send_request(FLASH_REQUEST_USED_SPACE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
+				usbTxBuffer[0] = TRUE;
+				flash_send_request(FLASH_REQUEST_USED_SPACE, NULL, NULL, NULL, FALSE, pdFALSE);
 				break;
 				
 			case(USB_DBG_DF_CHIP_ERASE):

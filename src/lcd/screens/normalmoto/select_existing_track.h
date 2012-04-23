@@ -31,7 +31,7 @@ if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
 	
 	responseU8 = 0;		// Number of tracks loaded
-
+	
 	flash_send_request(FLASH_REQUEST_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
 	while( trackList.isEmpty == FALSE){
 		menu_addItem(&mainMenu, &trackList.name, responseU8);
