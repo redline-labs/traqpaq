@@ -41,7 +41,13 @@ xTimerHandle xMessageTimer;
 
 __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
 	int rxd;
+	
 	usart_read_char(GPS_USART, &rxd);
+	
+	#if( TRAQPAQ_GPS_ECHO_MODE == TRUE )
+	usart_putchar(DEBUG_USART, rxd);
+	#endif
+	
 	xQueueSendFromISR(gpsRxdQueue, &rxd, pdFALSE);
 }
 
