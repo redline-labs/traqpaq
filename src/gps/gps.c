@@ -66,6 +66,7 @@ void gps_task_init( void ){
 	}
 	#else
 	gpio_set_gpio_pin(GPS_RESET);
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "External logging mode");
 	#endif
 }
 

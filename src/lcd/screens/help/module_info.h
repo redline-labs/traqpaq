@@ -43,7 +43,7 @@ if(lcd_redraw_required()){
 	lcd_writeText_16x32(&tempString, FONT_LARGE_POINTER, LCD_MIN_X + 133, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 100, COLOR_BLACK);
 	
 	lcd_writeText_16x32("S/N:", FONT_LARGE_POINTER, LCD_MIN_X + 5, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 132, COLOR_BLACK);
-	strlcpy(&tempString, &flashOTP.serial, OTP_SERIAL_LENGTH);
+	strlcpy(&tempString, &(flashOTP.serial[0]), OTP_SERIAL_LENGTH+1);		// OTP_SERIAL_LENGTH plus null character
 	lcd_writeText_16x32(&tempString, FONT_LARGE_POINTER, LCD_MIN_X + 85, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 132, COLOR_BLACK);
 	
 	lcd_redraw_complete();

@@ -43,7 +43,7 @@ __attribute__((__interrupt__)) static void ISR_button0(void) {
 }  
 
 __attribute__((__interrupt__)) static void ISR_button1(void) {
-	unsigned char button = BUTTON_UP;
+	unsigned char button = BUTTON_BACK;
 	xQueueSendFromISR(buttonPress, &button, pdFALSE);
 	eic_clear_interrupt_line(&AVR32_EIC, EXTINT_BUTTON1);
 }  
@@ -55,7 +55,7 @@ __attribute__((__interrupt__)) static void ISR_button2(void) {
 }  
 
 __attribute__((__interrupt__)) static void ISR_button3(void) {
-	unsigned char button = BUTTON_BACK; 
+	unsigned char button = BUTTON_UP; 
 	xQueueSendFromISR(buttonPress, &button, pdFALSE);
 	eic_clear_interrupt_line(&AVR32_EIC, EXTINT_BUTTON3);
 }  
@@ -66,23 +66,6 @@ __attribute__((__interrupt__)) static void ISR_button3(void) {
 //------------------------------
 void buttons_task_init(){
 	buttonPress = xQueueCreate(1, sizeof(unsigned char));
-	
-	// Check how the module was powered on
-	if( !gpio_get_pin_value(GPIO_BUTTON2) ){
-		
-		#if( TRAQPAQ_NORMAL_MODE_ON_USB )
-		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_BUTTON, "Forcing normal mode on USB powerup");
-		systemFlags.button.powerOnMethod = POWER_ON_MODE_BUTTON;
-		#else
-		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_BUTTON, "Powered on via button");
-		systemFlags.button.powerOnMethod = POWER_ON_MODE_USB;
-		#endif
-		
-	}else{
-		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_BUTTON, "Powered on via USB");
-		systemFlags.button.powerOnMethod = POWER_ON_MODE_BUTTON;
-	}
-	
 	
 	if(systemFlags.button.powerOnMethod == POWER_ON_MODE_BUTTON){
 		xTaskCreate(buttons_task_normal, configTSK_BUTTONS_TASK_NAME, configTSK_BUTTONS_TASK_STACK_SIZE, NULL, configTSK_BUTTONS_TASK_PRIORITY, configTSK_BUTTONS_TASK_HANDLE);

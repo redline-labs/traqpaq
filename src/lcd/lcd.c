@@ -42,6 +42,8 @@ const unsigned char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', 
 
 extern struct tFlashOTP flashOTP;
 
+volatile unsigned short id;
+
 // Queues
 xQueueHandle lcdWidgetsManagerQueue;
 xQueueHandle lcdButtonsManagerQueue;
@@ -93,6 +95,8 @@ void lcd_gui_task_normal( void *pvParameters ){
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_LCD, "Task Started");
 	
 	lcd_reset();
+	
+	id = lcd_readID();
 	
 	if( lcd_readID() != LCD_DEVICE_ID){
 		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_LCD, "Invalid Device ID");
@@ -554,7 +558,6 @@ void lcd_init(void){
 }
 
 unsigned short lcd_readID(){
-
 	lcd_writeCommand(LCD_CMD_ID_READ);
 	
 	return (*LCD_PARAM_ADDR);

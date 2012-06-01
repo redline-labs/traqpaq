@@ -40,8 +40,8 @@
 // Versions
 // ------------------------------------------------------------
 #define TRAQPAQ_SW_LEVEL_MAJOR		1
-#define TRAQPAQ_SW_LEVEL_MINOR		2
-#define TRAQPAQ_SW_LEVEL_ASCII		"1.20"
+#define TRAQPAQ_SW_LEVEL_MINOR		3
+#define TRAQPAQ_SW_LEVEL_ASCII		"1.30"
 #define TRAQPAQ_SW_BUILD_DATE		__DATE__
 #define TRAQPAQ_SW_SUPPORT_VER		__VERSION__
 
@@ -55,7 +55,7 @@
 
 #define APPL_CPU_SPEED				( sysclk_get_cpu_hz() )
 #define APPL_PBA_SPEED				( sysclk_get_pba_hz() )
-
+#define APPL_HSB_SPEED				( sysclk_get_hsb_hz() )
 
 // ------------------------------------------------------------
 // USB Definitions
@@ -168,8 +168,8 @@
 // GPIO Definitions
 // ------------------------------------------------------------
 #define CHARGE_RATE					AVR32_PIN_PA18
-#define CHARGE_STAT1				AVR32_PIN_PA16
-#define CHARGE_STAT2				AVR32_PIN_PA17
+#define CHARGE_STAT1				AVR32_PIN_PA13
+#define CHARGE_STAT2				AVR32_PIN_PX16
 #define CHARGE_PG					AVR32_PIN_PA19
 
 #define PM_SHDN1					AVR32_PIN_PA06

@@ -40,7 +40,7 @@ void board_init(void){
 	// ------------------------------------------------------------
 	// Display Initialization (EBI)
 	// ------------------------------------------------------------
-	smc_init(APPL_CPU_SPEED);
+	smc_init(APPL_HSB_SPEED);
 
 	// ------------------------------------------------------------
 	// CRC Initialization
@@ -56,15 +56,12 @@ void board_init(void){
 	gpio_clr_gpio_pin(ADC_VREF_EN);
 	gpio_clr_gpio_pin(PM_ENABLE);			// Main Power Supply
 	
-	//gpio_clr_gpio_pin(CHARGE_RATE);		// Battery Charge Rate
+	gpio_clr_gpio_pin(CHARGE_RATE);		// Battery Charge Rate
 
 	gpio_enable_pin_pull_up(CHARGE_STAT1);
 	gpio_enable_pin_pull_up(CHARGE_STAT2);
 	gpio_enable_pin_pull_up(CHARGE_PG);
 	
-	
-	
-
 
 	// ------------------------------------------------------------
 	// GPS Initialization (USART3)
@@ -89,7 +86,7 @@ void board_init(void){
 	#endif
 
 	// ------------------------------------------------------------
-	// Debug Initialization (USART0)
+	// Debug Initialization (USART2)
 	// ------------------------------------------------------------
 	#if( TRAQPAQ_DEBUG_ENABLED == TRUE )
 		const gpio_map_t DEBUG_USART_GPIO_MAP = {
@@ -159,7 +156,7 @@ void board_init(void){
 
 
 	// ------------------------------------------------------------
-	// Dataflash Initialization (SPI)
+	// Flash Initialization (SPI)
 	// ------------------------------------------------------------
 	const gpio_map_t SPI_GPIO_MAP = {
 		{DATAFLASH_SPI_SCK_PIN,		DATAFLASH_SPI_SCK_FUNCTION  },  // SPI Clock
@@ -169,10 +166,6 @@ void board_init(void){
 	};
 
 	gpio_enable_module(SPI_GPIO_MAP, sizeof(SPI_GPIO_MAP) / sizeof(SPI_GPIO_MAP[0])); // Assign I/Os to SPI.
-
-	//struct spi_device DATAFLASH_CS1 = {
-	//	.id = DATAFLASH_SPI_NPCS
-	//};
 		
 	spi_options_t dataflashOptions = {
 		.reg		 = DATAFLASH_SPI_NPCS,

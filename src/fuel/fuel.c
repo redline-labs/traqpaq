@@ -49,6 +49,7 @@ void fuel_task( void *pvParameters ){
 	unsigned short percent;
 	signed short accumulated_current;
 	unsigned char oldChargeStatus;
+	unsigned short responseU16;
 	
 	struct tBatteryInfo		batteryInfo;
 	struct tFuelStatus		fuelStatus;
@@ -61,18 +62,12 @@ void fuel_task( void *pvParameters ){
 	unsigned short voltage;
 	#endif
 	
-	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Task Started");
-	
-	// Check to see if the battery is good
-	while ( fuel_read_voltage() <= FUEL_VOLTAGE_POWERUP_LIMIT ){
-		vTaskDelay( (portTickType)TASK_DELAY_MS( FUEL_LOW_BATTERY_CHECK_TIME ) );
-	}		
-	
-	// Set the flag that the battery is good!
-	systemFlags.fuel.lowBattery = FALSE;
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Task Started");	
 	
 	
 	fuelManagerQueue = xQueueCreate(FUEL_QUEUE_SIZE, sizeof(request));
+	
+	systemFlags.fuel.lowBattery = FALSE;
 	
 	// ---------------------------------
 	// Check the Fuel Status registers
@@ -86,7 +81,7 @@ void fuel_task( void *pvParameters ){
 	
 	// ---------------------------------
 	// Initialize battery info
-	// ---------------------------------
+	// ---------------------------------	
 	batteryInfo = fuel_readBatteryInfo();
 	
 	if( batteryInfo.crc != fuel_calculateBatteryInfoCRC(&batteryInfo) ){
@@ -143,6 +138,7 @@ void fuel_task( void *pvParameters ){
 		// Check if battery low
 		// ---------------------------------
 		if ( fuel_read_voltage() <= FUEL_VOLTAGE_POWERDOWN_LIMIT ){
+			debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_FUEL, "Low Battery! Shutting down");
 			wdt_send_request(WDT_REQUEST_POWEROFF, NULL);
 		}		
 		
@@ -160,13 +156,50 @@ void fuel_task( void *pvParameters ){
 		// Check for any requests!
 		// ---------------------------------
 		if( xQueueReceive(fuelManagerQueue, &request, (portTickType)TASK_DELAY_MS(FUEL_UPDATE_RATE)) == pdTRUE ){
+			debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Processing request");
 			switch(request.command){
 				case(FUEL_REQUEST_SHUTDOWN):
 					debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Task shut down");
 					wdt_send_request(WDT_REQUEST_FUEL_SHUTDOWN_COMPLETE, NULL);
 					vTaskSuspend(NULL);
 					break;
+					
+				case(FUEL_REQUEST_VOLTAGE):
+					responseU16 = fuel_read_voltage();
+					*(request.pointer++) = (responseU16 >> 8);
+					*(request.pointer++) = (responseU16 >> 0);
+					break;
+					
+				case(FUEL_REQUEST_ACCUM_CURRENT):
+					responseU16 = fuel_read_current(FUEL_CURRENT_ACCUMULATED);
+					*(request.pointer++) = (responseU16 >> 8);
+					*(request.pointer++) = (responseU16 >> 0);
+					break;
+					
+				case(FUEL_REQUEST_INSTANT_CURRENT):
+					responseU16 = fuel_read_current(FUEL_CURRENT_INSTANTANEOUS);
+					*(request.pointer++) = (responseU16 >> 8);
+					*(request.pointer++) = (responseU16 >> 0);
+					break;
+					
+				case(FUEL_REQUEST_TEMPERATURE):
+					responseU16 = fuel_read_temperature();
+					*(request.pointer++) = (responseU16 >> 8);
+					*(request.pointer++) = (responseU16 >> 0);
+					break;
+					
+				case(FUEL_REQUEST_UPDATE_ACCUM):
+					fuel_updateAccumulatedCurrent(BATTERY_CAPACITY_COUNTS);
+					break;
 			}
+			
+			debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Complete");
+			
+			if(request.resume == TRUE){
+				vTaskResume(request.handle);
+				debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Requesting task resumed");
+			}
+			
 		}
 		
 	}
@@ -346,11 +379,21 @@ unsigned char charge_state( void ){
 	return (( gpio_get_pin_value(CHARGE_STAT1) << 2 ) |  ( gpio_get_pin_value(CHARGE_STAT2) << 1 ) | ( gpio_get_pin_value(CHARGE_PG) << 0 ));
 }
 
-unsigned char fuel_send_request(unsigned char command, unsigned char data){
+void fuel_send_request(unsigned char command, unsigned char data, unsigned char *pointer, unsigned char resume, unsigned char delay){
 	struct tFuelRequest request;
 	
 	request.command = command;
 	request.data = data;
+	request.resume = resume;
+	request.pointer = pointer;
 	
-	return xQueueSend(fuelManagerQueue, &request, portMAX_DELAY);
+	if(resume == TRUE){
+		request.handle = xTaskGetCurrentTaskHandle();
+	}
+	
+	xQueueSend(fuelManagerQueue, &request, delay);
+	
+	if(resume == TRUE){
+		vTaskSuspend(NULL);
+	}
 }

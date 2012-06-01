@@ -528,6 +528,16 @@ unsigned char flash_WriteOTP(unsigned char startAddress, unsigned char length, u
 	
 	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
 	
+	// Wait for dataflash to become ready again.
+	vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
+	while( flash_is_busy() ){
+		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
+	}
+		
+	if(flash_operation_failed()){
+		return DATAFLASH_RESPONSE_FAILURE;
+	}
+	
 	return DATAFLASH_RESPONSE_OK;
 }
 

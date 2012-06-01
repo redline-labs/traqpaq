@@ -89,24 +89,41 @@ void usb_task( void *pvParameters ){
 			case(USB_CMD_REQ_TESTER_ID):
 				usbTxBuffer[data_length++] = flashOTP.tester_id;				
 				break;
+				
+				
 
-			case(USB_CMD_REQ_BATTINFO):
-				responseU16 = fuel_read_voltage();
+			case(USB_CMD_REQ_BATTERY_VOLTAGE):
+				fuel_send_request(FUEL_REQUEST_VOLTAGE, NULL, &responseU16, TRUE, NULL);
 				usbTxBuffer[data_length++] = (responseU16 >> 8) & 0xFF;	// Battery voltage
 				usbTxBuffer[data_length++] = (responseU16 >> 0) & 0xFF ;
-
-				responseU16 = fuel_read_temperature();
-				usbTxBuffer[data_length++] = (responseU16 >> 8) & 0xFF;	// Temperature
-				usbTxBuffer[data_length++] = (responseU16 >> 0) & 0xFF;
-
-				responseU16 = fuel_read_current(FUEL_CURRENT_INSTANTANEOUS);
-				usbTxBuffer[data_length++] = (responseU16 >> 8) & 0xFF;	// Instantaneous Current
-				usbTxBuffer[data_length++] = (responseU16 >> 0) & 0xFF;
-
-				responseU16 = fuel_read_current(FUEL_CURRENT_ACCUMULATED);
-				usbTxBuffer[data_length++] = (responseU16 >> 8) & 0xFF;	// Accumulated Current
-				usbTxBuffer[data_length++] = (responseU16 >> 0) & 0xFF;
 				break;
+				
+			case(USB_CMD_REQ_BATTERY_TEMPERATURE):
+				fuel_send_request(FUEL_REQUEST_TEMPERATURE, NULL, &responseU16, TRUE, NULL);
+				usbTxBuffer[data_length++] = (responseU16 >> 8) & 0xFF;	// Battery voltage
+				usbTxBuffer[data_length++] = (responseU16 >> 0) & 0xFF ;
+				break;
+				
+			case(USB_CMD_REQ_BATTERY_ACCUM):
+				fuel_send_request(FUEL_REQUEST_ACCUM_CURRENT, NULL, &responseU16, TRUE, NULL);
+				usbTxBuffer[data_length++] = (responseU16 >> 8) & 0xFF;	// Battery voltage
+				usbTxBuffer[data_length++] = (responseU16 >> 0) & 0xFF ;
+				break;
+				
+				
+			case(USB_CMD_REQ_BATTERY_INSTANT):
+				fuel_send_request(FUEL_REQUEST_INSTANT_CURRENT, NULL, &responseU16, TRUE, NULL);
+				usbTxBuffer[data_length++] = (responseU16 >> 8) & 0xFF;	// Battery voltage
+				usbTxBuffer[data_length++] = (responseU16 >> 0) & 0xFF ;
+				break;
+				
+			case(USB_CMD_REQ_BATTERY_UPDATE):
+				fuel_send_request(FUEL_REQUEST_UPDATE_ACCUM, NULL, NULL, TRUE, NULL);
+				usbTxBuffer[data_length++] = TRUE;
+				break;
+				
+				
+				
 					
 			case(USB_CMD_READ_OTP):
 				data_length = usbRxBuffer[1];
@@ -132,7 +149,6 @@ void usb_task( void *pvParameters ){
 			case(USB_DBG_DF_BUSY):
 				data_length = 1;
 				usbTxBuffer[0] = flash_is_busy();
-				
 				break;
 				
 			case(USB_CMD_ERASE_RECORDDATA):
@@ -215,7 +231,7 @@ void usb_task( void *pvParameters ){
 				flash_send_request(FLASH_REQUEST_READ_TRACK, &usbTxBuffer, NULL, (usbRxBuffer[1] << 8) + (usbRxBuffer[2] << 0), TRUE, pdFALSE);
 				break;
 				
-			case(USB_CMD_WRITE_USERPREFS):
+			case(USB_CMD_WRITE_USERPREFS):	// 24d
 				data_length = 1;
 				usbTxBuffer[0] = TRUE;
 				userPrefs.screenFadeTime = BACKLIGHT_DEFAULT_FADETIME;

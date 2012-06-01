@@ -48,7 +48,7 @@
 #define OTP_RESERVED_DATA		0xAA
 
 
-struct tFlashOTP {
+struct __attribute__ ((packed)) tFlashOTP {
 	unsigned char serial[OTP_SERIAL_LENGTH];
 	unsigned char pcb_rev;
 	unsigned char tester_id;
