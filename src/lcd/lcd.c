@@ -34,6 +34,8 @@
 #include "string.h"
 #include "itoa.h"
 
+#include "images/traqpaq.h"
+
 #include FONT_SMALL_INCLUDE
 #include FONT_LARGE_INCLUDE
 
@@ -83,8 +85,10 @@ void lcd_gui_task_normal( void *pvParameters ){
 	unsigned char lastHour, lastMinute, lastSecond;
 	
 	unsigned char button;
-	unsigned short lcd_fsm = LCDFSM_MAINMENU;		// Useful for testing new screens!
+	unsigned short lcd_fsm = LCDFSM_SPLASH;		// Useful for testing new screens!
 	unsigned char redraw = TRUE;
+	
+	portTickType tickCount;
 	
 	lcdWidgetsManagerQueue = xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(request));
 	lcdButtonsManagerQueue	= xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(unsigned char));
@@ -105,7 +109,7 @@ void lcd_gui_task_normal( void *pvParameters ){
 	lcd_init();
 	
 	// Create GUI element
-	topBar = lcd_createTopBar("Ryan's traq|paq", COLOR_WHITE, COLOR_BLACK);	
+	topBar = lcd_createTopBar("Josh's traq|paq", COLOR_WHITE, COLOR_BLACK);
 	mainMenu = menu_init();
 	
 	backlight_init(BACKLIGHT_TURN_ON_DELAY);
@@ -185,6 +189,13 @@ void lcd_gui_task_normal( void *pvParameters ){
 		
 		// See if screen needs to be updated
 		switch(lcd_fsm){
+			// ---------------------------------
+			// Splash Screen
+			// ---------------------------------
+			case(LCDFSM_SPLASH):
+				#include "screens/splash.h"
+				break;
+			
 			// ---------------------------------
 			// Main Menu
 			// ---------------------------------
@@ -586,14 +597,14 @@ void lcd_fillRGB(unsigned int data){
 void lcd_displayImage(unsigned short *pixmap, unsigned short x_offset, unsigned short y_offset, unsigned short image_x, unsigned short image_y){
 	unsigned int i,j;
 	
-	lcd_setCur(x_offset, y_offset);
+	lcd_setCur(LCD_MAX_X - x_offset, LCD_MAX_Y - y_offset);
 	
-	for(j=0; j < image_x; j++){
-		for(i=0; i < image_y; i++){
+	for(j=image_x; j > 0; j--){
+		for(i=image_y; i > 0; i--){
 			lcd_writeData(*pixmap);
 			pixmap++;
 		}
-		lcd_setCur(x_offset + j, y_offset);
+		lcd_setCur(LCD_MAX_X - x_offset + j, LCD_MAX_Y - y_offset);
 	}
 }
 
@@ -634,9 +645,9 @@ void lcd_writeText_8x16(char *lcd_string, const unsigned char *font_style, unsig
 
 		for (y = (origin_y + yfont); y > origin_y; y--){
 			mask = 0x01;
-			for (x = (origin_x + xfont); x > origin_x ; x--){
+			for (x = (origin_x + xfont); x > origin_x; x--){
 				if (*data & mask){ // if pixel data then put dot
-					lcd_setCur(x, y);
+					lcd_setCur(LCD_MAX_X - x, LCD_MAX_Y - y);
 					lcd_writeData(fcolor);
 				}
 				mask <<= 1;
@@ -673,7 +684,7 @@ void lcd_writeText_16x32(char *lcd_string, const unsigned char *font_style, unsi
 			mask = 0x01;
 			for (x = (origin_x + xfont); x > origin_x ; x--){
 				if (*data & mask){ // if pixel data then put dot
-					lcd_setCur(x, y);
+					lcd_setCur(LCD_MAX_X - x, LCD_MAX_Y-y);
 					lcd_writeData(fcolor);
 				}
 				mask <<= 1;
@@ -710,21 +721,28 @@ void integer_to_hexascii(unsigned short number, unsigned char *string){
 
 
 void lcd_drawFilledRectangle(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2, unsigned short color){
-	volatile int numPixels;
+	int numPixels;
+	unsigned short newX1, newX2, newY1, newY2;
 	
 	numPixels = (x2 - x1 + 1) * (y1 - y2 + 1);		// Rectangle width * height
 	
+	// Flip coordinates 180deg (HW rev 1.3 screen flip)
+	newX1 = LCD_MAX_X - x2;
+	newX2 = LCD_MAX_X - x1;
+	newY1 = LCD_MAX_Y - y2;
+	newY2 = LCD_MAX_Y - y1;
+	
 	// TRICKY: SPFD5420 definitions of horizontal and vertical are different from used in our application
 	lcd_writeCommand(LCD_CMD_WINDOW_VERT_ADDR_START);
-	lcd_writeData(x1);
+	lcd_writeData(newX1);
 	lcd_writeCommand(LCD_CMD_WINDOW_VERT_ADDR_END);
-	lcd_writeData(x2);
+	lcd_writeData(newX2);
 	lcd_writeCommand(LCD_CMD_WINDOW_HORZ_ADDR_START);
-	lcd_writeData(y2);
+	lcd_writeData(newY2);
 	lcd_writeCommand(LCD_CMD_WINDOW_HORZ_ADDR_END);
-	lcd_writeData(y1);
+	lcd_writeData(newY1);
 	
-	lcd_setCur(x1, y1);
+	lcd_setCur(newX1, newY1);
 	
 	while(numPixels >= 0){
 		lcd_writeData(color);
@@ -771,7 +789,7 @@ void lcd_drawLine(unsigned short x1, unsigned short y1, unsigned short x2, unsig
 		// Walk along X, draw pixel, and step Y when required.
 		int16_t e = dx >> 1;
 		for ( i = 0; i <= dx; ++i) {
-			lcd_setCur(x, y);
+			lcd_setCur(LCD_MAX_X - x, LCD_MAX_Y - y);
 			lcd_writeData(color);
 			// Sub-pixel "error" overflowed, so we step Y and reset the "error".
 			if (e <= 0){
@@ -786,7 +804,7 @@ void lcd_drawLine(unsigned short x1, unsigned short y1, unsigned short x2, unsig
 		// Walk along Y, draw pixel, and step X when required.
 		int16_t e = dy >> 1;
 		for (i = 0; i <= dy; ++i) {
-			lcd_setCur(x, y);
+			lcd_setCur(LCD_MAX_X - x, LCD_MAX_Y - y);
 			lcd_writeData(color);
 			// Sub-pixel "error" overflowed, so we step X and reset the "error".
 			if (e <= 0){
@@ -894,9 +912,11 @@ struct tLCDTopBar lcd_createTopBar(unsigned char *string, unsigned short fcolor,
 	
 	// Draw bar background
 	lcd_drawFilledRectangle(LCD_MIN_X, LCD_MAX_Y, LCD_MAX_X, LCD_MAX_Y - LCD_TOPBAR_THICKNESS, topBar.bcolor);
+	//lcd_drawFilledRectangle(LCD_MIN_X, LCD_MIN_Y + LCD_TOPBAR_THICKNESS, LCD_MAX_X, LCD_MIN_Y, topBar.bcolor);
 	
 	// Write in the text
 	lcd_writeText_8x16(string, FONT_SMALL_POINTER, LCD_TOPBAR_TEXT_XPADDING, LCD_MAX_Y - LCD_TOPBAR_TEXT_YPADDING, topBar.fcolor);
+	//lcd_writeText_8x16(string, FONT_SMALL_POINTER, LCD_MIN_X, LCD_MIN_Y, COLOR_WHITE);
 	
 	// Draw battery
 	lcd_drawLine(LCD_MAX_X - LCD_BATTERY_X_POS,
