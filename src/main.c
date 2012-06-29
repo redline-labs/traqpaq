@@ -34,7 +34,7 @@ struct tSystemFlags systemFlags;
 // ------------------------------------------------------------
 // Main
 // ------------------------------------------------------------
-int main( void ){	
+int main( void ){
 	//--------------------------
 	// Initialization
 	//--------------------------
@@ -43,6 +43,9 @@ int main( void ){
 	Disable_global_interrupt();
 	
 	INTC_init_interrupts();
+	irq_initialize_vectors();
+	cpu_irq_enable();
+	
 	board_init();
 	
 	

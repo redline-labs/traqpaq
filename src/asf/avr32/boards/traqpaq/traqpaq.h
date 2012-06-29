@@ -129,7 +129,7 @@
 #define DATAFLASH_SPI_NPCS0_FUNCTION	AVR32_SPI0_NPCS_0_1_FUNCTION
 
 #define DATAFLASH_SPI_NPCS				0
-#define SPI_BAUDRATE					APPL_PBA_SPEED
+#define SPI_BAUDRATE					12000000	// 12MHz
 
 #define SPI_BITS_PER_XFER			8			// 8 Bits per transfer
 #define SPI_SCLK_DELAY				0			// Delay from CS to first CLK
