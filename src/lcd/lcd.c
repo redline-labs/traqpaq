@@ -85,7 +85,7 @@ void lcd_gui_task_normal( void *pvParameters ){
 	unsigned char lastHour, lastMinute, lastSecond;
 	
 	unsigned char button;
-	unsigned short lcd_fsm = LCDFSM_MAINMENU;//LCDFSM_SPLASH;		// Useful for testing new screens!
+	unsigned short lcd_fsm = LCDFSM_SPLASH;		// Useful for testing new screens!
 	unsigned char redraw = TRUE;
 	
 	portTickType tickCount;
@@ -193,7 +193,7 @@ void lcd_gui_task_normal( void *pvParameters ){
 			// Splash Screen
 			// ---------------------------------
 			case(LCDFSM_SPLASH):
-				//#include "screens/splash.h"
+				#include "screens/splash.h"
 				break;
 			
 			// ---------------------------------

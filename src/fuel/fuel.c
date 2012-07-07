@@ -211,7 +211,7 @@ void fuel_read_register(unsigned char command, unsigned char *pointer, unsigned 
 
 	packet.chip = 			FUEL_ADDRESS;
 	packet.addr_length = 	FUEL_ADDRESS_LENGTH;
-	packet.addr[0] = 			command;
+	packet.addr = 			command;
 	packet.length = 		length;
 	packet.buffer = 		pointer;
 
@@ -223,7 +223,7 @@ void fuel_write_register(unsigned char command, unsigned char *pointer, unsigned
 
 	packet.chip = 			FUEL_ADDRESS;
 	packet.addr_length = 	FUEL_ADDRESS_LENGTH;
-	packet.addr[0] = 			command;
+	packet.addr = 			command;
 	packet.length = 		length;
 	packet.buffer = 		pointer;
 
@@ -235,7 +235,7 @@ void fuel_write_command(unsigned char fcmd){
 
 	packet.chip = 			FUEL_ADDRESS;
 	packet.addr_length = 	FUEL_ADDRESS_LENGTH;
-	packet.addr[0] = 			FUEL_FUNCTION_MADDR;
+	packet.addr = 			FUEL_FUNCTION_MADDR;
 	packet.length = 		1;
 	packet.buffer = 		&fcmd;
 
