@@ -97,7 +97,7 @@ to exclude the API function. */
 #define INCLUDE_vTaskDelayUntil             1
 #define INCLUDE_vTaskDelay                  1
 #define INCLUDE_xTaskGetCurrentTaskHandle   1
-#define INCLUDE_xTaskGetSchedulerState      0
+#define INCLUDE_xTaskGetSchedulerState      1
 
 
 /* configTICK_USE_TC is a boolean indicating whether to use a Timer Counter or

@@ -184,14 +184,22 @@ struct tFuelStatusFlags {
 
 
 #define FUEL_REQUEST_SHUTDOWN					0
+#define FUEL_REQUEST_VOLTAGE					1
+#define FUEL_REQUEST_TEMPERATURE				2
+#define FUEL_REQUEST_ACCUM_CURRENT				3
+#define FUEL_REQUEST_INSTANT_CURRENT			4
+#define FUEL_REQUEST_UPDATE_ACCUM				5
 
 #define FUEL_LOW_BATTERY_CHECK_TIME				250
 
-#define fuel_low_battery_check()				while( systemFlags.fuel.lowBattery ) vTaskDelay( (portTickType)TASK_DELAY_MS( FUEL_LOW_BATTERY_CHECK_TIME ) )
+#define fuel_low_battery_check()				//while( systemFlags.fuel.lowBattery ) vTaskDelay( (portTickType)TASK_DELAY_MS( FUEL_LOW_BATTERY_CHECK_TIME ) )
 
 struct tFuelRequest {
 	unsigned char command;
 	unsigned char data;
+	unsigned char *pointer;
+	unsigned char resume;
+	xTaskHandle handle;
 };
 
 void fuel_task_init( void );
@@ -214,7 +222,7 @@ void fuel_updateAccumulatedCurrent(unsigned short value);
 void fuel_writeShadowRAM( void );
 unsigned char fuel_isBusy( void );
 
-unsigned char fuel_send_request(unsigned char command, unsigned char data);
+void fuel_send_request(unsigned char command, unsigned char data, unsigned char *pointer, unsigned char resume, unsigned char delay);
 
 
 #endif /* FUEL_H_ */

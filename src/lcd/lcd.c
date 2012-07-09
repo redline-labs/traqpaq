@@ -85,13 +85,13 @@ void lcd_gui_task_normal( void *pvParameters ){
 	unsigned char lastHour, lastMinute, lastSecond;
 	
 	unsigned char button;
-	unsigned short lcd_fsm = LCDFSM_SPLASH;		// Useful for testing new screens!
+	unsigned short lcd_fsm = LCDFSM_MAINMENU;		// Useful for testing new screens!
 	unsigned char redraw = TRUE;
 	
 	portTickType tickCount;
 	
 	lcdWidgetsManagerQueue = xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(request));
-	lcdButtonsManagerQueue	= xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(unsigned char));
+	lcdButtonsManagerQueue	= xQueueCreate(LCD_BUTTON_QUEUE_SIZE, sizeof(unsigned char));
 	
 	// Make sure the battery isn't low before continuing
 	fuel_low_battery_check();
@@ -193,7 +193,7 @@ void lcd_gui_task_normal( void *pvParameters ){
 			// Splash Screen
 			// ---------------------------------
 			case(LCDFSM_SPLASH):
-				#include "screens/splash.h"
+				//#include "screens/splash.h"
 				break;
 			
 			// ---------------------------------
@@ -269,12 +269,20 @@ void lcd_gui_task_normal( void *pvParameters ){
 			// ---------------------------------
 			// Main Menu -> Options -> Erase
 			// ---------------------------------
-			case(LCDFSM_OPTIONS_ERASE):
+			case(LCDFSM_OPTIONS_ERASE_RECORDS):
 				#include "screens/options/memory_erase.h"
 				break;
 				
-			case(LCDFSM_OPTIONS_ERASE_CONFIRM):
+			case(LCDFSM_OPTIONS_ERASE_RECORDS_CONFIRM):
 				#include "screens/options/memory_erase_confirm.h"
+				break;
+				
+			case(LCDFSM_OPTIONS_ERASE_TRACKS):
+				#include "screens/options/memory_erase_tracks.h"
+				break;
+				
+			case(LCDFSM_OPTIONS_ERASE_TRACKS_CONFIRM):
+				#include "screens/options/memory_erase_tracks_confirm.h"
 				break;
 				
 			// ---------------------------------

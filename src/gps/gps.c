@@ -84,25 +84,28 @@ void gps_task( void *pvParameters ){
 	
 	unsigned char recordIndex = 0;								// Index in formatted data struct
 	
-	signed int oldLatitude = 0;									// Previous position update latitude and longitude
-	signed int oldLongitude = 0;
-	
 	unsigned char oldMode = 0;
 	
 	unsigned int lapTime, oldLapTime;
+	unsigned short oldCourse;
 	
 	unsigned int datestamp;
 	
 	struct tRecordDataPage gpsData;							// Formatted GPS Data
 	struct tGPSLine finishLine;								// Formatted coordinate pairs for "finish line"
 	struct tTracklist trackList;
+	struct tGPSPoint lastPoint;
 	
 	struct tGPSRequest request;
-	
+
 	// Make sure the battery isn't low before continuing
 	fuel_low_battery_check();
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Task Started");
+	
+	lastPoint.heading = 0;
+	lastPoint.latitude = 0;
+	lastPoint.longitude = 0;
 	
 	// Pull the GPS out of reset and enable the ISR
 	gps_enable_interrupts();
@@ -141,9 +144,9 @@ void gps_task( void *pvParameters ){
 					
 				case(GPS_REQUEST_CREATE_NEW_TRACK):
 					itoa(gpsData.utc, &(trackList.name), 10, FALSE);
-					trackList.course = gpsData.data[recordIndex].course;
-					trackList.longitude = gpsData.data[recordIndex].longitude;
-					trackList.latitude = gpsData.data[recordIndex].latitude;
+					trackList.course = lastPoint.heading;
+					trackList.longitude = lastPoint.longitude;
+					trackList.latitude = lastPoint.latitude;
 					trackList.isEmpty = FALSE;
 					trackList.reserved = 0xA5;
 					flash_send_request(FLASH_REQUEST_ADD_TRACK, &trackList, NULL, NULL, FALSE, pdFALSE);
@@ -156,7 +159,23 @@ void gps_task( void *pvParameters ){
 					wdt_send_request(WDT_REQUEST_GPS_SHUTDOWN_COMPLETE, NULL);
 					vTaskSuspend(NULL);
 					break;
+				
+				case(GPS_REQUEST_LATITUDE):
+					*(request.pointer) = lastPoint.latitude;
+					break;
 					
+				case(GPS_REQUEST_LONGITUDE):
+					*(request.pointer) = lastPoint.longitude;
+					break;
+					
+				case(GPS_REQUEST_COURSE):
+					*(request.pointer) = lastPoint.heading;
+					break;
+			}
+			
+			// Resume requesting task if it has been suspended
+			if(request.resume == TRUE){
+				vTaskResume(request.handle);
 			}
 		}
 		
@@ -202,7 +221,7 @@ void gps_task( void *pvParameters ){
 					}						
 					
 					// Determine if a lap was detected!
-					gpsData.data[recordIndex].lapDetected = gps_intersection(oldLongitude,							oldLatitude,
+					gpsData.data[recordIndex].lapDetected = gps_intersection(lastPoint.longitude,					lastPoint.latitude,
 																			gpsData.data[recordIndex].longitude,    gpsData.data[recordIndex].latitude,
 																			finishLine.startLongitude,				finishLine.startLatitude,
 																			finishLine.endLongitude,				finishLine.endLatitude);
@@ -231,8 +250,9 @@ void gps_task( void *pvParameters ){
 					}
 					
 					// Save the last coordinates for detecting the intersection
-					oldLongitude = gpsData.data[recordIndex].longitude;
-					oldLatitude = gpsData.data[recordIndex].latitude;
+					lastPoint.longitude = gpsData.data[recordIndex].longitude;
+					lastPoint.latitude = gpsData.data[recordIndex].latitude;
+					lastPoint.heading = gpsData.data[recordIndex].course;
 						
 					processedGGA = TRUE;
 					
@@ -419,6 +439,10 @@ unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, sign
     //lat = y1+ua*(y2 - y1);
 	
 	if( (ua >= 0) && (ua <= 1) && (ub >= 0) && (ub <= 1) ){
+		// Paths intersected!
+		
+		// Check course
+
 		return true;
 	}
 	
@@ -508,13 +532,22 @@ void gps_warm_start( void ){
 	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
 }
 
-void gps_send_request(unsigned char command, unsigned int *pointer, unsigned char data, unsigned char delay){
+void gps_send_request(unsigned char command, unsigned int *pointer, unsigned char data, unsigned char delay, unsigned char resume){
 	struct tGPSRequest request;
 	request.command = command;
 	request.pointer = pointer;
 	request.data = data;
+	request.resume = resume;
+	
+	if(resume == TRUE){
+		request.handle = xTaskGetCurrentTaskHandle();
+	}
 	
 	xQueueSend(gpsManagerQueue, &request, delay);
+	
+	if(resume == TRUE){
+		vTaskSuspend(NULL);
+	}
 }
 
 void gps_messageTimeout( void ){

@@ -32,6 +32,12 @@
 #define CONTROL_FSM_H_
 
 // ---------------------------------
+// Splash Screen
+// ---------------------------------
+#define LCDFSM_SPLASH					999
+
+
+// ---------------------------------
 // Main Menu
 // ---------------------------------
 #define LCDFSM_MAINMENU					000
@@ -83,11 +89,14 @@
 #define LCDFSM_OPTIONS_SCREEN_TIMEOUT	422
 
 // ---------------------------------
-// Main Menu -> Options -> Date and Time
+// Main Menu -> Options -> Memory
 // ---------------------------------
-#define LCDFSM_OPTIONS_ERASE			441
-#define LCDFSM_OPTIONS_ERASE_CONFIRM	442
+#define LCDFSM_OPTIONS_ERASE_RECORDS	441
+#define LCDFSM_OPTIONS_ERASE_RECORDS_CONFIRM	442
 #define LCDFSM_OPTIONS_VIEW_USAGE		443
+
+#define LCDFSM_OPTIONS_ERASE_TRACKS		444
+#define LCDFSM_OPTIONS_ERASE_TRACKS_CONFIRM		445
 
 // ---------------------------------
 // Main Menu -> Options -> Create New Track

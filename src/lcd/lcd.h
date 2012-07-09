@@ -73,6 +73,8 @@ extern struct tLCDTopBar topBar;
 // GUI Elements
 #define LCD_PROGRESSBAR_PADDING		3
 
+#define LCD_SPLASH_SCREEN_TIME		4000	// Time in milliseconds for splash screen
+
 #define LCD_MENU_MAX_ITEMS			20
 #define LCD_MENU_ITEM_LENGTH		30
 #define LCD_TOPBAR_TEXT_LENGTH		20
@@ -374,7 +376,8 @@ struct tLCDTopBar {
 	struct tLCDAntenna antenna;
 };
 
-#define LCD_WIDGET_QUEUE_SIZE			5
+#define LCD_WIDGET_QUEUE_SIZE			10
+#define LCD_BUTTON_QUEUE_SIZE			5
 
 #define LCD_REQUEST_UPDATE_BATTERY		0
 #define LCD_REQUEST_UPDATE_CHARGE		1

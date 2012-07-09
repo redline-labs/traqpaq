@@ -141,8 +141,6 @@ void flash_task( void *pvParameters ){
 		flash_clr_wp();
 		flash_clr_hold();
 		
-		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FLASH, "Processing Request");
-		
 		switch(request.command){
 			case(FLASH_REQUEST_END_CURRENT_RECORD):
 				
@@ -257,9 +255,7 @@ void flash_task( void *pvParameters ){
 		// Resume requesting task if it has been suspended
 		if(request.resume == TRUE){
 			vTaskResume(request.handle);
-			debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FLASH, "Requesting task resumed");
 		}
-		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FLASH, "Completed Request");
 		
 	}
 }

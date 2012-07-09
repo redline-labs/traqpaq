@@ -36,8 +36,8 @@
 
 #define BACKLIGHT_DEFAULT_MAX		255		// Default MAX Screen Brightness
 #define BACKLIGHT_DEFAULT_MIN		55		// Default MIN Screen Brightness
-#define BACKLIGHT_DEFAULT_FADETIME	10		// Default Inactive Time in Seconds to Fade Screen
-#define BACKLIGHT_DEFAULT_OFFTIME	30		// Default Inactive Time in Seconds to Turn Off Screen
+#define BACKLIGHT_DEFAULT_FADETIME	30		// Default Inactive Time in Seconds to Fade Screen
+#define BACKLIGHT_DEFAULT_OFFTIME	120		// Default Inactive Time in Seconds to Turn Off Screen
 
 #define boost_converter_on()		gpio_set_gpio_pin(PM_SHDN1)
 #define boost_converter_off()		gpio_clr_gpio_pin(PM_SHDN1)

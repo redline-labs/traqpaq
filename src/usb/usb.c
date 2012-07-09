@@ -59,6 +59,8 @@ void usb_task( void *pvParameters ){
 	unsigned short data_length;
 	unsigned char responseU8;
 	unsigned short responseU16;
+	unsigned int responseU32;
+	signed int responseS32;
 	unsigned short i;
 	
 	struct tTracklist trackList;
@@ -117,12 +119,10 @@ void usb_task( void *pvParameters ){
 				usbTxBuffer[data_length++] = (responseU16 >> 0) & 0xFF ;
 				break;
 				
-			case(USB_CMD_REQ_BATTERY_UPDATE):
+			case(USB_CMD_REQ_BATTERY_UPDATE):	// 8d
 				fuel_send_request(FUEL_REQUEST_UPDATE_ACCUM, NULL, NULL, TRUE, NULL);
 				usbTxBuffer[data_length++] = TRUE;
 				break;
-				
-				
 				
 					
 			case(USB_CMD_READ_OTP):
@@ -135,7 +135,7 @@ void usb_task( void *pvParameters ){
 				flash_send_request(FLASH_REQUEST_READ_RECORDTABLE, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
 				break;
 					
-			case(USB_CMD_READ_RECORDDATA):
+			case(USB_CMD_READ_RECORDDATA):	// 19d
 				data_length = (usbRxBuffer[1] << 8) + usbRxBuffer[2];
 				flash_send_request(FLASH_REQUEST_READ_RECORDDATA, &usbTxBuffer, (usbRxBuffer[1] << 8) + usbRxBuffer[2], (usbRxBuffer[3] << 8) + usbRxBuffer[4], TRUE, pdFALSE);
 				break;
@@ -203,21 +203,13 @@ void usb_task( void *pvParameters ){
 				flash_WriteOTP(0, 18, &usbTxBuffer);
 				break;
 				
-			case(USB_CMD_WRITE_SAVEDTRACKS):
+			case(USB_CMD_WRITE_SAVEDTRACKS):	// 25d
 				flash_send_request(FLASH_REQUEST_ERASE_TRACKS, NULL, NULL, NULL, TRUE, pdFALSE);
 			
 				strlcpy(&trackList.name, "Burn Pit", TRACKLIST_MAX_STRLEN);
 				trackList.course = 900;
-				trackList.longitude = -83472574;
-				trackList.latitude = 42558193;
-				trackList.isEmpty = FALSE;
-				trackList.reserved = 0xA5;
-				flash_send_request(FLASH_REQUEST_ADD_TRACK, &trackList, NULL, NULL, TRUE, pdFALSE);
-				
-				strlcpy(&trackList.name, "Oakley Park", TRACKLIST_MAX_STRLEN);
-				trackList.course = 2666;
-				trackList.longitude = -83453003;
-				trackList.latitude = 42570383;
+				trackList.longitude = -83472585;
+				trackList.latitude = 42558330;
 				trackList.isEmpty = FALSE;
 				trackList.reserved = 0xA5;
 				flash_send_request(FLASH_REQUEST_ADD_TRACK, &trackList, NULL, NULL, TRUE, pdFALSE);
@@ -226,7 +218,7 @@ void usb_task( void *pvParameters ){
 				usbTxBuffer[0] = TRUE;
 				break;
 				
-			case(USB_CMD_READ_SAVEDTRACKS):
+			case(USB_CMD_READ_SAVEDTRACKS):		// 17d
 				data_length = sizeof(trackList);
 				flash_send_request(FLASH_REQUEST_READ_TRACK, &usbTxBuffer, NULL, (usbRxBuffer[1] << 8) + (usbRxBuffer[2] << 0), TRUE, pdFALSE);
 				break;
@@ -239,6 +231,21 @@ void usb_task( void *pvParameters ){
 				userPrefs.screenPWMMax = BACKLIGHT_DEFAULT_MAX;
 				userPrefs.screenPWMMin = BACKLIGHT_DEFAULT_MIN;
 				flash_send_request(FLASH_REQUEST_WRITE_USER_PREFS, NULL, NULL, NULL, FALSE, pdFALSE);
+				break;
+				
+			case(USB_DBG_GPS_LATITUDE):		// 64d
+				data_length = 4;
+				gps_send_request(GPS_REQUEST_LATITUDE, &usbTxBuffer[0], NULL, pdFALSE, pdTRUE);
+				break;
+				
+			case(USB_DBG_GPS_LONGITUDE):	// 65d
+				data_length = 4;
+				gps_send_request(GPS_REQUEST_LONGITUDE, &usbTxBuffer[0], NULL, pdFALSE, pdTRUE);
+				break;
+				
+			case(USB_DBG_GPS_COURSE):	// 66d
+				data_length = 4;
+				gps_send_request(GPS_REQUEST_COURSE, &usbTxBuffer[0], NULL, pdFALSE, pdTRUE);
 				break;
 
 

@@ -61,29 +61,15 @@ void wdt_task( void *pvParameters ){
 			switch(request.command){
 				case(WDT_REQUEST_POWEROFF):
 					debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_WDT, "Shutdown requested");
-					fuel_send_request(FUEL_REQUEST_SHUTDOWN, NULL);
+					fuel_send_request(FUEL_REQUEST_SHUTDOWN, NULL, NULL, NULL, NULL);
 					flash_send_request(FLASH_REQUEST_SHUTDOWN, NULL, NULL, NULL, NULL, NULL);
-					gps_send_request(GPS_REQUEST_SHUTDOWN, NULL, NULL, NULL);		
-					break;
+					gps_send_request(GPS_REQUEST_SHUTDOWN, NULL, NULL, NULL, pdFALSE);
 					
-				case(WDT_REQUEST_GPS_SHUTDOWN_COMPLETE):
-					gpsShutdown = TRUE;
-					break;
-					
-				case(WDT_REQUEST_DATAFLASH_SHUTDOWN_COMPLETE):
-					dataflashShutdown = TRUE;
-					break;
-					
-				case(WDT_REQUEST_FUEL_SHUTDOWN_COMPLETE):
-					fuelShutdown = TRUE;
+					debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_WDT, "Going down!");
+					wdt_clear();	// Kick the watchdog one more time to allow debug messages to be sent
+					vTaskSuspend(NULL);
 					break;
 			}
-		}
-		
-		if(dataflashShutdown && gpsShutdown && fuelShutdown){
-			debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_WDT, "Going down!");
-			wdt_clear();	// Kick the watchdog one more time to allow debug messages to be sent
-			vTaskSuspend(NULL);
 		}
 		
 		vTaskDelayUntil( &xLastWakeTime, ( WATCHDOG_UPDATE_INTERVAL_MS / portTICK_RATE_MS ) );

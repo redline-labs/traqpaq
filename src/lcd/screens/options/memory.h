@@ -30,7 +30,8 @@
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
 
-	menu_addItem(&mainMenu, "Erase all records",	LCDFSM_OPTIONS_ERASE);
+	menu_addItem(&mainMenu, "Erase all records",	LCDFSM_OPTIONS_ERASE_RECORDS);
+	menu_addItem(&mainMenu, "Erase all tracks",		LCDFSM_OPTIONS_ERASE_TRACKS);
 	menu_addItem(&mainMenu, "View memory use",		LCDFSM_OPTIONS_VIEW_USAGE);
 	
 	lcd_redraw_complete();

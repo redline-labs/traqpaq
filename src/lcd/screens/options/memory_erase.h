@@ -30,7 +30,7 @@
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
 
-	menu_addItem(&mainMenu, "Yes, erase all",	LCDFSM_OPTIONS_ERASE_CONFIRM);
+	menu_addItem(&mainMenu, "Yes, erase all",	LCDFSM_OPTIONS_ERASE_RECORDS_CONFIRM);
 	menu_addItem(&mainMenu, "No, keep data",	LCDFSM_OPTIONS_MEMORY);
 	
 	lcd_redraw_complete();

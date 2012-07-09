@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Record A New Session -> Create New Track
+ * Main Menu -> Options -> Memory -> Erase Tracks
  *
  * - Compiler:          GNU GCC for AVR32
  * - Supported devices: traq|paq hardware version 1.2
@@ -29,9 +29,9 @@
 
 if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
-	lcd_writeText_16x32(" Go to finish line", FONT_LARGE_POINTER, 5, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 64, COLOR_BLACK);
-	lcd_writeText_16x32("and press SELECT to", FONT_LARGE_POINTER, 5, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 96, COLOR_BLACK);
-	lcd_writeText_16x32("create a a new track", FONT_LARGE_POINTER, 5, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 128, COLOR_BLACK);
+
+	menu_addItem(&mainMenu, "Yes, erase all",	LCDFSM_OPTIONS_ERASE_TRACKS_CONFIRM);
+	menu_addItem(&mainMenu, "No, keep tracks",	LCDFSM_OPTIONS_MEMORY);
 	
 	lcd_redraw_complete();
 }
@@ -43,20 +43,21 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 		// Short duration button presses
 		// ---------------------------------
 		case(BUTTON_UP):
+			menu_scrollUp(&mainMenu);
 			break;
 			
 		case(BUTTON_DOWN):
+			menu_scrollDown(&mainMenu);
 			break;
 			
 		case(BUTTON_SELECT):
-			gps_send_request(GPS_REQUEST_CREATE_NEW_TRACK, NULL, NULL, pdFALSE, pdTRUE);
 			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_OPTIONS_NEW_TRACK_CREATED );
+			lcd_change_screens( menu_readCallback(&mainMenu) );
 			break;
 			
 		case(BUTTON_BACK):
 			lcd_force_redraw();
-			lcd_change_screens( LCDFSM_OPTIONS );
+			lcd_change_screens( LCDFSM_MAINMENU );
 			break;
 			
 			
