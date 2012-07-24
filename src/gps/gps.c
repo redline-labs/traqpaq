@@ -86,10 +86,10 @@ void gps_task( void *pvParameters ){
 	
 	unsigned char oldMode = 0;
 	
-	unsigned int lapTime, oldLapTime;
+	unsigned int lapTime = 0, oldLapTime = 0;
 	unsigned short oldCourse;
 	
-	unsigned int datestamp;
+	unsigned int datestamp = 0;
 	
 	struct tRecordDataPage gpsData;							// Formatted GPS Data
 	struct tGPSLine finishLine;								// Formatted coordinate pairs for "finish line"
@@ -122,37 +122,42 @@ void gps_task( void *pvParameters ){
 		// Check for pending requests
 		if( xQueueReceive(gpsManagerQueue, &request, pdFALSE) == pdTRUE ){
 			switch(request.command){
-				case(GPS_REQUEST_START_RECORDING):
-					flash_send_request(FLASH_REQUEST_SET_DATESTAMP, NULL, NULL, datestamp, FALSE, pdFALSE);
+				case(GPS_MGR_REQUEST_START_RECORDING):
+					//flash_send_request(FLASH_REQUEST_SET_DATESTAMP, NULL, NULL, datestamp, FALSE, pdFALSE);
+					flash_send_request(FLASH_MGR_SET_DATESTAMP, NULL, NULL, datestamp, FALSE, pdFALSE);
 					lapTime = 0;
 					oldLapTime = 0xFFFFFFFF;
 					recordFlag = TRUE;
 					break;
 					
-				case(GPS_REQUEST_STOP_RECORDING):
+				case(GPS_MGR_REQUEST_STOP_RECORDING):
 					recordFlag = FALSE;
 					recordIndex = 0;
-					flash_send_request(FLASH_REQUEST_END_CURRENT_RECORD, NULL, NULL, NULL, FALSE, 20);
+					//flash_send_request(FLASH_REQUEST_END_CURRENT_RECORD, NULL, NULL, NULL, FALSE, 20);
+					flash_send_request(FLASH_MGR_END_CURRENT_RECORD, NULL, NULL, NULL, FALSE, 20);
 					break;
 					
-				case(GPS_REQUEST_SET_FINISH_POINT):
+				case(GPS_MGR_REQUEST_SET_FINISH_POINT):
 					// Load the track, and then tell the dataflash that we are using it
-					flash_send_request(FLASH_REQUEST_READ_TRACK, &trackList, sizeof(trackList), request.data, TRUE, 20);
-					flash_send_request(FLASH_REQUEST_SET_TRACK, NULL, NULL, request.data, FALSE, 20);
-					finishLine = gps_find_finish_line(trackList.latitude, trackList.longitude, trackList.course);
+					//flash_send_request(FLASH_REQUEST_READ_TRACK, &trackList, sizeof(trackList), request.data, TRUE, 20);
+					flash_send_request(FLASH_MGR_READ_TRACK, &trackList, sizeof(trackList), request.data, TRUE, 20);
+					//flash_send_request(FLASH_REQUEST_SET_TRACK, NULL, NULL, request.data, FALSE, 20);
+					flash_send_request(FLASH_MGR_SET_TRACK, NULL, NULL, request.data, FALSE, 20);
+					finishLine = gps_find_finish_line(trackList.latitude, trackList.longitude, trackList.heading);
 					break;
 					
-				case(GPS_REQUEST_CREATE_NEW_TRACK):
+				case(GPS_MGR_REQUEST_CREATE_NEW_TRACK):
 					itoa(gpsData.utc, &(trackList.name), 10, FALSE);
-					trackList.course = lastPoint.heading;
+					trackList.heading = lastPoint.heading;
 					trackList.longitude = lastPoint.longitude;
 					trackList.latitude = lastPoint.latitude;
 					trackList.isEmpty = FALSE;
 					trackList.reserved = 0xA5;
-					flash_send_request(FLASH_REQUEST_ADD_TRACK, &trackList, NULL, NULL, FALSE, pdFALSE);
+					//flash_send_request(FLASH_REQUEST_ADD_TRACK, &trackList, NULL, NULL, FALSE, pdFALSE);
+					flash_send_request(FLASH_MGR_ADD_TRACK, &trackList, NULL, NULL, FALSE, pdFALSE);
 					break;
 					
-				case(GPS_REQUEST_SHUTDOWN):
+				case(GPS_MGR_REQUEST_SHUTDOWN):
 					xTimerStop(xMessageTimer, pdFALSE);
 					gpio_clr_gpio_pin(GPS_RESET);	// Put the GPS into reset
 					debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Task shut down");
@@ -160,15 +165,15 @@ void gps_task( void *pvParameters ){
 					vTaskSuspend(NULL);
 					break;
 				
-				case(GPS_REQUEST_LATITUDE):
+				case(GPS_MGR_REQUEST_LATITUDE):
 					*(request.pointer) = lastPoint.latitude;
 					break;
 					
-				case(GPS_REQUEST_LONGITUDE):
+				case(GPS_MGR_REQUEST_LONGITUDE):
 					*(request.pointer) = lastPoint.longitude;
 					break;
 					
-				case(GPS_REQUEST_COURSE):
+				case(GPS_MGR_REQUEST_COURSE):
 					*(request.pointer) = lastPoint.heading;
 					break;
 			}
@@ -227,8 +232,6 @@ void gps_task( void *pvParameters ){
 																			finishLine.endLongitude,				finishLine.endLatitude);
 																			 
 					if( gpsData.data[recordIndex].lapDetected && recordFlag){
-						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_OLDLAPTIME, lapTime, pdFALSE);
-						
 						if(lapTime <= oldLapTime){
 							lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_PERIPHERIAL, LCD_PERIPHERIAL_FASTER, pdFALSE);
 						}else{
@@ -237,6 +240,9 @@ void gps_task( void *pvParameters ){
 						
 						oldLapTime = lapTime;
 						lapTime = 0;
+						
+						// Update the displayed lap time
+						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_OLDLAPTIME, oldLapTime, pdFALSE);
 					}
 					
 					// Update the antenna widget
@@ -252,7 +258,7 @@ void gps_task( void *pvParameters ){
 					// Save the last coordinates for detecting the intersection
 					lastPoint.longitude = gpsData.data[recordIndex].longitude;
 					lastPoint.latitude = gpsData.data[recordIndex].latitude;
-					lastPoint.heading = gpsData.data[recordIndex].course;
+					lastPoint.heading = gpsData.data[recordIndex].heading;
 						
 					processedGGA = TRUE;
 					
@@ -266,7 +272,7 @@ void gps_task( void *pvParameters ){
 						
 					// More Converting!!
 					gpsData.data[recordIndex].speed		= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_SPEED	]]) ) & 0xFFFF;
-					gpsData.data[recordIndex].course	= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_TRACK	]]) ) & 0xFFFF;
+					gpsData.data[recordIndex].heading	= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_TRACK	]]) ) & 0xFFFF;
 					datestamp							= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_DATE	]]) );
 					
 					if(recordIndex == 0){
@@ -317,7 +323,8 @@ void gps_task( void *pvParameters ){
 						
 						recordIndex++;
 						if(recordIndex == RECORD_DATA_PER_PAGE){
-							flash_send_request(FLASH_REQUEST_ADD_RECORDDATA, &gpsData, sizeof(gpsData), NULL, TRUE, 20);
+							//flash_send_request(FLASH_REQUEST_ADD_RECORDDATA, &gpsData, sizeof(gpsData), NULL, TRUE, 20);
+							flash_send_request(FLASH_MGR_ADD_RECORD_DATA, &gpsData, sizeof(gpsData), NULL, TRUE, 20);
 							recordIndex = 0;
 						}
 						
@@ -532,7 +539,7 @@ void gps_warm_start( void ){
 	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
 }
 
-void gps_send_request(unsigned char command, unsigned int *pointer, unsigned char data, unsigned char delay, unsigned char resume){
+void gps_send_request(enum tGpsCommand command, unsigned int *pointer, unsigned char data, unsigned char delay, unsigned char resume){
 	struct tGPSRequest request;
 	request.command = command;
 	request.pointer = pointer;

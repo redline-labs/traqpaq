@@ -31,7 +31,8 @@ if(lcd_redraw_required()){
 	menu_clear(&mainMenu);
 	
 	lcd_writeText_16x32("Working...", FONT_LARGE_POINTER, 50, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 64, COLOR_BLACK);
-	flash_send_request(FLASH_REQUEST_ERASE_TRACKS, NULL, NULL, NULL, TRUE, pdFALSE);
+	//flash_send_request(FLASH_REQUEST_ERASE_TRACKS, NULL, NULL, NULL, TRUE, pdFALSE);
+	flash_send_request(FLASH_MGR_ERASE_TRACKS, NULL, NULL, NULL, TRUE, pdFALSE);
 	lcd_writeText_16x32("Done!", FONT_LARGE_POINTER, 50, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 96, COLOR_GREEN);
 	
 	lcd_redraw_complete();

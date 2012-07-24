@@ -36,16 +36,17 @@
 
 #define WATCHDOG_QUEUE_SIZE			5
 
-
-#define WDT_REQUEST_POWEROFF						0
-#define WDT_REQUEST_DATAFLASH_SHUTDOWN_COMPLETE		1
-#define WDT_REQUEST_GPS_SHUTDOWN_COMPLETE			2
-#define WDT_REQUEST_LCD_SHUTDOWN_COMPLETE			3
-#define WDT_REQUEST_USB_SHUTDOWN_COMPLETE			4
-#define WDT_REQUEST_FUEL_SHUTDOWN_COMPLETE			5
+enum tWatchdogCommand {
+	WDT_REQUEST_POWEROFF,
+	WDT_REQUEST_DATAFLASH_SHUTDOWN_COMPLETE,
+	WDT_REQUEST_GPS_SHUTDOWN_COMPLETE,
+	WDT_REQUEST_LCD_SHUTDOWN_COMPLETE,
+	WDT_REQUEST_USB_SHUTDOWN_COMPLETE,
+	WDT_REQUEST_FUEL_SHUTDOWN_COMPLETE,
+};
 
 struct tWatchdogRequest {
-	unsigned char command;
+	enum tWatchdogCommand command;
 	unsigned char data;
 };
 
@@ -53,7 +54,7 @@ void wdt_task_init(void);
 void wdt_task( void *pvParameters );
 
 unsigned char wdt_triggered(void);
-unsigned char wdt_send_request(unsigned char command, unsigned char data);
+unsigned char wdt_send_request(enum tWatchdogCommand command, unsigned char data);
 
 
 #endif /* WDT_H_ */

@@ -126,23 +126,25 @@
 #define PMTK001_VALID_CMD			0x33
 
 
+enum tGpsCommand {
+	GPS_MGR_REQUEST_DATE,
+	GPS_MGR_REQUEST_START_RECORDING,
+	GPS_MGR_REQUEST_STOP_RECORDING,
+	GPS_MGR_REQUEST_SET_FINISH_POINT,
+	GPS_MGR_REQUEST_CREATE_NEW_TRACK,
+	GPS_MGR_REQUEST_SHUTDOWN,
+	GPS_MGR_REQUEST_LATITUDE,
+	GPS_MGR_REQUEST_LONGITUDE,
+	GPS_MGR_REQUEST_COURSE
+};
+
 struct tGPSRequest {
-	unsigned char command;
+	enum tGpsCommand command;
 	unsigned char data;
 	unsigned int *pointer;
 	unsigned char resume;		// Flag to resume the calling task
 	xTaskHandle handle;			// Handle of task to resume after completion
 };
-
-#define GPS_REQUEST_DATE				0
-#define GPS_REQUEST_START_RECORDING		1
-#define GPS_REQUEST_STOP_RECORDING		2
-#define GPS_REQUEST_SET_FINISH_POINT	3
-#define GPS_REQUEST_CREATE_NEW_TRACK	4
-#define GPS_REQUEST_SHUTDOWN			5
-#define GPS_REQUEST_LATITUDE			6
-#define GPS_REQUEST_LONGITUDE			7
-#define GPS_REQUEST_COURSE				8
 
 
 struct tGPSPoint {
@@ -193,7 +195,7 @@ void gps_set_messages( void );
 void gps_cold_start( void );
 void gps_warm_start( void );
 
-void gps_send_request(unsigned char command, unsigned int *pointer, unsigned char data, unsigned char delay, unsigned char resume);
+void gps_send_request(enum tGpsCommand command, unsigned int *pointer, unsigned char data, unsigned char delay, unsigned char resume);
 void gps_messageTimeout( void );
 
 #endif /* GPS_H_ */

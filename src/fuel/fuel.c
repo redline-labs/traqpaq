@@ -158,37 +158,38 @@ void fuel_task( void *pvParameters ){
 		if( xQueueReceive(fuelManagerQueue, &request, (portTickType)TASK_DELAY_MS(FUEL_UPDATE_RATE)) == pdTRUE ){
 			debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Processing request");
 			switch(request.command){
-				case(FUEL_REQUEST_SHUTDOWN):
+				//case(FUEL_MGR_REQUEST_SHUTDOWN):
+				case(FUEL_MGR_REQUEST_SHUTDOWN):
 					debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Task shut down");
 					wdt_send_request(WDT_REQUEST_FUEL_SHUTDOWN_COMPLETE, NULL);
 					vTaskSuspend(NULL);
 					break;
 					
-				case(FUEL_REQUEST_VOLTAGE):
+				case(FUEL_MGR_REQUEST_VOLTAGE):
 					responseU16 = fuel_read_voltage();
 					*(request.pointer++) = (responseU16 >> 8);
 					*(request.pointer++) = (responseU16 >> 0);
 					break;
 					
-				case(FUEL_REQUEST_ACCUM_CURRENT):
+				case(FUEL_MGR_REQUEST_ACCUM_CURRENT):
 					responseU16 = fuel_read_current(FUEL_CURRENT_ACCUMULATED);
 					*(request.pointer++) = (responseU16 >> 8);
 					*(request.pointer++) = (responseU16 >> 0);
 					break;
 					
-				case(FUEL_REQUEST_INSTANT_CURRENT):
+				case(FUEL_MGR_REQUEST_INSTANT_CURRENT):
 					responseU16 = fuel_read_current(FUEL_CURRENT_INSTANTANEOUS);
 					*(request.pointer++) = (responseU16 >> 8);
 					*(request.pointer++) = (responseU16 >> 0);
 					break;
 					
-				case(FUEL_REQUEST_TEMPERATURE):
+				case(FUEL_MGR_REQUEST_TEMPERATURE):
 					responseU16 = fuel_read_temperature();
 					*(request.pointer++) = (responseU16 >> 8);
 					*(request.pointer++) = (responseU16 >> 0);
 					break;
 					
-				case(FUEL_REQUEST_UPDATE_ACCUM):
+				case(FUEL_MGR_REQUEST_UPDATE_ACCUM):
 					fuel_updateAccumulatedCurrent(BATTERY_CAPACITY_COUNTS);
 					break;
 			}
@@ -379,7 +380,7 @@ unsigned char charge_state( void ){
 	return (( gpio_get_pin_value(CHARGE_STAT1) << 2 ) |  ( gpio_get_pin_value(CHARGE_STAT2) << 1 ) | ( gpio_get_pin_value(CHARGE_PG) << 0 ));
 }
 
-void fuel_send_request(unsigned char command, unsigned char data, unsigned char *pointer, unsigned char resume, unsigned char delay){
+void fuel_send_request(enum tFuelCommand command, unsigned char data, unsigned char *pointer, unsigned char resume, unsigned char delay){
 	struct tFuelRequest request;
 	
 	request.command = command;

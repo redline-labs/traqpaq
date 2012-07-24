@@ -36,7 +36,7 @@ xQueueHandle debugLogQueue;
 struct tDebugLog debugRequest;
 
 
-__attribute__((__interrupt__)) static void ISR_debug_rxd(void){
+/*__attribute__((__interrupt__)) static void ISR_debug_rxd(void){
 	#if( TRAQPAQ_GPS_ECHO_MODE == TRUE )
 	int rxd;
 	
@@ -44,7 +44,7 @@ __attribute__((__interrupt__)) static void ISR_debug_rxd(void){
 	
 	usart_putchar(GPS_USART, rxd);
 	#endif
-}
+}*/
 
 
 

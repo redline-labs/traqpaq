@@ -64,7 +64,7 @@ struct __attribute__ ((packed)) tRecordData {
 	unsigned short altitude; 
 	
 	unsigned short speed;
-	unsigned short course;
+	unsigned short heading;
 }; // 16 bytes
 
 #define RECORD_DATA_PER_PAGE	15
@@ -101,12 +101,12 @@ struct __attribute__ ((packed)) tTracklist {
 	signed int longitude;
 	signed int latitude;
 	
-	unsigned short course;
+	unsigned short heading;
 	unsigned char isEmpty;
 	unsigned char reserved;
 }; // 32 Bytes
 
-#define TRACKLIST_TOTAL_NUM			120		// Maximum number of tracks able to be stored
+#define TRACKLIST_TOTAL_NUM					120		// Maximum number of tracks able to be stored
 
 
 #define FLASH_ADDR_USERPREFS_START			0x00000000

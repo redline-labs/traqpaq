@@ -30,7 +30,7 @@
 #include <asf.h>
 #include "hal.h"
 #include "menu.h"
-#include "control_fsm.h"
+#include "lcd_fsm.h"
 #include "string.h"
 #include "itoa.h"
 
@@ -54,7 +54,12 @@ xTimerHandle xPeripherialTimer;
 // Create task for FreeRTOS
 void lcd_task_init( void ){
 	if(systemFlags.button.powerOnMethod == POWER_ON_MODE_BUTTON){
-		xPeripherialTimer = xTimerCreate( "PeripheralTimer", LCD_PERIPHERIAL_FADE_TIME * configTICK_RATE_HZ, pdFALSE, NULL, lcd_clearPeripheral );
+		xPeripherialTimer = xTimerCreate( "PeripheralTimer",	// Timer Name
+										(portTickType) (LCD_PERIPHERIAL_FADE_TIME * configTICK_RATE_HZ),	// Timer period (in ticks)
+										pdFALSE,				// Auto-reload
+										NULL,					// Timer ID
+										(tmrTIMER_CALLBACK)lcd_clearPeripheral );	// Callback
+										
 		xTaskCreate(lcd_gui_task_normal, configTSK_GUI_TASK_NAME, configTSK_GUI_TASK_STACK_SIZE, NULL, configTSK_GUI_TASK_PRIORITY, configTSK_GUI_TASK_HANDLE);
 		
 	}else{
@@ -64,8 +69,6 @@ void lcd_task_init( void ){
 
 // LCD GUI Task
 void lcd_gui_task_normal( void *pvParameters ){
-	unsigned char i = 0;
-	
 	struct tLCDRequest request;
 	struct tLCDTopBar topBar;
 	struct tMenu mainMenu;
@@ -75,7 +78,6 @@ void lcd_gui_task_normal( void *pvParameters ){
 	
 	struct tTracklist trackList;
 	struct tRecordsEntry recordTable;
-	struct tRecordDataPage recordData;
 	
 	unsigned char tempString[20];
 	unsigned char responseU8;
@@ -87,8 +89,6 @@ void lcd_gui_task_normal( void *pvParameters ){
 	unsigned char button;
 	unsigned short lcd_fsm = LCDFSM_MAINMENU;		// Useful for testing new screens!
 	unsigned char redraw = TRUE;
-	
-	portTickType tickCount;
 	
 	lcdWidgetsManagerQueue = xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(request));
 	lcdButtonsManagerQueue	= xQueueCreate(LCD_BUTTON_QUEUE_SIZE, sizeof(unsigned char));
@@ -368,8 +368,7 @@ void lcd_gui_task_normal( void *pvParameters ){
 
 
 void lcd_gui_task_usb( void *pvParameters ){
-	unsigned char i = 0;
-	
+
 	struct tLCDRequest request;
 	
 	struct tLCDProgressBar progressBar;
@@ -618,8 +617,7 @@ void lcd_displayImage(unsigned short *pixmap, unsigned short x_offset, unsigned 
 
 void lcd_displayLargeText(unsigned short *pixmap, unsigned short x_offset, unsigned short y_offset, unsigned short image_x, unsigned short image_y){
 	unsigned int i,j;
-	unsigned short match;
-	
+
 	for(j=0; j < image_x; j++){
 		for(i=0; i < image_y; i++){
 			if(*pixmap != COLOR_WHITE){
@@ -867,7 +865,7 @@ void lcd_updateProgressBar(struct tLCDProgressBar *progressBar, unsigned char pe
 }
 
 
-struct tLCDLabel lcd_createLabel(unsigned char *string, unsigned char *font_style, unsigned short x1, unsigned short y1, unsigned short width, unsigned short height, unsigned short textcolor, unsigned short backcolor){
+struct tLCDLabel lcd_createLabel(char *string, unsigned char *font_style, unsigned short x1, unsigned short y1, unsigned short width, unsigned short height, unsigned short textcolor, unsigned short backcolor){
 	struct tLCDLabel label;
 	
 	label.start_x = x1;

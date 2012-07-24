@@ -61,9 +61,10 @@ void wdt_task( void *pvParameters ){
 			switch(request.command){
 				case(WDT_REQUEST_POWEROFF):
 					debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_WDT, "Shutdown requested");
-					fuel_send_request(FUEL_REQUEST_SHUTDOWN, NULL, NULL, NULL, NULL);
-					flash_send_request(FLASH_REQUEST_SHUTDOWN, NULL, NULL, NULL, NULL, NULL);
-					gps_send_request(GPS_REQUEST_SHUTDOWN, NULL, NULL, NULL, pdFALSE);
+					fuel_send_request(FUEL_MGR_REQUEST_SHUTDOWN, NULL, NULL, NULL, NULL);
+					//flash_send_request(FLASH_REQUEST_SHUTDOWN, NULL, NULL, NULL, NULL, NULL);
+					flash_send_request(FLASH_MGR_REQUEST_SHUTDOWN, NULL, NULL, NULL, NULL, NULL);
+					gps_send_request(GPS_MGR_REQUEST_SHUTDOWN, NULL, NULL, NULL, pdFALSE);
 					
 					debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_WDT, "Going down!");
 					wdt_clear();	// Kick the watchdog one more time to allow debug messages to be sent
@@ -88,7 +89,7 @@ unsigned char wdt_triggered(void){
 	}
 }
 
-unsigned char wdt_send_request(unsigned char command, unsigned char data){
+unsigned char wdt_send_request(enum tWatchdogCommand command, unsigned char data){
 	struct tWatchdogRequest request;
 	
 	request.command = command;

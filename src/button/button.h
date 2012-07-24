@@ -57,7 +57,7 @@ struct tButtonStatusFlags{
 };
 
 
-void buttons_task_init();
+void buttons_task_init( void );
 void buttons_task_normal( void *pvParameters );
 void buttons_task_usb( void *pvParameters );
 

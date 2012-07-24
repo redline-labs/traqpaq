@@ -304,7 +304,7 @@ void lcd_drawFilledRectangle(unsigned short x1, unsigned short y1, unsigned shor
 struct tLCDProgressBar lcd_createProgressBar(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2, unsigned short barcolor, unsigned short boxcolor, unsigned short backcolor);
 void lcd_updateProgressBar(struct tLCDProgressBar *progressBar, unsigned char percent);
 
-struct tLCDLabel lcd_createLabel(unsigned char *string, unsigned char *font_style, unsigned short x1, unsigned short y1, unsigned short width, unsigned short height, unsigned short textcolor, unsigned short backcolor);
+struct tLCDLabel lcd_createLabel(char *string, unsigned char *font_style, unsigned short x1, unsigned short y1, unsigned short width, unsigned short height, unsigned short textcolor, unsigned short backcolor);
 void lcd_updateLabel(struct tLCDLabel * label, unsigned char *string);
 
 struct tLCDTopBar lcd_createTopBar(unsigned char *string, unsigned short fcolor, unsigned short bcolor);
@@ -325,6 +325,8 @@ void lcd_clearPeripheral( void );
 void lcd_resetPeripheralTimer( void );
 
 void lcd_updateLapTimer( unsigned int ticks, struct tLCDLabel *hours, struct tLCDLabel *minutes, struct tLCDLabel *seconds, struct tLCDLabel *milli );
+
+void integer_to_hexascii(unsigned short number, unsigned char *string);
 
 struct tLCDProgressBar {
 	unsigned short start_x;

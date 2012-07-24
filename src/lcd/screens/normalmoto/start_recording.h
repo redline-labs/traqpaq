@@ -48,7 +48,7 @@ if(lcd_redraw_required()){
 	oldLapSecondLabel = lcd_createLabel("00", FONT_LARGE_POINTER, LCD_MIN_X + 146, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 192, 32, 32, COLOR_BLACK, COLOR_WHITE);
 	oldLapMilliLabel = lcd_createLabel("0", FONT_LARGE_POINTER, LCD_MIN_X + 194, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 192, 16, 32, COLOR_BLACK, COLOR_WHITE);
 	
-	gps_send_request(GPS_REQUEST_START_RECORDING, NULL, NULL, pdFALSE, pdTRUE);
+	gps_send_request(GPS_MGR_REQUEST_START_RECORDING, NULL, NULL, pdFALSE, pdTRUE);
 	backlight_stopTimers();
 	
 	lcd_redraw_complete();
@@ -67,7 +67,7 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, pdFALSE) == pdTRUE ){
 			break;
 			
 		case(BUTTON_SELECT):
-			gps_send_request(GPS_REQUEST_STOP_RECORDING, NULL, NULL, pdFALSE, pdTRUE);
+			gps_send_request(GPS_MGR_REQUEST_STOP_RECORDING, NULL, NULL, pdFALSE, pdTRUE);
 			backlight_resetTimer();
 			lcd_force_redraw();
 			lcd_change_screens( LCDFSM_MAINMENU );

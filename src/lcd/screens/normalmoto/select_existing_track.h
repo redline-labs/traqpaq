@@ -32,11 +32,13 @@ if(lcd_redraw_required()){
 	
 	responseU8 = 0;		// Number of tracks loaded
 	
-	flash_send_request(FLASH_REQUEST_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
+	//flash_send_request(FLASH_REQUEST_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
+	flash_send_request(FLASH_MGR_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
 	while( trackList.isEmpty == FALSE){
 		menu_addItem(&mainMenu, &trackList.name, responseU8);
 		responseU8++;
-		flash_send_request(FLASH_REQUEST_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
+		//flash_send_request(FLASH_REQUEST_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
+		flash_send_request(FLASH_MGR_READ_TRACK, &trackList, sizeof(trackList), responseU8, TRUE, 20);
 	}
 	
 	if( responseU8 == 0 ){
@@ -61,7 +63,7 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_SELECT):
-			gps_send_request(GPS_REQUEST_SET_FINISH_POINT, NULL, (unsigned char)menu_readCallback(&mainMenu), pdFALSE, pdTRUE);
+			gps_send_request(GPS_MGR_REQUEST_SET_FINISH_POINT, NULL, (unsigned char)menu_readCallback(&mainMenu), pdFALSE, pdTRUE);
 			
 			lcd_force_redraw();
 			lcd_change_screens( LCDFSM_START_RECORD );

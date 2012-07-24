@@ -41,14 +41,18 @@
 #ifndef _USB_H_
 #define _USB_H_
 
-
+#define USB_VERSION					0x0100
+#define USB_VERSION_ASCII			"1.00"
 
 #define USB_RX_BUFFER_SIZE			256
 #define USB_TX_BUFFER_SIZE			256
 
 #define USB_MANAGER_QUEUE_SIZE		5
 
-
+//enum tUsbCmds {
+//	USB_CMD_REQ_APPL_VER = 0;
+//	
+//};
 
 // Module info commands
 #define USB_CMD_REQ_APPL_VER			0x00

@@ -39,7 +39,7 @@ struct tMenu menu_init(){
 	return menu;
 }
 
-void menu_addItem(struct tMenu *menu, unsigned char *itemText, unsigned short actionCode) {
+void menu_addItem(struct tMenu *menu, char *itemText, unsigned short actionCode) {
 	
 	if(menu->numItems == 0){
 		strcpy(menu->item[menu->numItems].text, itemText);

@@ -95,55 +95,59 @@ void usb_task( void *pvParameters ){
 				
 
 			case(USB_CMD_REQ_BATTERY_VOLTAGE):
-				fuel_send_request(FUEL_REQUEST_VOLTAGE, NULL, &responseU16, TRUE, NULL);
+				fuel_send_request(FUEL_MGR_REQUEST_VOLTAGE, NULL, &responseU16, TRUE, NULL);
 				usbTxBuffer[data_length++] = (responseU16 >> 8) & 0xFF;	// Battery voltage
 				usbTxBuffer[data_length++] = (responseU16 >> 0) & 0xFF ;
 				break;
 				
 			case(USB_CMD_REQ_BATTERY_TEMPERATURE):
-				fuel_send_request(FUEL_REQUEST_TEMPERATURE, NULL, &responseU16, TRUE, NULL);
+				fuel_send_request(FUEL_MGR_REQUEST_TEMPERATURE, NULL, &responseU16, TRUE, NULL);
 				usbTxBuffer[data_length++] = (responseU16 >> 8) & 0xFF;	// Battery voltage
 				usbTxBuffer[data_length++] = (responseU16 >> 0) & 0xFF ;
 				break;
 				
 			case(USB_CMD_REQ_BATTERY_ACCUM):
-				fuel_send_request(FUEL_REQUEST_ACCUM_CURRENT, NULL, &responseU16, TRUE, NULL);
+				fuel_send_request(FUEL_MGR_REQUEST_ACCUM_CURRENT, NULL, &responseU16, TRUE, NULL);
 				usbTxBuffer[data_length++] = (responseU16 >> 8) & 0xFF;	// Battery voltage
 				usbTxBuffer[data_length++] = (responseU16 >> 0) & 0xFF ;
 				break;
 				
 				
 			case(USB_CMD_REQ_BATTERY_INSTANT):
-				fuel_send_request(FUEL_REQUEST_INSTANT_CURRENT, NULL, &responseU16, TRUE, NULL);
+				fuel_send_request(FUEL_MGR_REQUEST_INSTANT_CURRENT, NULL, &responseU16, TRUE, NULL);
 				usbTxBuffer[data_length++] = (responseU16 >> 8) & 0xFF;	// Battery voltage
 				usbTxBuffer[data_length++] = (responseU16 >> 0) & 0xFF ;
 				break;
 				
 			case(USB_CMD_REQ_BATTERY_UPDATE):	// 8d
-				fuel_send_request(FUEL_REQUEST_UPDATE_ACCUM, NULL, NULL, TRUE, NULL);
+				fuel_send_request(FUEL_MGR_REQUEST_UPDATE_ACCUM, NULL, NULL, TRUE, NULL);
 				usbTxBuffer[data_length++] = TRUE;
 				break;
 				
 					
 			case(USB_CMD_READ_OTP):
 				data_length = usbRxBuffer[1];
-				flash_send_request(FLASH_REQUEST_READ_OTP, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
+				//flash_send_request(FLASH_REQUEST_READ_OTP, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
+				flash_send_request(FLASH_MGR_READ_OTP, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
 				break;
 
 			case(USB_CMD_READ_RECORDTABLE):
 				data_length = usbRxBuffer[1];
-				flash_send_request(FLASH_REQUEST_READ_RECORDTABLE, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
+				//flash_send_request(FLASH_REQUEST_READ_RECORDTABLE, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
+				flash_send_request(FLASH_MGR_READ_RECORDTABLE, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
 				break;
 					
 			case(USB_CMD_READ_RECORDDATA):	// 19d
 				data_length = (usbRxBuffer[1] << 8) + usbRxBuffer[2];
-				flash_send_request(FLASH_REQUEST_READ_RECORDDATA, &usbTxBuffer, (usbRxBuffer[1] << 8) + usbRxBuffer[2], (usbRxBuffer[3] << 8) + usbRxBuffer[4], TRUE, pdFALSE);
+				//flash_send_request(FLASH_REQUEST_READ_RECORDDATA, &usbTxBuffer, (usbRxBuffer[1] << 8) + usbRxBuffer[2], (usbRxBuffer[3] << 8) + usbRxBuffer[4], TRUE, pdFALSE);
+				flash_send_request(FLASH_MGR_READ_RECORDATA, &usbTxBuffer, (usbRxBuffer[1] << 8) + usbRxBuffer[2], (usbRxBuffer[3] << 8) + usbRxBuffer[4], TRUE, pdFALSE);
 				break;
 				
 			case(USB_DBG_DF_SECTOR_ERASE):
 				usbTxBuffer[0] = TRUE;
 				data_length = 1;
-				flash_send_request(FLASH_REQUEST_SECTOR_ERASE, NULL, NULL, usbRxBuffer[1], FALSE, pdFALSE);
+				//flash_send_request(FLASH_REQUEST_SECTOR_ERASE, NULL, NULL, usbRxBuffer[1], FALSE, pdFALSE);
+				flash_send_request(FLASH_MGR_SECTOR_ERASE, NULL, NULL, usbRxBuffer[1], FALSE, pdFALSE);
 				break;
 				
 			case(USB_DBG_DF_BUSY):
@@ -153,7 +157,8 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_CMD_ERASE_RECORDDATA):
 				data_length = 1;
-				flash_send_request(FLASH_REQUEST_ERASE_RECORDED_DATA, NULL, NULL, NULL, FALSE, pdFALSE);
+				//flash_send_request(FLASH_REQUEST_ERASE_RECORDED_DATA, NULL, NULL, NULL, FALSE, pdFALSE);
+				flash_send_request(FLASH_MGR_ERASE_RECORDED_DATA, NULL, NULL, NULL, FALSE, pdFALSE);
 				usbTxBuffer[0] = TRUE;
 				break;
 					
@@ -165,12 +170,14 @@ void usb_task( void *pvParameters ){
 			case(USB_DBG_DF_USED_SPACE):
 				data_length = 1;
 				usbTxBuffer[0] = TRUE;
-				flash_send_request(FLASH_REQUEST_USED_SPACE, NULL, NULL, NULL, FALSE, pdFALSE);
+				//flash_send_request(FLASH_REQUEST_USED_SPACE, NULL, NULL, NULL, FALSE, pdFALSE);
+				flash_send_request(FLASH_MGR_USED_SPACE, NULL, NULL, NULL, FALSE, pdFALSE);
 				break;
 				
 			case(USB_DBG_DF_CHIP_ERASE):
 				data_length = 1;
-				flash_send_request(FLASH_REQUEST_CHIP_ERASE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
+				//flash_send_request(FLASH_REQUEST_CHIP_ERASE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
+				flash_send_request(FLASH_MGR_CHIP_ERASE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
 				break;
 				
 			case(USB_CMD_WRITE_OTP):
@@ -200,19 +207,21 @@ void usb_task( void *pvParameters ){
 				usbTxBuffer[data_length++] = (responseU16 >> 8) & 0xFF;
 				usbTxBuffer[data_length++] = (responseU16 >> 0) & 0xFF;
 
-				flash_WriteOTP(0, 18, &usbTxBuffer);
+				flash_WriteOTP(0, 18, &usbTxBuffer);	// TODO: Change this to a flash manager request
 				break;
 				
 			case(USB_CMD_WRITE_SAVEDTRACKS):	// 25d
-				flash_send_request(FLASH_REQUEST_ERASE_TRACKS, NULL, NULL, NULL, TRUE, pdFALSE);
+				//flash_send_request(FLASH_REQUEST_ERASE_TRACKS, NULL, NULL, NULL, TRUE, pdFALSE);
+				flash_send_request(FLASH_MGR_ERASE_TRACKS, NULL, NULL, NULL, TRUE, pdFALSE);
 			
 				strlcpy(&trackList.name, "Burn Pit", TRACKLIST_MAX_STRLEN);
-				trackList.course = 900;
+				trackList.heading = 900;
 				trackList.longitude = -83472585;
 				trackList.latitude = 42558330;
 				trackList.isEmpty = FALSE;
 				trackList.reserved = 0xA5;
-				flash_send_request(FLASH_REQUEST_ADD_TRACK, &trackList, NULL, NULL, TRUE, pdFALSE);
+				//flash_send_request(FLASH_REQUEST_ADD_TRACK, &trackList, NULL, NULL, TRUE, pdFALSE);
+				flash_send_request(FLASH_MGR_ADD_TRACK, &trackList, NULL, NULL, TRUE, pdFALSE);
 				
 				data_length = 1;
 				usbTxBuffer[0] = TRUE;
@@ -220,7 +229,8 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_CMD_READ_SAVEDTRACKS):		// 17d
 				data_length = sizeof(trackList);
-				flash_send_request(FLASH_REQUEST_READ_TRACK, &usbTxBuffer, NULL, (usbRxBuffer[1] << 8) + (usbRxBuffer[2] << 0), TRUE, pdFALSE);
+				//flash_send_request(FLASH_REQUEST_READ_TRACK, &usbTxBuffer, NULL, (usbRxBuffer[1] << 8) + (usbRxBuffer[2] << 0), TRUE, pdFALSE);
+				flash_send_request(FLASH_MGR_READ_TRACK, &usbTxBuffer, NULL, (usbRxBuffer[1] << 8) + (usbRxBuffer[2] << 0), TRUE, pdFALSE);
 				break;
 				
 			case(USB_CMD_WRITE_USERPREFS):	// 24d
@@ -230,22 +240,23 @@ void usb_task( void *pvParameters ){
 				userPrefs.screenOffTime = BACKLIGHT_DEFAULT_OFFTIME;
 				userPrefs.screenPWMMax = BACKLIGHT_DEFAULT_MAX;
 				userPrefs.screenPWMMin = BACKLIGHT_DEFAULT_MIN;
-				flash_send_request(FLASH_REQUEST_WRITE_USER_PREFS, NULL, NULL, NULL, FALSE, pdFALSE);
+				//flash_send_request(FLASH_REQUEST_WRITE_USER_PREFS, NULL, NULL, NULL, FALSE, pdFALSE);
+				flash_send_request(FLASH_MGR_WRITE_USER_PREFS, NULL, NULL, NULL, FALSE, pdFALSE);
 				break;
 				
 			case(USB_DBG_GPS_LATITUDE):		// 64d
 				data_length = 4;
-				gps_send_request(GPS_REQUEST_LATITUDE, &usbTxBuffer[0], NULL, pdFALSE, pdTRUE);
+				gps_send_request(GPS_MGR_REQUEST_LATITUDE, &usbTxBuffer[0], NULL, pdFALSE, pdTRUE);
 				break;
 				
 			case(USB_DBG_GPS_LONGITUDE):	// 65d
 				data_length = 4;
-				gps_send_request(GPS_REQUEST_LONGITUDE, &usbTxBuffer[0], NULL, pdFALSE, pdTRUE);
+				gps_send_request(GPS_MGR_REQUEST_LONGITUDE, &usbTxBuffer[0], NULL, pdFALSE, pdTRUE);
 				break;
 				
 			case(USB_DBG_GPS_COURSE):	// 66d
 				data_length = 4;
-				gps_send_request(GPS_REQUEST_COURSE, &usbTxBuffer[0], NULL, pdFALSE, pdTRUE);
+				gps_send_request(GPS_MGR_REQUEST_COURSE, &usbTxBuffer[0], NULL, pdFALSE, pdTRUE);
 				break;
 
 

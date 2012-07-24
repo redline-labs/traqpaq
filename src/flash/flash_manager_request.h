@@ -32,7 +32,7 @@
 #define DATAFLASH_MANAGER_REQUEST_H_
 
 #include "hal.h"
-
+/*
 #define FLASH_REQUEST_END_CURRENT_RECORD		0
 #define FLASH_REQUEST_ADD_TRACK					1
 #define FLASH_REQUEST_ADD_RECORDDATA			2
@@ -58,10 +58,41 @@
 
 
 #define DFMAN_STATUS_BUSY						0
-#define DFMAN_STATUS_READY						1
+#define DFMAN_STATUS_READY						1 */
+
+enum tFlashCommand {
+	FLASH_MGR_END_CURRENT_RECORD,
+	FLASH_MGR_ADD_TRACK,
+	FLASH_MGR_ADD_RECORD_DATA,
+	FLASH_MGR_ERASE_RECORD,
+	FLASH_MGR_READ_RECORDTABLE,
+	FLASH_MGR_READ_OTP,
+	FLASH_MGR_SECTOR_ERASE,
+	FLASH_MGR_BUSY,
+	FLASH_MGR_CHIP_ERASE,
+	FLASH_MGR_READ_RECORDATA,
+	FLASH_MGR_IS_FLASH_FULL,
+	FLASH_MGR_USED_SPACE,
+	FLASH_MGR_UPDATE_DATE,
+	FLASH_MGR_READ_TRACK,
+	FLASH_MGR_ERASE_RECORDED_DATA,
+	FLASH_MGR_WRITE_USER_PREFS,
+	FLASH_MGR_SET_TRACK,
+	FLASH_MGR_ERASE_TRACKS,
+	
+	FLASH_MGR_REQUEST_SHUTDOWN,
+	FLASH_MGR_SET_DATESTAMP
+};
+
+enum tFlashStatus {
+	FLASH_STATUS_BUSY = 0,
+	FLASH_STATUS_READY = 1
+};
 
 struct tFlashRequest {
-	unsigned char command;		// Define the request
+	//unsigned char command;		// Define the request
+	enum tFlashCommand command;		// Define the request
+	
 	unsigned char *pointer;		// Pointer for data to be written
 	unsigned short length;		// Length of data to be written
 	unsigned int index;			// Used for reading requests

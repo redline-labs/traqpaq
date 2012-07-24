@@ -43,7 +43,7 @@
 #define MENU_TEXT_Y_PADDING			6										// Y Padding for menu item text
 
 struct tMenu menu_init( void );
-void menu_addItem(struct tMenu *menu, unsigned char *itemText, unsigned short actionCode);
+void menu_addItem(struct tMenu *menu, char *itemText, unsigned short actionCode);
 void menu_scrollUp(struct tMenu *menu);
 void menu_scrollDown(struct tMenu *menu);
 unsigned short menu_readCallback(struct tMenu *menu);

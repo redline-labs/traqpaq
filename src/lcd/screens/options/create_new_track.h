@@ -49,7 +49,7 @@ if( xQueueReceive(lcdButtonsManagerQueue, &button, 0) == pdTRUE ){
 			break;
 			
 		case(BUTTON_SELECT):
-			gps_send_request(GPS_REQUEST_CREATE_NEW_TRACK, NULL, NULL, pdFALSE, pdTRUE);
+			gps_send_request(GPS_MGR_REQUEST_CREATE_NEW_TRACK, NULL, NULL, pdFALSE, pdTRUE);
 			lcd_force_redraw();
 			lcd_change_screens( LCDFSM_OPTIONS_NEW_TRACK_CREATED );
 			break;

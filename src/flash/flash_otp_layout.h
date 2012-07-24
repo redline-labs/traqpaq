@@ -28,8 +28,11 @@
  ******************************************************************************/
 
 
-#ifndef DATAFLASH_OTP_LAYOUT_H_
-#define DATAFLASH_OTP_LAYOUT_H_
+#ifndef FLASH_OTP_LAYOUT_H_
+#define FLASH_OTP_LAYOUT_H_
+
+#define FLASH_OTP_LAYOUT_VERSION	0x0100
+#define FLASH_OTP_LAYOUT_VERSION_ASCII	"1.00"
 
 #define OTP_START_INDEX			0
 #define OTP_END_INDEX			17
@@ -54,6 +57,6 @@ struct __attribute__ ((packed)) tFlashOTP {
 	unsigned char tester_id;
 	unsigned char reserved;
 	unsigned short crc;
-};
+};		// 18 Bytes
 
-#endif /* DATAFLASH_OTP_LAYOUT_H_ */
+#endif /* FLASH_OTP_LAYOUT_H_ */
