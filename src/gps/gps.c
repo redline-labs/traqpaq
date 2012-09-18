@@ -77,8 +77,6 @@ void gps_task( void *pvParameters ){
 	
 	unsigned char processedRMC = FALSE, processedGGA = FALSE;	// Flags for processed NMEA messages
 	
-	unsigned char recordFlag = FALSE;
-	
 	unsigned char processChecksum = FALSE;
 	unsigned short calculatedChecksum = 0;
 	
@@ -94,7 +92,8 @@ void gps_task( void *pvParameters ){
 	struct tRecordDataPage gpsData;							// Formatted GPS Data
 	struct tGPSLine finishLine;								// Formatted coordinate pairs for "finish line"
 	struct tTracklist trackList;
-	struct tGPSPoint lastPoint;
+	
+	struct tGPSInfo gpsInfo;
 	
 	struct tGPSRequest request;
 
@@ -103,9 +102,16 @@ void gps_task( void *pvParameters ){
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Task Started");
 	
-	lastPoint.heading = 0;
-	lastPoint.latitude = 0;
-	lastPoint.longitude = 0;
+	// Initialize information about the GPS receiver
+	gpsInfo.serial_number = 0;
+	gpsInfo.sw_date[0] = 0;
+	gpsInfo.sw_version[0] = 0;
+	gpsInfo.mode = 0;
+	gpsInfo.satellites = 0;
+	gpsInfo.record_flag = FALSE;
+	gpsInfo.current_location.heading = 0;
+	gpsInfo.current_location.latitude = 0;
+	gpsInfo.current_location.longitude = 0;
 	
 	// Pull the GPS out of reset and enable the ISR
 	gps_enable_interrupts();
@@ -127,11 +133,11 @@ void gps_task( void *pvParameters ){
 					flash_send_request(FLASH_MGR_SET_DATESTAMP, NULL, NULL, datestamp, FALSE, pdFALSE);
 					lapTime = 0;
 					oldLapTime = 0xFFFFFFFF;
-					recordFlag = TRUE;
+					gpsInfo.record_flag = TRUE;
 					break;
 					
 				case(GPS_MGR_REQUEST_STOP_RECORDING):
-					recordFlag = FALSE;
+					gpsInfo.record_flag = FALSE;
 					recordIndex = 0;
 					//flash_send_request(FLASH_REQUEST_END_CURRENT_RECORD, NULL, NULL, NULL, FALSE, 20);
 					flash_send_request(FLASH_MGR_END_CURRENT_RECORD, NULL, NULL, NULL, FALSE, 20);
@@ -148,9 +154,9 @@ void gps_task( void *pvParameters ){
 					
 				case(GPS_MGR_REQUEST_CREATE_NEW_TRACK):
 					itoa(gpsData.utc, &(trackList.name), 10, FALSE);
-					trackList.heading = lastPoint.heading;
-					trackList.longitude = lastPoint.longitude;
-					trackList.latitude = lastPoint.latitude;
+					trackList.heading = gpsInfo.current_location.heading;
+					trackList.longitude = gpsInfo.current_location.longitude;
+					trackList.latitude = gpsInfo.current_location.latitude;
 					trackList.isEmpty = FALSE;
 					trackList.reserved = 0xA5;
 					//flash_send_request(FLASH_REQUEST_ADD_TRACK, &trackList, NULL, NULL, FALSE, pdFALSE);
@@ -166,16 +172,21 @@ void gps_task( void *pvParameters ){
 					break;
 				
 				case(GPS_MGR_REQUEST_LATITUDE):
-					*(request.pointer) = lastPoint.latitude;
+					*(request.pointer) = gpsInfo.current_location.latitude;
 					break;
 					
 				case(GPS_MGR_REQUEST_LONGITUDE):
-					*(request.pointer) = lastPoint.longitude;
+					*(request.pointer) = gpsInfo.current_location.longitude;
 					break;
 					
 				case(GPS_MGR_REQUEST_COURSE):
-					*(request.pointer) = lastPoint.heading;
+					*(request.pointer) = gpsInfo.current_location.heading;
 					break;
+					
+				case(GPS_MGR_REQUEST_RECORD_STATUS):
+					*(request.pointer) = gpsInfo.record_flag;
+					break;
+				
 			}
 			
 			// Resume requesting task if it has been suspended
@@ -226,12 +237,12 @@ void gps_task( void *pvParameters ){
 					}						
 					
 					// Determine if a lap was detected!
-					gpsData.data[recordIndex].lapDetected = gps_intersection(lastPoint.longitude,					lastPoint.latitude,
+					gpsData.data[recordIndex].lapDetected = gps_intersection(gpsInfo.current_location.longitude,	gpsInfo.current_location.latitude,
 																			gpsData.data[recordIndex].longitude,    gpsData.data[recordIndex].latitude,
 																			finishLine.startLongitude,				finishLine.startLatitude,
 																			finishLine.endLongitude,				finishLine.endLatitude);
 																			 
-					if( gpsData.data[recordIndex].lapDetected && recordFlag){
+					if( gpsData.data[recordIndex].lapDetected && gpsInfo.record_flag){
 						if(lapTime <= oldLapTime){
 							lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_PERIPHERIAL, LCD_PERIPHERIAL_FASTER, pdFALSE);
 						}else{
@@ -256,9 +267,9 @@ void gps_task( void *pvParameters ){
 					}
 					
 					// Save the last coordinates for detecting the intersection
-					lastPoint.longitude = gpsData.data[recordIndex].longitude;
-					lastPoint.latitude = gpsData.data[recordIndex].latitude;
-					lastPoint.heading = gpsData.data[recordIndex].heading;
+					gpsInfo.current_location.longitude = gpsData.data[recordIndex].longitude;
+					gpsInfo.current_location.latitude = gpsData.data[recordIndex].latitude;
+					gpsInfo.current_location.heading = gpsData.data[recordIndex].heading;
 						
 					processedGGA = TRUE;
 					
@@ -310,14 +321,36 @@ void gps_task( void *pvParameters ){
 							break;
 					}
 					
+				}else
+				//--------------------------
+				// PMTK599 Message Received (Receiver Part Number and Serial Number)
+				//--------------------------
+				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_MTK599_ID0) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_MTK599_ID1) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_MTK599_ID2) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK599_ID3) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK599_ID4) ){
+						
+				
+				}else
+				//--------------------------
+				// PMTK705 Message Received (Receiver Software Version and Date)
+				//--------------------------
+				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_MTK705_ID0) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_MTK705_ID1) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_MTK705_ID2) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK705_ID3) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK705_ID4) ){
+							
 				}
+				
 				
 				
 				if(processedGGA && processedRMC){
 					processedGGA = FALSE;
 					processedRMC = FALSE;
 						
-					if(recordFlag){
+					if(gpsInfo.record_flag){
 						// Update lap time counter;
 						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_LAPTIME, lapTime++, pdFALSE);
 						

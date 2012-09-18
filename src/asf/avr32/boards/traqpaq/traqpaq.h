@@ -40,8 +40,8 @@
 // Versions
 // ------------------------------------------------------------
 #define TRAQPAQ_SW_LEVEL_MAJOR		1
-#define TRAQPAQ_SW_LEVEL_MINOR		3
-#define TRAQPAQ_SW_LEVEL_ASCII		"1.30"
+#define TRAQPAQ_SW_LEVEL_MINOR		4
+#define TRAQPAQ_SW_LEVEL_ASCII		"1.40"
 #define TRAQPAQ_SW_BUILD_DATE		__DATE__
 #define TRAQPAQ_SW_SUPPORT_VER		__VERSION__
 

@@ -258,6 +258,23 @@ void usb_task( void *pvParameters ){
 				data_length = 4;
 				gps_send_request(GPS_MGR_REQUEST_COURSE, &usbTxBuffer[0], NULL, pdFALSE, pdTRUE);
 				break;
+				
+			case(USB_DBG_START_RECORDING):
+				data_length = 1;
+				gps_send_request(GPS_MGR_REQUEST_START_RECORDING, NULL, NULL, pdFALSE, pdTRUE);
+				usbTxBuffer[0] = TRUE;
+				break;
+			
+			case(USB_DBG_STOP_RECORDING):
+				data_length = 1;
+				gps_send_request(GPS_MGR_REQUEST_STOP_RECORDING, NULL, NULL, pdFALSE, pdTRUE);
+				usbTxBuffer[0] = TRUE;
+				break;
+			
+			case(USB_DBG_RECORDING_STATUS):
+				data_length = 1;
+				gps_send_request(GPS_MGR_REQUEST_RECORD_STATUS, &usbTxBuffer, NULL, pdFALSE, pdTRUE);
+				break;
 
 
 			default:

@@ -75,19 +75,36 @@
 #define MESSAGE_OFFSET_ID3			5
 #define MESSAGE_OFFSET_ID4			6
 
+// GGA message from GPS receiver
 #define ID_GGA_ID0					'G'
 #define ID_GGA_ID1					'G'
 #define ID_GGA_ID2					'A'
 
+// RMC message from GPS receiver
 #define ID_RMC_ID0					'R'
 #define ID_RMC_ID1					'M'
 #define ID_RMC_ID2					'C'
 
+// Standard response from GPS receiver
 #define ID_MTK001_ID0				'T'
 #define ID_MTK001_ID1				'K'
 #define ID_MTK001_ID2				'0'
 #define ID_MTK001_ID3				'0'
 #define ID_MTK001_ID4				'1'
+
+// Debug 499 response from GPS receiver
+#define ID_MTK599_ID0				'T'
+#define ID_MTK599_ID1				'K'
+#define ID_MTK599_ID2				'5'
+#define ID_MTK599_ID3				'9'
+#define ID_MTK599_ID4				'9'
+
+// Debug 705 response from GPS receiver
+#define ID_MTK705_ID0				'T'
+#define ID_MTK705_ID1				'K'
+#define ID_MTK705_ID2				'7'
+#define ID_MTK705_ID3				'0'
+#define ID_MTK705_ID4				'5'
 
 #define TOKEN_GGA_UTC				1
 #define TOKEN_GGA_LATITUDE			2
@@ -125,6 +142,17 @@
 #define PMTK001_VALID_CMD_FAILED	0x32
 #define PMTK001_VALID_CMD			0x33
 
+#define TOKEN_PMTK599_SERIAL_MSB	3
+#define TOKEN_PMTK599_SERIAL_LSB	6
+#define TOKEN_PMTK599_PARTNO_MSB	12
+#define TOKEN_PMTK599_PARTNO_LSB	18
+
+#define TOKEN_PMTK705_SW_VERSION	1
+#define TOKEN_PMTK705_SW_DATE		3
+
+#define GPS_INFO_SW_VERSION_SIZE	9	// Number of characters of SW version string, AXN_x.xx, plus null character
+#define GPS_INFO_SW_DATE_SIZE		9	// Number of characters of SW date string, YYYYMMDD, plus null character
+
 
 enum tGpsCommand {
 	GPS_MGR_REQUEST_DATE,
@@ -135,7 +163,8 @@ enum tGpsCommand {
 	GPS_MGR_REQUEST_SHUTDOWN,
 	GPS_MGR_REQUEST_LATITUDE,
 	GPS_MGR_REQUEST_LONGITUDE,
-	GPS_MGR_REQUEST_COURSE
+	GPS_MGR_REQUEST_COURSE,
+	GPS_MGR_REQUEST_RECORD_STATUS
 };
 
 struct tGPSRequest {
@@ -161,6 +190,18 @@ struct tGPSLine {
 	
 	signed int endLatitude;
 	signed int endLongitude;
+};
+
+struct tGPSInfo {
+	unsigned int	serial_number;
+	unsigned char	sw_version[GPS_INFO_SW_VERSION_SIZE];
+	unsigned char	sw_date[GPS_INFO_SW_DATE_SIZE];
+	
+	unsigned char	mode;
+	unsigned char	satellites;
+	unsigned char	record_flag;
+	
+	struct tGPSPoint current_location;	
 };
 
 
