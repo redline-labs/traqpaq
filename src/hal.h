@@ -76,6 +76,9 @@
 // CRC
 #include "crc/crc.h"
 
+// Accelerometer
+#include "accel/accel.h"
+
 struct tSystemFlags{
 	struct tDisplayStatusFlags display;
 	struct tFuelStatusFlags fuel;

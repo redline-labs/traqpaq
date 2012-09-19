@@ -118,35 +118,69 @@
 // ------------------------------------------------------------
 // Dataflash Definitions (SPI)
 // ------------------------------------------------------------
-#define DATAFLASH_SPI					(&AVR32_SPI0)
-#define DATAFLASH_SPI_SCK_PIN			AVR32_SPI0_SCK_0_1_PIN
-#define DATAFLASH_SPI_SCK_FUNCTION		AVR32_SPI0_SCK_0_1_FUNCTION
-#define DATAFLASH_SPI_MISO_PIN			AVR32_SPI0_MISO_0_1_PIN
-#define DATAFLASH_SPI_MISO_FUNCTION		AVR32_SPI0_MISO_0_1_FUNCTION
-#define DATAFLASH_SPI_MOSI_PIN			AVR32_SPI0_MOSI_0_1_PIN
-#define DATAFLASH_SPI_MOSI_FUNCTION		AVR32_SPI0_MOSI_0_1_FUNCTION
-#define DATAFLASH_SPI_NPCS0_PIN			AVR32_SPI0_NPCS_0_1_PIN
-#define DATAFLASH_SPI_NPCS0_FUNCTION	AVR32_SPI0_NPCS_0_1_FUNCTION
+#define FLASH_SPI					(&AVR32_SPI0)
+#define FLASH_SPI_SCK_PIN			AVR32_SPI0_SCK_0_1_PIN
+#define FLASH_SPI_SCK_FUNCTION		AVR32_SPI0_SCK_0_1_FUNCTION
+#define FLASH_SPI_MISO_PIN			AVR32_SPI0_MISO_0_1_PIN
+#define FLASH_SPI_MISO_FUNCTION		AVR32_SPI0_MISO_0_1_FUNCTION
+#define FLASH_SPI_MOSI_PIN			AVR32_SPI0_MOSI_0_1_PIN
+#define FLASH_SPI_MOSI_FUNCTION		AVR32_SPI0_MOSI_0_1_FUNCTION
+#define FLASH_SPI_NPCS0_PIN			AVR32_SPI0_NPCS_0_1_PIN
+#define FLASH_SPI_NPCS0_FUNCTION	AVR32_SPI0_NPCS_0_1_FUNCTION
 
-#define DATAFLASH_SPI_NPCS				0
-#define SPI_BAUDRATE					12000000	// 12MHz
+#define FLASH_SPI_NPCS				0
+#define FLASH_SPI_BAUDRATE			12000000	// 12MHz
 
-#define SPI_BITS_PER_XFER			8			// 8 Bits per transfer
-#define SPI_SCLK_DELAY				0			// Delay from CS to first CLK
-#define SPI_XFER_DELAY				0			// Delay between transfers
-#define SPI_STAY_ACTIVE				1			// Keep CS active between transfers (manually control CS)
-#define SPI_MODE					0			// SPI Mode of Device
-#define SPI_FAULT_DETECT			1			// Hardware Fault Detection
+#define FLASH_SPI_BITS_PER_XFER		8			// 8 Bits per transfer
+#define FLASH_SPI_SCLK_DELAY		0			// Delay from CS to first CLK
+#define FLASH_SPI_XFER_DELAY		0			// Delay between transfers
+#define FLASH_SPI_STAY_ACTIVE		1			// Keep CS active between transfers (manually control CS)
+#define FLASH_SPI_MODE				0			// SPI Mode of Device
+#define FLASH_SPI_FAULT_DETECT		1			// Hardware Fault Detection
 
-#define SPI_MASTER_DELAY_BCT		0
-#define SPI_MASTER_DELAY_BS			0
+#define FLASH_SPI_MASTER_DELAY_BCT	0
+#define FLASH_SPI_MASTER_DELAY_BS	0
 
-#define SPI_VARIABLE_PS				0			// SPI Variable PS
-#define SPI_PCS_DECODE				0			// SPI PCS Decode
-#define SPI_PCS_DELAY				0			// SPI PCS Delay
+#define FLASH_SPI_VARIABLE_PS		0			// SPI Variable PS
+#define FLASH_SPI_PCS_DECODE		0			// SPI PCS Decode
+#define FLASH_SPI_PCS_DELAY			0			// SPI PCS Delay
 
-#define SPI_TX_PDCA_CHANNEL			0
-#define SPI_RX_PDCA_CHANNEL			1
+#define FLASH_SPI_TX_PDCA_CHANNEL	0
+#define FLASH_SPI_RX_PDCA_CHANNEL	1
+
+
+// ------------------------------------------------------------
+// Accelerometer Definitions (SPI)
+// ------------------------------------------------------------
+#define ACCEL_SPI					(&AVR32_SPI1)
+#define ACCEL_SPI_SCK_PIN			AVR32_SPI1_SCK_0_0_PIN
+#define ACCEL_SPI_SCK_FUNCTION		AVR32_SPI1_SCK_0_0_FUNCTION
+#define ACCEL_SPI_MISO_PIN			AVR32_SPI1_MISO_0_0_PIN
+#define ACCEL_SPI_MISO_FUNCTION		AVR32_SPI1_MISO_0_0_FUNCTION
+#define ACCEL_SPI_MOSI_PIN			AVR32_SPI1_MOSI_0_0_PIN
+#define ACCEL_SPI_MOSI_FUNCTION		AVR32_SPI1_MOSI_0_0_FUNCTION
+#define ACCEL_SPI_NPCS0_PIN			AVR32_SPI1_NPCS_0_0_PIN
+#define ACCEL_SPI_NPCS0_FUNCTION	AVR32_SPI1_NPCS_0_0_FUNCTION
+
+#define ACCEL_SPI_NPCS				0
+#define ACCEL_SPI_BAUDRATE			5000000	// 5MHz
+
+#define ACCEL_SPI_BITS_PER_XFER		8			// 8 Bits per transfer
+#define ACCEL_SPI_SCLK_DELAY		0			// Delay from CS to first CLK
+#define ACCEL_SPI_XFER_DELAY		0			// Delay between transfers
+#define ACCEL_SPI_STAY_ACTIVE		1			// Keep CS active between transfers (manually control CS)
+#define ACCEL_SPI_MODE				3			// SPI Mode of Device
+#define ACCEL_SPI_FAULT_DETECT		1			// Hardware Fault Detection
+
+#define ACCEL_SPI_MASTER_DELAY_BCT	0
+#define ACCEL_SPI_MASTER_DELAY_BS	0
+
+#define ACCEL_SPI_VARIABLE_PS		0			// SPI Variable PS
+#define ACCEL_SPI_PCS_DECODE		0			// SPI PCS Decode
+#define ACCEL_SPI_PCS_DELAY			0			// SPI PCS Delay
+
+#define ACCEL_SPI_TX_PDCA_CHANNEL	0
+#define ACCEL_SPI_RX_PDCA_CHANNEL	1
 
 
 // ------------------------------------------------------------

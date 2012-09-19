@@ -281,19 +281,19 @@ void flash_task( void *pvParameters ){
 unsigned char flash_checkID(void){
 	unsigned short spiResponse[3];
 		
-	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_READ_DEVICE_ID);
+	spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
+	spi_write(FLASH_SPI, DATAFLASH_CMD_READ_DEVICE_ID);
 	
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DUMMY);
-	spi_read(DATAFLASH_SPI, &spiResponse[0]);
+	spi_write(FLASH_SPI, DATAFLASH_CMD_DUMMY);
+	spi_read(FLASH_SPI, &spiResponse[0]);
 	
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DUMMY);
-	spi_read(DATAFLASH_SPI, &spiResponse[1]);
+	spi_write(FLASH_SPI, DATAFLASH_CMD_DUMMY);
+	spi_read(FLASH_SPI, &spiResponse[1]);
 	
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DUMMY);
-	spi_read(DATAFLASH_SPI, &spiResponse[2]);
+	spi_write(FLASH_SPI, DATAFLASH_CMD_DUMMY);
+	spi_read(FLASH_SPI, &spiResponse[2]);
 
-	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
 	
 	if( (spiResponse[0] == DATAFLASH_MANUFACTURER_ID) & (spiResponse[1] == DATAFLASH_DEVICE_ID0) & (spiResponse[2] == DATAFLASH_DEVICE_ID1) ){
 		return DATAFLASH_RESPONSE_OK;
@@ -307,16 +307,16 @@ union tDataflashStatus flash_readStatus(void){
 	unsigned short spiResponse[2];
 	union tDataflashStatus result;
 
-	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_READ_STATUS);
+	spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
+	spi_write(FLASH_SPI, DATAFLASH_CMD_READ_STATUS);
 	
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DUMMY);
-	spi_read(DATAFLASH_SPI, &spiResponse[0]);
+	spi_write(FLASH_SPI, DATAFLASH_CMD_DUMMY);
+	spi_read(FLASH_SPI, &spiResponse[0]);
 	
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DUMMY);
-	spi_read(DATAFLASH_SPI, &spiResponse[1]);
+	spi_write(FLASH_SPI, DATAFLASH_CMD_DUMMY);
+	spi_read(FLASH_SPI, &spiResponse[1]);
 	
-	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
 	
 	result.raw[0] = spiResponse[0];
 	result.raw[1] = spiResponse[1];
@@ -328,28 +328,28 @@ union tDataflashStatus flash_readStatus(void){
 unsigned char flash_GlobalUnprotect(void){
 	flash_WriteEnable();
 	
-	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_WRITE_STATUS1);
-	spi_write(DATAFLASH_SPI, DATAFLASH_STATUS_GLOBAL_UNPROTECT);
-	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
+	spi_write(FLASH_SPI, DATAFLASH_CMD_WRITE_STATUS1);
+	spi_write(FLASH_SPI, DATAFLASH_STATUS_GLOBAL_UNPROTECT);
+	spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
 	
 	return DATAFLASH_RESPONSE_OK;
 }
 
 
 unsigned char flash_WriteEnable(void){
-	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_WRITE_ENABLE);
-	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
+	spi_write(FLASH_SPI, DATAFLASH_CMD_WRITE_ENABLE);
+	spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
 	
 	return DATAFLASH_RESPONSE_OK;
 }
 
 
 unsigned char flash_WriteDisable(void){
-	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_WRITE_DISABLE);
-	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
+	spi_write(FLASH_SPI, DATAFLASH_CMD_WRITE_DISABLE);
+	spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
 	
 	return DATAFLASH_RESPONSE_OK;
 }
@@ -429,27 +429,27 @@ unsigned char flash_eraseRecordedData(){
 unsigned char flash_ReadToBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){
 	unsigned short dummyData;
 
-	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
 	
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_READ_ARRAY);
-	spi_write(DATAFLASH_SPI, (startAddress >> 16) & 0xFF);
-	spi_write(DATAFLASH_SPI, (startAddress >>  8) & 0xFF);
-	spi_write(DATAFLASH_SPI, (startAddress & 0xFF) );
-	spi_read(DATAFLASH_SPI, &dummyData);	// Dummy read required to clear the SPI->RDR register before enabling PDCA
+	spi_write(FLASH_SPI, DATAFLASH_CMD_READ_ARRAY);
+	spi_write(FLASH_SPI, (startAddress >> 16) & 0xFF);
+	spi_write(FLASH_SPI, (startAddress >>  8) & 0xFF);
+	spi_write(FLASH_SPI, (startAddress & 0xFF) );
+	spi_read(FLASH_SPI, &dummyData);	// Dummy read required to clear the SPI->RDR register before enabling PDCA
 	
-	while( !spi_writeEndCheck(DATAFLASH_SPI) );
+	while( !spi_writeEndCheck(FLASH_SPI) );
 	
-	pdca_load_channel(SPI_RX_PDCA_CHANNEL, bufferPointer, length);
-	pdca_load_channel(SPI_TX_PDCA_CHANNEL, (void *)0x80000000, length); // Use start of Flash as Dummy Bytes to Clock Out
+	pdca_load_channel(FLASH_SPI_RX_PDCA_CHANNEL, bufferPointer, length);
+	pdca_load_channel(FLASH_SPI_TX_PDCA_CHANNEL, (void *)0x80000000, length); // Use start of Flash as Dummy Bytes to Clock Out
 	
-	pdca_enable(SPI_RX_PDCA_CHANNEL);
-	pdca_enable(SPI_TX_PDCA_CHANNEL);
+	pdca_enable(FLASH_SPI_RX_PDCA_CHANNEL);
+	pdca_enable(FLASH_SPI_TX_PDCA_CHANNEL);
 	
-	while(pdca_get_transfer_status(SPI_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE){
+	while(pdca_get_transfer_status(FLASH_SPI_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE){
 		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PDCA_CHECK_TIME ) );
 	}
 	
-	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
 	
 	if(flash_operation_failed()){
 		return DATAFLASH_RESPONSE_FAILURE;
@@ -466,23 +466,23 @@ unsigned char flash_WriteFromBuffer(unsigned long startAddress, unsigned short l
 	
 	flash_WriteEnable();
 	
-	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
 	
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_PAGE_PROGRAM);
-	spi_write(DATAFLASH_SPI, (startAddress >> 16) & 0xFF);
-	spi_write(DATAFLASH_SPI, (startAddress >>  8) & 0xFF);
-	spi_write(DATAFLASH_SPI, (startAddress & 0xFF) );
+	spi_write(FLASH_SPI, DATAFLASH_CMD_PAGE_PROGRAM);
+	spi_write(FLASH_SPI, (startAddress >> 16) & 0xFF);
+	spi_write(FLASH_SPI, (startAddress >>  8) & 0xFF);
+	spi_write(FLASH_SPI, (startAddress & 0xFF) );
 	
-	while( !spi_writeEndCheck(DATAFLASH_SPI) );
+	while( !spi_writeEndCheck(FLASH_SPI) );
 	
-	pdca_load_channel(SPI_TX_PDCA_CHANNEL, bufferPointer, length);
-	pdca_enable(SPI_TX_PDCA_CHANNEL);
+	pdca_load_channel(FLASH_SPI_TX_PDCA_CHANNEL, bufferPointer, length);
+	pdca_enable(FLASH_SPI_TX_PDCA_CHANNEL);
 	
-	while(pdca_get_transfer_status(SPI_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE){
+	while(pdca_get_transfer_status(FLASH_SPI_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE){
 		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PDCA_CHECK_TIME ) );
 	}
 	
-	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
 	
 	// Wait for dataflash to become ready again.
 	vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
@@ -501,21 +501,21 @@ unsigned char flash_ReadOTP(unsigned char startAddress, unsigned char length, un
 	unsigned char i;
 	unsigned short temp;
 	
-	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_READ_OTP);
-	spi_write(DATAFLASH_SPI, 0x00);
-	spi_write(DATAFLASH_SPI, 0x00);
-	spi_write(DATAFLASH_SPI, startAddress);
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DUMMY);
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DUMMY);
+	spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
+	spi_write(FLASH_SPI, DATAFLASH_CMD_READ_OTP);
+	spi_write(FLASH_SPI, 0x00);
+	spi_write(FLASH_SPI, 0x00);
+	spi_write(FLASH_SPI, startAddress);
+	spi_write(FLASH_SPI, DATAFLASH_CMD_DUMMY);
+	spi_write(FLASH_SPI, DATAFLASH_CMD_DUMMY);
 	
 	for(i = 0; i < length; i++){
-		spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DUMMY);
-		spi_read(DATAFLASH_SPI, &temp);
+		spi_write(FLASH_SPI, DATAFLASH_CMD_DUMMY);
+		spi_read(FLASH_SPI, &temp);
 		bufferPointer[i] = temp & 0xFF;
 	}
 	
-	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
 	
 	return DATAFLASH_RESPONSE_OK;
 }
@@ -529,17 +529,17 @@ unsigned char flash_WriteOTP(unsigned char startAddress, unsigned char length, u
 	
 	flash_WriteEnable();
 
-	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_PROGRAM_OTP);
-	spi_write(DATAFLASH_SPI, 0x00);
-	spi_write(DATAFLASH_SPI, 0x00);
-	spi_write(DATAFLASH_SPI, startAddress);
+	spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
+	spi_write(FLASH_SPI, DATAFLASH_CMD_PROGRAM_OTP);
+	spi_write(FLASH_SPI, 0x00);
+	spi_write(FLASH_SPI, 0x00);
+	spi_write(FLASH_SPI, startAddress);
 	
 	for(i = 0; i < length; i++){
-		spi_write(DATAFLASH_SPI, bufferPointer[i]);
+		spi_write(FLASH_SPI, bufferPointer[i]);
 	}
 	
-	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
 	
 	// Wait for dataflash to become ready again.
 	vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
@@ -563,14 +563,14 @@ unsigned char flash_eraseBlock(unsigned char blockSize, unsigned long startAddre
 		
 		flash_WriteEnable();
 		
-		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+		spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
 		
-		spi_write(DATAFLASH_SPI, blockSize);
-		spi_write(DATAFLASH_SPI, (startAddress >> 16) & 0xFF);
-		spi_write(DATAFLASH_SPI, (startAddress >>  8) & 0xFF);
-		spi_write(DATAFLASH_SPI, (startAddress >>  0) & 0xFF);
+		spi_write(FLASH_SPI, blockSize);
+		spi_write(FLASH_SPI, (startAddress >> 16) & 0xFF);
+		spi_write(FLASH_SPI, (startAddress >>  8) & 0xFF);
+		spi_write(FLASH_SPI, (startAddress >>  0) & 0xFF);
 		
-		spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+		spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
 		
 		// Wait for dataflash to become ready again.
 		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_ERASE_TIME ) );
@@ -596,9 +596,9 @@ unsigned char flash_chipErase( void ){
 	
 	flash_WriteEnable();
 	
-	spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-	spi_write(DATAFLASH_SPI, DATAFLASH_CMD_CHIP_ERASE);
-	spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+	spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
+	spi_write(FLASH_SPI, DATAFLASH_CMD_CHIP_ERASE);
+	spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
 	
 	
 	// Wait for dataflash to become ready again.
@@ -618,9 +618,9 @@ unsigned char flash_powerDown( void ){
 			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
 		}
 		
-		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-		spi_write(DATAFLASH_SPI, DATAFLASH_CMD_DEEP_POWER_DOWN);
-		spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+		spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
+		spi_write(FLASH_SPI, DATAFLASH_CMD_DEEP_POWER_DOWN);
+		spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
 		
 		return DATAFLASH_RESPONSE_OK;
 }
@@ -631,9 +631,9 @@ unsigned char flash_wakeUp( void ){
 			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
 		}
 		
-		spi_selectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
-		spi_write(DATAFLASH_SPI, DATAFLASH_CMD_WAKEUP);
-		spi_unselectChip(DATAFLASH_SPI, DATAFLASH_SPI_NPCS);
+		spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
+		spi_write(FLASH_SPI, DATAFLASH_CMD_WAKEUP);
+		spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
 		
 		return DATAFLASH_RESPONSE_OK;
 }

@@ -1,9 +1,9 @@
 /******************************************************************************
  *
- * Debug
+ * Accelerometer Interface
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.3
+ * - Supported devices: traq|paq hardware version 1.4
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -27,49 +27,42 @@
  *
  ******************************************************************************/
 
+#include <asf.h>
+#include "hal.h"
 
-#ifndef DEBUG_H_
-#define DEBUG_H_
-
-#define DEBUG_CR					0x0D
-#define DEBUG_LF					0x0A
-
-#define DEBUG_MAX_STRLEN			40
-#define DEBUG_QUEUE_SIZE			15
-
-enum tDebugSender {
-	DEBUG_SENDER_WDT,
-	DEBUG_SENDER_FLASH,
-	DEBUG_SENDER_USB,
-	DEBUG_SENDER_GPS,
-	DEBUG_SENDER_LCD,
-	DEBUG_SENDER_FUEL,
-	DEBUG_SENDER_BUTTON,
-	DEBUG_SENDER_CHARGE,
-	DEBUG_SENDER_ADC,
-	DEBUG_SENDER_PWM,
-	DEBUG_SENDER_ACCEL,
-	DEBUG_SENDER_BATTERY_ACCUM,
-	DEBUG_SENDER_BATTERY_VOLT
-};
-
-enum tDebugPriority {
-	DEBUG_PRIORITY_INFO,
-	DEBUG_PRIORITY_WARNING,
-	DEBUG_PRIORITY_CRITICAL,
-};
+//--------------------------
+// Queues
+//--------------------------
 
 
-struct tDebugLog {
-	enum tDebugPriority priority;
-	enum tDebugSender sender;
-	unsigned char text[DEBUG_MAX_STRLEN];
-};
+//--------------------------
+// Structs
+//--------------------------
 
 
-void debug_task_init( void );
-void debug_task( void *pvParameters );
-void debug_log(enum tDebugPriority priority, enum tDebugSender sender, char *string);
+//--------------------------
+// Functions
+//--------------------------
+void accel_task_init( void ){
+	unsigned short response;
+	
+	// Check if the accelerometer is responding
+	if( !accel_checkID() ){
+		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_ACCEL, "Incorrect accel ID - Exiting task");
+	}
+}
 
 
-#endif /* DEBUG_H_ */
+unsigned char accel_checkID( void ){
+	unsigned short response;
+	
+	spi_selectChip(ACCEL_SPI, ACCEL_SPI_NPCS);
+	spi_write(ACCEL_SPI, ACCEL_REGISTER_DEVICE_ID);
+	
+	spi_write(ACCEL_SPI, ACCEL_DUMMY_CMD);
+	spi_read(ACCEL_SPI, &response);
+	
+	spi_unselectChip(ACCEL_SPI, ACCEL_SPI_NPCS);
+	
+	return ( response == ACCEL_DEVICE_ID );
+}

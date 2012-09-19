@@ -33,7 +33,8 @@
 
 #include "hal.h"
 
-#define DATAFLASH_VERSION					"1.00"
+#define FLASH_VERSION					"1.00"
+#define FLASH_DRIVER_TYPE				"AT25DF161"
 
 #define flash_clr_wp()					gpio_set_gpio_pin(DATAFLASH_WP)
 #define flash_set_wp()					gpio_clr_gpio_pin(DATAFLASH_WP)

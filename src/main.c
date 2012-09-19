@@ -82,6 +82,7 @@ int main( void ){
 	usb_task_init();
 	wdt_task_init();
 	gps_task_init();
+	accel_task_init();
 
 
 	//--------------------------

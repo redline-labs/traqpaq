@@ -158,32 +158,32 @@ void board_init(void){
 	// ------------------------------------------------------------
 	// Flash Initialization (SPI)
 	// ------------------------------------------------------------
-	const gpio_map_t SPI_GPIO_MAP = {
-		{DATAFLASH_SPI_SCK_PIN,		DATAFLASH_SPI_SCK_FUNCTION  },  // SPI Clock
-		{DATAFLASH_SPI_MISO_PIN,	DATAFLASH_SPI_MISO_FUNCTION },  // MISO
-		{DATAFLASH_SPI_MOSI_PIN,	DATAFLASH_SPI_MOSI_FUNCTION },  // MOSI
-		{DATAFLASH_SPI_NPCS0_PIN, 	DATAFLASH_SPI_NPCS0_FUNCTION},  // Chip Select
+	const gpio_map_t FLASH_SPI_GPIO_MAP = {
+		{FLASH_SPI_SCK_PIN,		FLASH_SPI_SCK_FUNCTION  },  // SPI Clock
+		{FLASH_SPI_MISO_PIN,	FLASH_SPI_MISO_FUNCTION },  // MISO
+		{FLASH_SPI_MOSI_PIN,	FLASH_SPI_MOSI_FUNCTION },  // MOSI
+		{FLASH_SPI_NPCS0_PIN, 	FLASH_SPI_NPCS0_FUNCTION},  // Chip Select
 	};
 
-	gpio_enable_module(SPI_GPIO_MAP, sizeof(SPI_GPIO_MAP) / sizeof(SPI_GPIO_MAP[0])); // Assign I/Os to SPI.
+	gpio_enable_module(FLASH_SPI_GPIO_MAP, sizeof(FLASH_SPI_GPIO_MAP) / sizeof(FLASH_SPI_GPIO_MAP[0])); // Assign I/Os to SPI.
 		
-	spi_options_t dataflashOptions = {
-		.reg		 = DATAFLASH_SPI_NPCS,
-		.baudrate	 = SPI_BAUDRATE,
-		.bits		 = SPI_BITS_PER_XFER,
-		.spck_delay  = SPI_SCLK_DELAY,
-		.trans_delay = SPI_XFER_DELAY,
-		.stay_act    = SPI_STAY_ACTIVE,
-		.spi_mode	 = SPI_MODE,
-		.modfdis	 = SPI_FAULT_DETECT, 
+	spi_options_t flashSpiOptions = {
+		.reg		 = FLASH_SPI_NPCS,
+		.baudrate	 = FLASH_SPI_BAUDRATE,
+		.bits		 = FLASH_SPI_BITS_PER_XFER,
+		.spck_delay  = FLASH_SPI_SCLK_DELAY,
+		.trans_delay = FLASH_SPI_XFER_DELAY,
+		.stay_act    = FLASH_SPI_STAY_ACTIVE,
+		.spi_mode	 = FLASH_SPI_MODE,
+		.modfdis	 = FLASH_SPI_FAULT_DETECT, 
 	};
 
-	spi_initMaster(DATAFLASH_SPI, &dataflashOptions);
-	spi_selectionMode(DATAFLASH_SPI, SPI_VARIABLE_PS, SPI_PCS_DECODE, SPI_SCLK_DELAY);
-	spi_enable(DATAFLASH_SPI);
-	spi_setupChipReg(DATAFLASH_SPI, &dataflashOptions, APPL_PBA_SPEED);
+	spi_initMaster(FLASH_SPI, &flashSpiOptions);
+	spi_selectionMode(FLASH_SPI, FLASH_SPI_VARIABLE_PS, FLASH_SPI_PCS_DECODE, FLASH_SPI_SCLK_DELAY);
+	spi_enable(FLASH_SPI);
+	spi_setupChipReg(FLASH_SPI, &flashSpiOptions, APPL_PBA_SPEED);
 		
-	static const pdca_channel_options_t pdcaSPItx = { 
+	static const pdca_channel_options_t pdcaFlashTx = { 
 		.addr = NULL,								// memory address 
 		.pid = AVR32_PDCA_PID_SPI0_TX,				// select peripheral - SPI transfer channel 
 		.size = NULL,								// transfer counter 
@@ -192,10 +192,10 @@ void board_init(void){
 		.transfer_size = PDCA_TRANSFER_SIZE_BYTE	// select size of the transfer 
 	};
 		
-	pdca_init_channel(SPI_TX_PDCA_CHANNEL, &pdcaSPItx);
-	pdca_disable(SPI_TX_PDCA_CHANNEL);
+	pdca_init_channel(FLASH_SPI_TX_PDCA_CHANNEL, &pdcaFlashTx);
+	pdca_disable(FLASH_SPI_TX_PDCA_CHANNEL);
 		
-	static const pdca_channel_options_t pdcaSPIrx = { 
+	static const pdca_channel_options_t pdcaFlashRx = { 
 		.addr = NULL,								// memory address 
 		.pid = AVR32_PDCA_PID_SPI0_RX,				// select peripheral - SPI transfer channel 
 		.size = NULL,								// transfer counter 
@@ -204,9 +204,60 @@ void board_init(void){
 		.transfer_size = PDCA_TRANSFER_SIZE_BYTE	// select size of the transfer 
 	};
 		
-	pdca_init_channel(SPI_RX_PDCA_CHANNEL, &pdcaSPIrx);
+	pdca_init_channel(FLASH_SPI_RX_PDCA_CHANNEL, &pdcaFlashRx);
 		
+	
+	// ------------------------------------------------------------
+	// Accel Initialization (SPI)
+	// ------------------------------------------------------------
+	const gpio_map_t ACCEL_SPI_GPIO_MAP = {
+		{ACCEL_SPI_SCK_PIN,		ACCEL_SPI_SCK_FUNCTION  },  // SPI Clock
+		{ACCEL_SPI_MISO_PIN,	ACCEL_SPI_MISO_FUNCTION },  // MISO
+		{ACCEL_SPI_MOSI_PIN,	ACCEL_SPI_MOSI_FUNCTION },  // MOSI
+		{ACCEL_SPI_NPCS0_PIN, 	ACCEL_SPI_NPCS0_FUNCTION},  // Chip Select
+	};
 
+	gpio_enable_module(ACCEL_SPI_GPIO_MAP, sizeof(ACCEL_SPI_GPIO_MAP) / sizeof(ACCEL_SPI_GPIO_MAP[0])); // Assign I/Os to SPI.
+	
+	spi_options_t accelSpiOptions = {
+		.reg		 = ACCEL_SPI_NPCS,
+		.baudrate	 = ACCEL_SPI_BAUDRATE,
+		.bits		 = ACCEL_SPI_BITS_PER_XFER,
+		.spck_delay  = ACCEL_SPI_SCLK_DELAY,
+		.trans_delay = ACCEL_SPI_XFER_DELAY,
+		.stay_act    = ACCEL_SPI_STAY_ACTIVE,
+		.spi_mode	 = ACCEL_SPI_MODE,
+		.modfdis	 = ACCEL_SPI_FAULT_DETECT,
+	};
+
+	spi_initMaster(ACCEL_SPI, &accelSpiOptions);
+	spi_selectionMode(ACCEL_SPI, ACCEL_SPI_VARIABLE_PS, ACCEL_SPI_PCS_DECODE, ACCEL_SPI_SCLK_DELAY);
+	spi_enable(ACCEL_SPI);
+	spi_setupChipReg(ACCEL_SPI, &accelSpiOptions, APPL_PBA_SPEED);
+	
+	/*static const pdca_channel_options_t pdcaAccelTx = {
+		.addr = NULL,								// memory address
+		.pid = AVR32_PDCA_PID_SPI1_TX,				// select peripheral - SPI transfer channel
+		.size = NULL,								// transfer counter
+		.r_addr = NULL,								// next memory address
+		.r_size = NULL,								// next transfer counter
+		.transfer_size = PDCA_TRANSFER_SIZE_BYTE	// select size of the transfer
+	};
+	
+	pdca_init_channel(SPI_TX_PDCA_CHANNEL, &pdcaAccelTx);
+	pdca_disable(SPI_TX_PDCA_CHANNEL);
+	
+	static const pdca_channel_options_t pdcaAccelRx = {
+		.addr = NULL,								// memory address
+		.pid = AVR32_PDCA_PID_SPI1_RX,				// select peripheral - SPI transfer channel
+		.size = NULL,								// transfer counter
+		.r_addr = NULL,								// next memory address
+		.r_size = NULL,								// next transfer counter
+		.transfer_size = PDCA_TRANSFER_SIZE_BYTE	// select size of the transfer
+	};
+	
+	pdca_init_channel(SPI_RX_PDCA_CHANNEL, &pdcaAccelRx);*/
+	
 
 	// ------------------------------------------------------------
 	// Fuel Initialization (TWI)

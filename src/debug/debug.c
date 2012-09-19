@@ -147,7 +147,7 @@ void debug_task( void *pvParameters ) {
 	}
 }
 
-void debug_log(unsigned char priority, unsigned char sender, char *string){
+void debug_log(enum tDebugPriority priority, enum tDebugSender sender, char *string){
 	#if( TRAQPAQ_DEBUG_ENABLED == TRUE )
 	struct tDebugLog request;
 	
