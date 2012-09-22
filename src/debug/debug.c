@@ -137,6 +137,22 @@ void debug_task( void *pvParameters ) {
 			case(DEBUG_SENDER_BATTERY_VOLT):
 				usart_write_line(DEBUG_USART, "[VOLT]: ");
 				break;
+				
+			case(DEBUG_SENDER_ACCEL):
+				usart_write_line(DEBUG_USART, "[ACCEL]: ");
+				break;
+				
+			case(DEBUG_SENDER_ACCELX):
+				usart_write_line(DEBUG_USART, "[X]: ");
+				break;
+				
+			case(DEBUG_SENDER_ACCELY):
+				usart_write_line(DEBUG_USART, "[Y]: ");
+				break;
+				
+			case(DEBUG_SENDER_ACCELZ):
+				usart_write_line(DEBUG_USART, "[Z]: ");
+				break;
 			
 		}
 		

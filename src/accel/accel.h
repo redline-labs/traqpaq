@@ -36,6 +36,16 @@
 
 #define ACCEL_DRIVER_TYPE			"ADXL345"
 
+#define ACCEL_MANAGER_QUEUE_SIZE		5
+
+#define ACCEL_RESPONSE_OK				TRUE
+#define ACCEL_RESPONSE_ERROR			FALSE
+
+#define ACCEL_READ						0b10000000
+#define ACCEL_WRITE						0b00000000
+#define ACCEL_SINGLE_BYTE				0b00000000
+#define ACCEL_MULTIPLE_BYTES			0b01000000
+
 #define ACCEL_REGISTER_DEVICE_ID		0x00	// Accelerometer Device ID
 #define ACCEL_REGISTER_THRESH_TAP		0x1D	// Tap Threshold
 #define ACCEL_REGISTER_OFSX				0x1E	// X-Axis Offset
@@ -120,10 +130,82 @@
 // FIFO_STATUS
 #define ACCEL_MASK_FIFO_ENTRIES			0b00111111
 
+#define ACCEL_SELF_TEST_SAMPLES			128			// Keep a power of two to make division easy
+
+#define ACCEL_SENSITIVITY				4			// 3.9mg per LSB
+#define ACCEL_SELF_TEST_SETTLE_TIME		2			// Time in milliseconds to allow the self-test to settle
+
+#define ACCEL_SELF_TEST_X_MIN			51			// Counts
+#define ACCEL_SELF_TEST_X_MAX			538			// Counts
+#define ACCEL_SELF_TEST_Y_MIN			-538		// Counts
+#define ACCEL_SELF_TEST_Y_MAX			-51			// Counts
+#define ACCEL_SELF_TEST_Z_MIN			77			// Counts
+#define ACCEL_SELF_TEST_Z_MAX			872			// Counts
+
+#define ACCEL_READ_FIFO_INTERVAL		15			// Time in milliseconds to read the FIFO
+
+
+enum tAccelSelfTest {
+	ACCEL_SELF_TEST_ENABLE,
+	ACCEL_SELF_TEST_DISABLE	
+};
+
+
+struct __attribute__ ((packed)) tAccelSample {
+	signed short x;
+	signed short y;
+	signed short z;	
+};
+
+
+struct tAccelInitData {
+	struct tAccelSample normal;
+	struct tAccelSample test;
+};
+
+enum tAccelStatus {
+	UNKNOWN,
+	INCORRECT_DEVID,
+	UNINITALIZED,
+	CHECK_ID_FAILED,
+	PERFORMING_INIT,
+	SELF_TEST_FAILED,
+	IDLE,
+	SAMPLING
+};
+
+struct tAccelInfo {
+	unsigned char available;
+	unsigned char selfTestPassed;
+	enum tAccelStatus status;
+	struct tAccelInitData init;
+	struct tAccelSample filteredData;
+};
+
+#define ACCEL_SAMPLES_PER_PAGE		42
+
+
+struct __attribute__ ((packed)) tAccelDataPage {
+	unsigned char error;
+	unsigned char bufferOverrun;
+	unsigned char reserved[2];
+	
+	struct tAccelSample samples[ACCEL_SAMPLES_PER_PAGE];
+};
 
 
 void accel_task_init( void );
+void accel_task( void *pvParameters );
 unsigned char accel_checkID( void );
-
+unsigned char accel_setDataFormat( unsigned char format );
+unsigned char accel_setDataRate( unsigned char rate );
+unsigned char accel_setFIFOCtrl( unsigned char control );
+unsigned char accel_setPowerCtrl( unsigned char control);
+unsigned char accel_read( struct tAccelSample *sample );
+unsigned char accel_readEntriesFIFO( void );
+unsigned char accel_selfTest( enum tAccelSelfTest flag );
+unsigned char accel_readRegister( unsigned char registerAddr );
+unsigned char accel_flushFIFO( void );
+unsigned char accel_performInit( struct tAccelInfo *info );
 
 #endif /* ACCEL_H_ */
