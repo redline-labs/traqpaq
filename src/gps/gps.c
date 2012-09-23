@@ -30,6 +30,7 @@
 #include "hal.h"
 #include "math.h"
 #include "lcd/itoa.h"
+#include "string.h"
 
 xQueueHandle gpsRxdQueue;
 xQueueHandle gpsManagerQueue;
@@ -38,6 +39,7 @@ unsigned char rxBuffer[GPS_MSG_MAX_STRLEN];
 unsigned char gpsTokens[MAX_SIGNALS_SENTENCE];
 
 xTimerHandle xMessageTimer;
+xTimerHandle xReceiverInfoTimer;
 
 __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
 	int rxd;
@@ -72,6 +74,7 @@ void gps_task_init( void ){
 
 
 void gps_task( void *pvParameters ){
+	unsigned char i;
 	unsigned int rxdChar;										// Temporary storage for received character queue
 	unsigned char rxIndex = 0;									// Index in received character buffer
 	
@@ -103,9 +106,11 @@ void gps_task( void *pvParameters ){
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Task Started");
 	
 	// Initialize information about the GPS receiver
-	gpsInfo.serial_number = 0;
-	gpsInfo.sw_date[0] = 0;
-	gpsInfo.sw_version[0] = 0;
+	gpsInfo.serial_number_valid = FALSE;
+	gpsInfo.sw_date_valid = FALSE;
+	gpsInfo.sw_version_valid = FALSE;
+	gpsInfo.part_number_valid = FALSE;
+	
 	gpsInfo.mode = 0;
 	gpsInfo.satellites = 0;
 	gpsInfo.record_flag = FALSE;
@@ -121,8 +126,9 @@ void gps_task( void *pvParameters ){
 	gps_warm_start();
 	#endif
 	
-	// Start the GPS message timeout detection
-	xMessageTimer = xTimerCreate( "gpsMessageTimer", GPS_MSG_TIMEOUT * portTICK_RATE_MS, pdFALSE, NULL, gps_messageTimeout );
+	xMessageTimer = xTimerCreate( "gpsMessageTimer", (GPS_MSG_TIMEOUT / portTICK_RATE_MS), pdFALSE, 0, gps_messageTimeout );			// Start the GPS message timeout detection
+	xReceiverInfoTimer = xTimerCreate( "GetReceiverInfoTimer", (GPS_MSG_TX_TIME / portTICK_RATE_MS), 1, NULL, gps_getReceiverInfo );	// Start the delay for requesting receiver info
+	xTimerStart(xReceiverInfoTimer, 0);
 	
 	while(TRUE){
 		// Check for pending requests
@@ -330,7 +336,25 @@ void gps_task( void *pvParameters ){
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_MTK599_ID2) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK599_ID3) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK599_ID4) ){
-						
+					
+					// Load up the serial number
+					gpsInfo.serial_number = (gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B0]], rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B0]+1]) << 24) +
+											(gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B1]], rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B1]+1]) << 16) +
+											(gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B2]], rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B2]+1]) <<  8) +
+											(gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B3]], rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B3]+1]) <<  0);
+
+					// Load up the part number... Goofy, it is transmitted as Hex Byte in ASCII
+					gpsInfo.part_number[0] = gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B0]], rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B0]+1]);
+					gpsInfo.part_number[1] = gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B1]], rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B1]+1]);
+					gpsInfo.part_number[2] = gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B2]], rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B2]+1]);
+					gpsInfo.part_number[3] = gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B3]], rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B3]+1]);
+					gpsInfo.part_number[4] = gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B4]], rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B4]+1]);
+					gpsInfo.part_number[5] = gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B5]], rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B5]+1]);
+					gpsInfo.part_number[6] = gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B6]], rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B6]+1]);
+					gpsInfo.part_number[7] = NULL;	// Terminate the string
+					
+					gpsInfo.serial_number_valid = TRUE;
+					gpsInfo.part_number_valid = TRUE;
 				
 				}else
 				//--------------------------
@@ -341,7 +365,12 @@ void gps_task( void *pvParameters ){
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_MTK705_ID2) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK705_ID3) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK705_ID4) ){
-							
+						
+					strcpy( &gpsInfo.sw_version, &rxBuffer[gpsTokens[TOKEN_PMTK705_SW_VERSION]] );
+					strcpy( &gpsInfo.sw_date, &rxBuffer[gpsTokens[TOKEN_PMTK705_SW_DATE]] );
+					
+					gpsInfo.sw_version_valid = TRUE;
+					gpsInfo.sw_date_valid = TRUE;
 				}
 				
 				
@@ -443,9 +472,11 @@ unsigned short gps_received_checksum( void ){
 	
 	// Skip the GPS_CHECKSUM_CHAR
 	index++;
-				
+	
+	return gps_convertASCIIHex(rxBuffer[index], rxBuffer[index + 1]);	
+	
 	// Convert the received checksum
-	if(rxBuffer[index] >= 'A'){
+	/*if(rxBuffer[index] >= 'A'){
 		rxBuffer[index] += 10 - 'A';
 	}else{
 		rxBuffer[index] -= '0';
@@ -457,7 +488,25 @@ unsigned short gps_received_checksum( void ){
 		rxBuffer[index+1] -= '0';
 	}
 				
-	return ((rxBuffer[index] & 0xF) << 4) + (rxBuffer[index+1] & 0xF);
+	return ((rxBuffer[index] & 0xF) << 4) + (rxBuffer[index+1] & 0xF);*/
+}
+
+unsigned char gps_convertASCIIHex(unsigned char byte1, unsigned char byte2){
+	unsigned char converted;
+	
+	if(byte1 >= 'A'){
+		byte1 += 10 - 'A';
+	}else{
+		byte1 -= '0';
+	}
+	
+	if(byte2 >= 'A'){
+		byte2 += 10 - 'A';
+	}else{
+		byte2 -= '0';
+	}
+	
+	return ((byte1 & 0xF) << 4) + (byte2 & 0xF);
 }
 
 
@@ -590,8 +639,20 @@ void gps_send_request(enum tGpsCommand command, unsigned int *pointer, unsigned 
 	}
 }
 
-void gps_messageTimeout( void ){
+void gps_messageTimeout( xTimerHandle xTimer ){
 	debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "Message Timer Expired");
 	debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Setting Message Rate");
 	gps_set_messaging_rate(GPS_MESSAGING_100MS);
+}
+
+void gps_getReceiverInfo( xTimerHandle xTimer ){
+	// Software version and date	
+	usart_write_line(GPS_USART, "$PMTK605*31");
+	usart_putchar(GPS_USART, GPS_MSG_CR);
+	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
+	
+	// Reciever part number and serial number
+	usart_write_line(GPS_USART, "$PMTK499,1C0,21*77");
+	usart_putchar(GPS_USART, GPS_MSG_CR);
+	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
 }

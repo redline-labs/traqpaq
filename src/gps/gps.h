@@ -44,7 +44,7 @@
 #define GPS_MSG_START_CHAR			'$'		
 #define GPS_MSG_END_CHAR			0x0A					// ASCII for LF
 #define GPS_MSG_CR					0x0D
-#define GPS_MSG_MAX_STRLEN			82						// Each message is limited to 82 characters max, including '$', CR, and LF
+#define GPS_MSG_MAX_STRLEN			120						// Each message is limited to 82 characters max, including '$', CR, and LF.... Some debug messages are longer than NMEA spec
 #define GPS_DELIMITER_CHAR			','
 #define GPS_CHECKSUM_CHAR			'*'
 #define GPS_PERIOD					'.'
@@ -142,16 +142,27 @@
 #define PMTK001_VALID_CMD_FAILED	0x32
 #define PMTK001_VALID_CMD			0x33
 
-#define TOKEN_PMTK599_SERIAL_MSB	3
-#define TOKEN_PMTK599_SERIAL_LSB	6
-#define TOKEN_PMTK599_PARTNO_MSB	12
-#define TOKEN_PMTK599_PARTNO_LSB	18
+#define TOKEN_PMTK599_SERIAL_B0		3
+#define TOKEN_PMTK599_SERIAL_B1		4
+#define TOKEN_PMTK599_SERIAL_B2		5
+#define TOKEN_PMTK599_SERIAL_B3		6
+
+#define TOKEN_PMTK599_PARTNO_B0		12
+#define TOKEN_PMTK599_PARTNO_B1		13
+#define TOKEN_PMTK599_PARTNO_B2		14
+#define TOKEN_PMTK599_PARTNO_B3		15
+#define TOKEN_PMTK599_PARTNO_B4		16
+#define TOKEN_PMTK599_PARTNO_B5		17
+#define TOKEN_PMTK599_PARTNO_B6		18
 
 #define TOKEN_PMTK705_SW_VERSION	1
 #define TOKEN_PMTK705_SW_DATE		3
 
 #define GPS_INFO_SW_VERSION_SIZE	9	// Number of characters of SW version string, AXN_x.xx, plus null character
 #define GPS_INFO_SW_DATE_SIZE		9	// Number of characters of SW date string, YYYYMMDD, plus null character
+#define GPS_INFO_PART_NUMBER_SIZE	8	// Number of characters of Part Number String, plus null character
+
+#define GPS_MSG_TX_TIME				500
 
 
 enum tGpsCommand {
@@ -164,7 +175,8 @@ enum tGpsCommand {
 	GPS_MGR_REQUEST_LATITUDE,
 	GPS_MGR_REQUEST_LONGITUDE,
 	GPS_MGR_REQUEST_COURSE,
-	GPS_MGR_REQUEST_RECORD_STATUS
+	GPS_MGR_REQUEST_RECORD_STATUS,
+	GPS_MGR_REQUEST_RECEIVER_INFO
 };
 
 struct tGPSRequest {
@@ -194,8 +206,16 @@ struct tGPSLine {
 
 struct tGPSInfo {
 	unsigned int	serial_number;
+	unsigned char	serial_number_valid;
+	
 	unsigned char	sw_version[GPS_INFO_SW_VERSION_SIZE];
+	unsigned char	sw_version_valid;
+	
 	unsigned char	sw_date[GPS_INFO_SW_DATE_SIZE];
+	unsigned char	sw_date_valid;
+	
+	unsigned char	part_number[GPS_INFO_PART_NUMBER_SIZE];
+	unsigned char	part_number_valid;
 	
 	unsigned char	mode;
 	unsigned char	satellites;
@@ -237,6 +257,8 @@ void gps_cold_start( void );
 void gps_warm_start( void );
 
 void gps_send_request(enum tGpsCommand command, unsigned int *pointer, unsigned char data, unsigned char delay, unsigned char resume);
-void gps_messageTimeout( void );
+void gps_messageTimeout( xTimerHandle xTimer );
+void gps_getReceiverInfo( xTimerHandle xTimer );
+unsigned char gps_convertASCIIHex(unsigned char byte1, unsigned char byte2);
 
 #endif /* GPS_H_ */

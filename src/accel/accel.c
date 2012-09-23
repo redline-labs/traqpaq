@@ -48,7 +48,7 @@ void accel_task_init( void ){
 	accelInfo.available = FALSE;
 	accelInfo.status = UNKNOWN;
 	
-	flashManagerQueue = xQueueCreate(FLASH_MANAGER_QUEUE_SIZE, sizeof(request));
+	//accelManagerQueue = xQueueCreate(FLASH_MANAGER_QUEUE_SIZE, sizeof(request));
 	
 	// Make sure the accel is in standby
 	accel_setPowerCtrl( ACCEL_MASK_POWER_CTL_STANDBY );
