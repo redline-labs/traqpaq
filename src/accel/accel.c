@@ -314,6 +314,7 @@ unsigned char accel_performInit( struct tAccelInfo *info ){
 	
 	// Check to see if the accel is available on this board 
 	if( !info->available ){
+		info->status = INIT_FAILED;
 		return ACCEL_RESPONSE_ERROR;
 	}
 	
