@@ -41,6 +41,8 @@ unsigned char gpsTokens[MAX_SIGNALS_SENTENCE];
 xTimerHandle xMessageTimer;
 xTimerHandle xReceiverInfoTimer;
 
+struct tGPSInfo gpsInfo;
+
 __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
 	int rxd;
 	
@@ -95,8 +97,6 @@ void gps_task( void *pvParameters ){
 	struct tRecordDataPage gpsData;							// Formatted GPS Data
 	struct tGPSLine finishLine;								// Formatted coordinate pairs for "finish line"
 	struct tTracklist trackList;
-	
-	struct tGPSInfo gpsInfo;
 	
 	struct tGPSRequest request;
 

@@ -44,6 +44,7 @@ xQueueHandle usbManagerQueue;
 extern struct tFlashOTP flashOTP;
 extern struct tFlashFlags flashFlags;
 extern struct tUserPrefs userPrefs;
+extern struct tGPSInfo gpsInfo;
 
 // Create task for FreeRTOS
 void usb_task_init( void ){
@@ -91,8 +92,6 @@ void usb_task( void *pvParameters ){
 			case(USB_CMD_REQ_TESTER_ID):
 				usbTxBuffer[data_length++] = flashOTP.tester_id;				
 				break;
-				
-				
 
 			case(USB_CMD_REQ_BATTERY_VOLTAGE):
 				fuel_send_request(FUEL_MGR_REQUEST_VOLTAGE, NULL, &responseU16, TRUE, NULL);
@@ -127,26 +126,22 @@ void usb_task( void *pvParameters ){
 					
 			case(USB_CMD_READ_OTP):
 				data_length = usbRxBuffer[1];
-				//flash_send_request(FLASH_REQUEST_READ_OTP, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
 				flash_send_request(FLASH_MGR_READ_OTP, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
 				break;
 
 			case(USB_CMD_READ_RECORDTABLE):
 				data_length = usbRxBuffer[1];
-				//flash_send_request(FLASH_REQUEST_READ_RECORDTABLE, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
 				flash_send_request(FLASH_MGR_READ_RECORDTABLE, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
 				break;
 					
 			case(USB_CMD_READ_RECORDDATA):	// 19d
 				data_length = (usbRxBuffer[1] << 8) + usbRxBuffer[2];
-				//flash_send_request(FLASH_REQUEST_READ_RECORDDATA, &usbTxBuffer, (usbRxBuffer[1] << 8) + usbRxBuffer[2], (usbRxBuffer[3] << 8) + usbRxBuffer[4], TRUE, pdFALSE);
 				flash_send_request(FLASH_MGR_READ_RECORDATA, &usbTxBuffer, (usbRxBuffer[1] << 8) + usbRxBuffer[2], (usbRxBuffer[3] << 8) + usbRxBuffer[4], TRUE, pdFALSE);
 				break;
 				
 			case(USB_DBG_DF_SECTOR_ERASE):
 				usbTxBuffer[0] = TRUE;
 				data_length = 1;
-				//flash_send_request(FLASH_REQUEST_SECTOR_ERASE, NULL, NULL, usbRxBuffer[1], FALSE, pdFALSE);
 				flash_send_request(FLASH_MGR_SECTOR_ERASE, NULL, NULL, usbRxBuffer[1], FALSE, pdFALSE);
 				break;
 				
@@ -157,7 +152,6 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_CMD_ERASE_RECORDDATA):
 				data_length = 1;
-				//flash_send_request(FLASH_REQUEST_ERASE_RECORDED_DATA, NULL, NULL, NULL, FALSE, pdFALSE);
 				flash_send_request(FLASH_MGR_ERASE_RECORDED_DATA, NULL, NULL, NULL, FALSE, pdFALSE);
 				usbTxBuffer[0] = TRUE;
 				break;
@@ -170,13 +164,11 @@ void usb_task( void *pvParameters ){
 			case(USB_DBG_DF_USED_SPACE):
 				data_length = 1;
 				usbTxBuffer[0] = TRUE;
-				//flash_send_request(FLASH_REQUEST_USED_SPACE, NULL, NULL, NULL, FALSE, pdFALSE);
 				flash_send_request(FLASH_MGR_USED_SPACE, NULL, NULL, NULL, FALSE, pdFALSE);
 				break;
 				
 			case(USB_DBG_DF_CHIP_ERASE):
 				data_length = 1;
-				//flash_send_request(FLASH_REQUEST_CHIP_ERASE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
 				flash_send_request(FLASH_MGR_CHIP_ERASE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
 				break;
 				
@@ -240,23 +232,31 @@ void usb_task( void *pvParameters ){
 				userPrefs.screenOffTime = BACKLIGHT_DEFAULT_OFFTIME;
 				userPrefs.screenPWMMax = BACKLIGHT_DEFAULT_MAX;
 				userPrefs.screenPWMMin = BACKLIGHT_DEFAULT_MIN;
-				//flash_send_request(FLASH_REQUEST_WRITE_USER_PREFS, NULL, NULL, NULL, FALSE, pdFALSE);
 				flash_send_request(FLASH_MGR_WRITE_USER_PREFS, NULL, NULL, NULL, FALSE, pdFALSE);
 				break;
 				
 			case(USB_DBG_GPS_LATITUDE):		// 64d
 				data_length = 4;
-				gps_send_request(GPS_MGR_REQUEST_LATITUDE, &usbTxBuffer[0], NULL, pdFALSE, pdTRUE);
+				usbTxBuffer[0] = (gpsInfo.current_location.latitude >> 24) & 0xFF;
+				usbTxBuffer[1] = (gpsInfo.current_location.latitude >> 16) & 0xFF;
+				usbTxBuffer[2] = (gpsInfo.current_location.latitude >>  8) & 0xFF;
+				usbTxBuffer[3] = (gpsInfo.current_location.latitude >>  0) & 0xFF;
 				break;
 				
 			case(USB_DBG_GPS_LONGITUDE):	// 65d
 				data_length = 4;
-				gps_send_request(GPS_MGR_REQUEST_LONGITUDE, &usbTxBuffer[0], NULL, pdFALSE, pdTRUE);
+				usbTxBuffer[0] = (gpsInfo.current_location.longitude >> 24) & 0xFF;
+				usbTxBuffer[1] = (gpsInfo.current_location.longitude >> 16) & 0xFF;
+				usbTxBuffer[2] = (gpsInfo.current_location.longitude >>  8) & 0xFF;
+				usbTxBuffer[3] = (gpsInfo.current_location.longitude >>  0) & 0xFF;
 				break;
 				
 			case(USB_DBG_GPS_COURSE):	// 66d
 				data_length = 4;
-				gps_send_request(GPS_MGR_REQUEST_COURSE, &usbTxBuffer[0], NULL, pdFALSE, pdTRUE);
+				usbTxBuffer[0] = (gpsInfo.current_location.heading >> 24) & 0xFF;
+				usbTxBuffer[1] = (gpsInfo.current_location.heading >> 16) & 0xFF;
+				usbTxBuffer[2] = (gpsInfo.current_location.heading >>  8) & 0xFF;
+				usbTxBuffer[3] = (gpsInfo.current_location.heading >>  0) & 0xFF;
 				break;
 				
 			case(USB_DBG_START_RECORDING):
@@ -273,7 +273,31 @@ void usb_task( void *pvParameters ){
 			
 			case(USB_DBG_RECORDING_STATUS):
 				data_length = 1;
-				gps_send_request(GPS_MGR_REQUEST_RECORD_STATUS, &usbTxBuffer, NULL, pdFALSE, pdTRUE);
+				usbTxBuffer[0] = gpsInfo.record_flag;
+				break;
+				
+			case(USB_DBG_GPS_INFO_SN):	// 67d
+				data_length = 5;
+				usbTxBuffer[0] = gpsInfo.serial_number_valid;
+				usbTxBuffer[1] = (gpsInfo.serial_number >> 24) & 0xFF;
+				usbTxBuffer[2] = (gpsInfo.serial_number >> 16) & 0xFF;
+				usbTxBuffer[3] = (gpsInfo.serial_number >>  8) & 0xFF;
+				usbTxBuffer[4] = (gpsInfo.serial_number >>  0) & 0xFF;
+				break;
+				
+			case(USB_DBG_GPS_INFO_PN):	// 68d
+				usbTxBuffer[0] = gpsInfo.part_number_valid;
+				data_length = strlcpy(&usbTxBuffer[1], gpsInfo.part_number, GPS_INFO_PART_NUMBER_SIZE) + 1;
+				break;
+				
+			case(USB_DBG_GPS_INFO_SW_VER):	// 69d
+				usbTxBuffer[0] = gpsInfo.sw_version_valid;
+				data_length = strlcpy(&usbTxBuffer[1], gpsInfo.sw_version, GPS_INFO_SW_VERSION_SIZE) + 1;
+				break;
+				
+			case(USB_DBG_GPS_INFO_SW_DATE):	// 70d
+				usbTxBuffer[0] = gpsInfo.sw_date_valid;
+				data_length = strlcpy(&usbTxBuffer[1], gpsInfo.sw_date, GPS_INFO_SW_DATE_SIZE) + 1;
 				break;
 
 
