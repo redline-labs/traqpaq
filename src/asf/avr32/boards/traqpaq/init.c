@@ -33,6 +33,15 @@
 
 void board_init(void){
 	// ------------------------------------------------------------
+	// Boot checks
+	// ------------------------------------------------------------
+	if( gpio_get_pin_value(DATAFLASH_WP) == PIN_HIGH ){
+		// Stop boot, the flash is being accessed externally
+		// Wait for power cycle
+		while(TRUE);
+	}
+	
+	// ------------------------------------------------------------
 	// Clock Initialization
 	// ------------------------------------------------------------
 	sysclk_init();
@@ -47,6 +56,7 @@ void board_init(void){
 	// ------------------------------------------------------------
 	//init_crcccitt_tab();
 
+
 	// ------------------------------------------------------------
 	// GPIO Initialization
 	// ------------------------------------------------------------
@@ -55,8 +65,10 @@ void board_init(void){
 	gpio_clr_gpio_pin(LCD_RESET);
 	gpio_clr_gpio_pin(ADC_VREF_EN);
 	gpio_clr_gpio_pin(PM_ENABLE);			// Main Power Supply
+	gpio_clr_gpio_pin(DATAFLASH_WP);		// Flash Write Protect
+	gpio_clr_gpio_pin(CHARGE_RATE);			// Battery Charge Rate
 	
-	gpio_clr_gpio_pin(CHARGE_RATE);		// Battery Charge Rate
+	gpio_set_gpio_pin(DATAFLASH_HOLD);		// Flash Hold - TO BE OBSOLETED?
 
 	gpio_enable_pin_pull_up(CHARGE_STAT1);
 	gpio_enable_pin_pull_up(CHARGE_STAT2);
@@ -235,7 +247,7 @@ void board_init(void){
 	spi_enable(ACCEL_SPI);
 	spi_setupChipReg(ACCEL_SPI, &accelSpiOptions, APPL_PBA_SPEED);
 	
-	/*static const pdca_channel_options_t pdcaAccelTx = {
+	static const pdca_channel_options_t pdcaAccelTx = {
 		.addr = NULL,								// memory address
 		.pid = AVR32_PDCA_PID_SPI1_TX,				// select peripheral - SPI transfer channel
 		.size = NULL,								// transfer counter
@@ -244,8 +256,8 @@ void board_init(void){
 		.transfer_size = PDCA_TRANSFER_SIZE_BYTE	// select size of the transfer
 	};
 	
-	pdca_init_channel(SPI_TX_PDCA_CHANNEL, &pdcaAccelTx);
-	pdca_disable(SPI_TX_PDCA_CHANNEL);
+	pdca_init_channel(ACCEL_SPI_TX_PDCA_CHANNEL, &pdcaAccelTx);
+	pdca_disable(ACCEL_SPI_TX_PDCA_CHANNEL);
 	
 	static const pdca_channel_options_t pdcaAccelRx = {
 		.addr = NULL,								// memory address
@@ -256,7 +268,7 @@ void board_init(void){
 		.transfer_size = PDCA_TRANSFER_SIZE_BYTE	// select size of the transfer
 	};
 	
-	pdca_init_channel(SPI_RX_PDCA_CHANNEL, &pdcaAccelRx);*/
+	pdca_init_channel(ACCEL_SPI_RX_PDCA_CHANNEL, &pdcaAccelRx);
 	
 
 	// ------------------------------------------------------------

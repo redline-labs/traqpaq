@@ -37,6 +37,12 @@
 #include "conf_board.h"
 
 // ------------------------------------------------------------
+// GPIO Definitions
+// ------------------------------------------------------------
+#define PIN_HIGH					1
+#define PIN_LOW						0
+
+// ------------------------------------------------------------
 // Versions
 // ------------------------------------------------------------
 #define TRAQPAQ_SW_LEVEL_MAJOR		1
@@ -179,8 +185,8 @@
 #define ACCEL_SPI_PCS_DECODE		0			// SPI PCS Decode
 #define ACCEL_SPI_PCS_DELAY			0			// SPI PCS Delay
 
-#define ACCEL_SPI_TX_PDCA_CHANNEL	0
-#define ACCEL_SPI_RX_PDCA_CHANNEL	1
+#define ACCEL_SPI_TX_PDCA_CHANNEL	2
+#define ACCEL_SPI_RX_PDCA_CHANNEL	3
 
 
 // ------------------------------------------------------------
