@@ -202,34 +202,25 @@ unsigned char accel_setPowerCtrl( unsigned char control ){
 }
 
 unsigned char accel_read( struct tAccelSample *sample ){
-	unsigned short x1, x2, y1, y2, z1, z2;
+	unsigned char readCmd = ACCEL_READ | ACCEL_MULTIPLE_BYTES | ACCEL_REGISTER_DATAX0;
+	
+	// Even though its only 7 bytes, we will be calling this function frequently
+	// PDCA is a little more efficient transferring the bytes out the SPI bus compared to SPI function calls
+	
 	spi_selectChip(ACCEL_SPI, ACCEL_SPI_NPCS);
 	
-	spi_write(ACCEL_SPI, ACCEL_READ | ACCEL_MULTIPLE_BYTES | ACCEL_REGISTER_DATAX0);
+	// Load up the PDCA channels
+	pdca_load_channel(ACCEL_SPI_RX_PDCA_CHANNEL, sample, ACCEL_PCDA_READ_SIZE );
+	pdca_load_channel(ACCEL_SPI_TX_PDCA_CHANNEL, &readCmd, ACCEL_PCDA_READ_SIZE ); // Use start of Flash as Dummy Bytes to Clock Out
 	
-	spi_write(ACCEL_SPI, ACCEL_DUMMY_CMD);
-	spi_read(ACCEL_SPI, &x1);
+	// Kick off the transfers, always Rx first
+	pdca_enable(ACCEL_SPI_RX_PDCA_CHANNEL);
+	pdca_enable(ACCEL_SPI_TX_PDCA_CHANNEL);
 	
-	spi_write(ACCEL_SPI, ACCEL_DUMMY_CMD);
-	spi_read(ACCEL_SPI, &x2);
-	
-	spi_write(ACCEL_SPI, ACCEL_DUMMY_CMD);
-	spi_read(ACCEL_SPI, &y1);
-	
-	spi_write(ACCEL_SPI, ACCEL_DUMMY_CMD);
-	spi_read(ACCEL_SPI, &y2);
-	
-	spi_write(ACCEL_SPI, ACCEL_DUMMY_CMD);
-	spi_read(ACCEL_SPI, &z1);
-	
-	spi_write(ACCEL_SPI, ACCEL_DUMMY_CMD);
-	spi_read(ACCEL_SPI, &z2);
+	// Wait for transfer to complete, too quick to put task to sleep ( ~13.8us )
+	while(pdca_get_transfer_status(ACCEL_SPI_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE);
 	
 	spi_unselectChip(ACCEL_SPI, ACCEL_SPI_NPCS);
-	
-	sample->x = (x2 << 8) + x1;
-	sample->y = (y2 << 8) + y1;
-	sample->z = (z2 << 8) + z1;
 	
 	return ACCEL_RESPONSE_OK;
 }

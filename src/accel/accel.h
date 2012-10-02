@@ -143,6 +143,7 @@
 #define ACCEL_SELF_TEST_Z_MAX			872			// Counts
 
 #define ACCEL_READ_FIFO_INTERVAL		15			// Time in milliseconds to read the FIFO
+#define ACCEL_PCDA_READ_SIZE			7			// Number of bytes to read for PDCA transfers, (2 * 3B) + 1B
 
 
 enum tAccelSelfTest {
@@ -152,6 +153,7 @@ enum tAccelSelfTest {
 
 
 struct __attribute__ ((packed)) tAccelSample {
+	unsigned char dummy;	// Used during PDCA reads
 	signed short x;
 	signed short y;
 	signed short z;	
