@@ -258,7 +258,8 @@ void gps_warm_start( void );
 
 void gps_send_request(enum tGpsCommand command, unsigned int *pointer, unsigned char data, unsigned char delay, unsigned char resume);
 void gps_messageTimeout( xTimerHandle xTimer );
-void gps_getReceiverInfo( xTimerHandle xTimer );
+void gps_getReceiverSWInfo( xTimerHandle xTimer );
+void gps_getReceiverHWInfo( xTimerHandle xTimer );
 unsigned char gps_convertASCIIHex(unsigned char byte1, unsigned char byte2);
 
 #endif /* GPS_H_ */

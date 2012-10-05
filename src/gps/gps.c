@@ -39,7 +39,7 @@ unsigned char rxBuffer[GPS_MSG_MAX_STRLEN];
 unsigned char gpsTokens[MAX_SIGNALS_SENTENCE];
 
 xTimerHandle xMessageTimer;
-xTimerHandle xReceiverInfoTimer;
+xTimerHandle xReceiverSWInfoTimer, xReceiverHWInfoTimer;
 
 struct tGPSInfo gpsInfo;
 
@@ -127,8 +127,10 @@ void gps_task( void *pvParameters ){
 	#endif
 	
 	xMessageTimer = xTimerCreate( "gpsMessageTimer", (GPS_MSG_TIMEOUT / portTICK_RATE_MS), pdFALSE, 0, gps_messageTimeout );			// Start the GPS message timeout detection
-	xReceiverInfoTimer = xTimerCreate( "GetReceiverInfoTimer", (GPS_MSG_TX_TIME / portTICK_RATE_MS), 1, NULL, gps_getReceiverInfo );	// Start the delay for requesting receiver info
-	xTimerStart(xReceiverInfoTimer, 0);
+	xReceiverSWInfoTimer = xTimerCreate( "GetReceiverSWInfoTimer", (GPS_MSG_TX_TIME / portTICK_RATE_MS), 1, NULL, gps_getReceiverSWInfo );	// Start the delay for requesting receiver info
+	xReceiverHWInfoTimer = xTimerCreate( "GetReceiverHWInfoTimer", 2*(GPS_MSG_TX_TIME / portTICK_RATE_MS), 1, NULL, gps_getReceiverHWInfo );
+	xTimerStart(xReceiverSWInfoTimer, pdFALSE);
+	xTimerStart(xReceiverHWInfoTimer, pdFALSE);
 	
 	while(TRUE){
 		// Check for pending requests
@@ -338,9 +340,9 @@ void gps_task( void *pvParameters ){
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK599_ID4) ){
 					
 					// Load up the serial number
-					gpsInfo.serial_number = (gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B0]], rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B0]+1]) << 24) +
-											(gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B1]], rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B1]+1]) << 16) +
-											(gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B2]], rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B2]+1]) <<  8) +
+					gpsInfo.serial_number = (gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B0]], rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B0]+1]) << 24) |
+											(gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B1]], rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B1]+1]) << 16) |
+											(gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B2]], rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B2]+1]) <<  8) |	
 											(gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B3]], rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B3]+1]) <<  0);
 
 					// Load up the part number... Goofy, it is transmitted as Hex Byte in ASCII
@@ -366,11 +368,12 @@ void gps_task( void *pvParameters ){
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK705_ID3) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK705_ID4) ){
 						
-					strcpy( &gpsInfo.sw_version, &rxBuffer[gpsTokens[TOKEN_PMTK705_SW_VERSION]] );
-					strcpy( &gpsInfo.sw_date, &rxBuffer[gpsTokens[TOKEN_PMTK705_SW_DATE]] );
+					strlcpy( &gpsInfo.sw_version, &rxBuffer[gpsTokens[TOKEN_PMTK705_SW_VERSION]], GPS_INFO_SW_VERSION_SIZE );
+					strlcpy( &gpsInfo.sw_date, &rxBuffer[gpsTokens[TOKEN_PMTK705_SW_DATE]], GPS_INFO_SW_DATE_SIZE );
 					
 					gpsInfo.sw_version_valid = TRUE;
 					gpsInfo.sw_date_valid = TRUE;
+					asm("nop");
 				}
 				
 				
@@ -474,21 +477,6 @@ unsigned short gps_received_checksum( void ){
 	index++;
 	
 	return gps_convertASCIIHex(rxBuffer[index], rxBuffer[index + 1]);	
-	
-	// Convert the received checksum
-	/*if(rxBuffer[index] >= 'A'){
-		rxBuffer[index] += 10 - 'A';
-	}else{
-		rxBuffer[index] -= '0';
-	}
-				
-	if(rxBuffer[index+1] >= 'A'){
-		rxBuffer[index+1] += 10 - 'A';
-	}else{
-		rxBuffer[index+1] -= '0';
-	}
-				
-	return ((rxBuffer[index] & 0xF) << 4) + (rxBuffer[index+1] & 0xF);*/
 }
 
 unsigned char gps_convertASCIIHex(unsigned char byte1, unsigned char byte2){
@@ -520,8 +508,8 @@ unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, sign
 	// Calculate the denominator
     denominator = (x2 - x1)*(y4 - y3) - (y2 - y1)*(x4 - x3);
     
-    ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denominator;
-    ub = ((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denominator;
+    ua = (float)((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denominator;
+    ub = (float)((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denominator;
 
     // Calulate the point of intersection
     //long = x1+ua*(x2 - x1);
@@ -645,12 +633,15 @@ void gps_messageTimeout( xTimerHandle xTimer ){
 	gps_set_messaging_rate(GPS_MESSAGING_100MS);
 }
 
-void gps_getReceiverInfo( xTimerHandle xTimer ){
+void gps_getReceiverSWInfo( xTimerHandle xTimer ){
 	// Software version and date	
 	usart_write_line(GPS_USART, "$PMTK605*31");
 	usart_putchar(GPS_USART, GPS_MSG_CR);
 	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
-	
+}
+
+
+void gps_getReceiverHWInfo( xTimerHandle xTimer ){
 	// Reciever part number and serial number
 	usart_write_line(GPS_USART, "$PMTK499,1C0,21*77");
 	usart_putchar(GPS_USART, GPS_MSG_CR);
