@@ -41,8 +41,8 @@
 #ifndef _USB_H_
 #define _USB_H_
 
-#define USB_VERSION					0x0101
-#define USB_VERSION_ASCII			"1.01"
+#define USB_VERSION					0x0102
+#define USB_VERSION_ASCII			"1.02"
 
 #define USB_RX_BUFFER_SIZE			256
 #define USB_TX_BUFFER_SIZE			256
@@ -99,6 +99,7 @@
 #define USB_DBG_DF_USED_SPACE			0x3D	
 
 #define USB_DBG_GPS_CURRENT_POSITION	0x40
+#define USB_DBG_GPS_CURRENT_MODE		0x41
 #define USB_DBG_GPS_INFO_SN				0x43
 #define USB_DBG_GPS_INFO_PN				0x44
 #define USB_DBG_GPS_INFO_SW_VER			0x45

@@ -264,6 +264,9 @@ void gps_task( void *pvParameters ){
 						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_OLDLAPTIME, oldLapTime, pdFALSE);
 					}
 					
+					gpsInfo.mode = gpsData.currentMode;		// TODO: Merge all mode/satellites stuff into gpsInfo??
+					gpsInfo.satellites = gpsData.satellites;
+					
 					// Update the antenna widget
 					if(oldMode != gpsData.currentMode){
 						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_ANTENNA, gpsData.currentMode, pdFALSE);

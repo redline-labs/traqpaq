@@ -172,9 +172,9 @@ void usb_task( void *pvParameters ){
 				usbTxBuffer[data_length++] = 'R';
 				usbTxBuffer[data_length++] = 'A';
 				usbTxBuffer[data_length++] = 'Q';
-				usbTxBuffer[data_length++] = '0';
-				usbTxBuffer[data_length++] = '3';
-				usbTxBuffer[data_length++] = '6';
+				usbTxBuffer[data_length++] = '2';
+				usbTxBuffer[data_length++] = '8';
+				usbTxBuffer[data_length++] = '1';
 				usbTxBuffer[data_length++] = '1';
 				usbTxBuffer[data_length++] = '2';
 				usbTxBuffer[data_length++] = '0';
@@ -182,8 +182,8 @@ void usb_task( void *pvParameters ){
 				usbTxBuffer[data_length++] = '0';
 				usbTxBuffer[data_length++] = '1';
 
-				usbTxBuffer[data_length++] = 0x12;	// PCB Rev
-				usbTxBuffer[data_length++] = 0x30;	// ID of test fixture
+				usbTxBuffer[data_length++] = 0x14;	// PCB Rev
+				usbTxBuffer[data_length++] = 0x00;	// ID of test fixture
 				usbTxBuffer[data_length++] = 0xAA;	// Reserved
 
 				responseU16 = 0;
@@ -246,6 +246,11 @@ void usb_task( void *pvParameters ){
 				usbTxBuffer[data_length++] = (gpsInfo.current_location.heading >> 16) & 0xFF;
 				usbTxBuffer[data_length++] = (gpsInfo.current_location.heading >>  8) & 0xFF;
 				usbTxBuffer[data_length++] = (gpsInfo.current_location.heading >>  0) & 0xFF;
+				break;
+				
+			case(USB_DBG_GPS_CURRENT_MODE):
+				usbTxBuffer[data_length++] = gpsInfo.mode;
+				usbTxBuffer[data_length++] = gpsInfo.satellites;
 				break;
 				
 			case(USB_DBG_START_RECORDING):
