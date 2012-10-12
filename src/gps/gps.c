@@ -3,7 +3,7 @@
  * GPS Interface
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.2
+ * - Supported devices: traq|paq hardware version 1.4
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -248,7 +248,8 @@ void gps_task( void *pvParameters ){
 					gpsData.data[recordIndex].lapDetected = gps_intersection(gpsInfo.current_location.longitude,	gpsInfo.current_location.latitude,
 																			gpsData.data[recordIndex].longitude,    gpsData.data[recordIndex].latitude,
 																			finishLine.startLongitude,				finishLine.startLatitude,
-																			finishLine.endLongitude,				finishLine.endLatitude);
+																			finishLine.endLongitude,				finishLine.endLatitude,
+																			gpsInfo.current_location.heading,		finishLine.heading);
 																			 
 					if( gpsData.data[recordIndex].lapDetected && gpsInfo.record_flag){
 						if(lapTime <= oldLapTime){
@@ -501,12 +502,13 @@ unsigned char gps_convertASCIIHex(unsigned char byte1, unsigned char byte2){
 }
 
 
-unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, signed int y2, signed int x3, signed int y3, signed int x4, signed int y4){
+unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, signed int y2, signed int x3, signed int y3, signed int x4, signed int y4, unsigned short travelHeading, unsigned short finishHeading){
 	// (x1, y1) and (x2, y2) are points for line along traveled path
     // (x3, y3) and (y4, x3) are points for the threshold line
 	
 	// Temporary storage
 	float ua, ub, denominator;
+	signed short angleDiff;
 	
 	// Calculate the denominator
     denominator = (x2 - x1)*(y4 - y3) - (y2 - y1)*(x4 - x3);
@@ -522,11 +524,22 @@ unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, sign
 		// Paths intersected!
 		
 		// Check course
-
-		return true;
+		angleDiff = travelHeading - finishHeading;
+		
+		if(angleDiff > 180){
+			angleDiff -= 360;
+		}else if(angleDiff < - 180){
+			angleDiff += 360;
+		}
+		
+		if( angleDiff <= THRESHOLD_ANGLE ){
+			return TRUE;
+		}else{
+			return FALSE;
+		}
 	}
 	
-	return false;
+	return FALSE;
 }
 
 signed int gps_convert_to_decimal_degrees(signed int coordinate){

@@ -3,7 +3,7 @@
  * GPS defines
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.2
+ * - Supported devices: traq|paq hardware version 1.4
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -61,6 +61,7 @@
 #define THRESHOLD_DISTANCE_FEET		25			// Threshold (+/-) in feet for finish line gate
 #define EARTH_RADIUS_FEET			20891000	// Approximate radius of earth in feet;
 #define THRESHOLD_DISTANCE			THRESHOLD_DISTANCE_FEET / EARTH_RADIUS_FEET // Do not modify, instead modify 'THRESHOLD_DISTANCE_FEET'
+#define THRESHOLD_ANGLE				225			// Threshold (+/-) in degrees for finish line gate  
 
 #define RADIANS_CONVERSION			0.0174532925	// Value of (Pi / 180)
 
@@ -247,7 +248,7 @@ void gps_reset( void );
 void gps_buffer_tokenize( void );
 unsigned short gps_received_checksum( void );
 
-unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, signed int y2, signed int x3, signed int y3, signed int x4, signed int y4);
+unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, signed int y2, signed int x3, signed int y3, signed int x4, signed int y4, unsigned short travelHeading, unsigned short finishHeading);
 signed int gps_convert_to_decimal_degrees(signed int coordinate);
 struct tGPSLine gps_find_finish_line(signed int latitude, signed int longitude, unsigned short heading);
 

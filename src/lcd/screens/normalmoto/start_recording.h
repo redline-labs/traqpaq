@@ -3,7 +3,7 @@
  * Start Recording Session
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.2
+ * - Supported devices: traq|paq hardware version 1.4
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )

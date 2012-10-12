@@ -3,7 +3,7 @@
  * Memory Interface Include
  *
  * - Compiler:          GNU GCC for AVR32
- * - Supported devices: traq|paq hardware version 1.2
+ * - Supported devices: traq|paq hardware version 1.4
  * - AppNote:			N/A
  *
  * - Last Author:		Ryan David ( ryan.david@redline-electronics.com )
@@ -51,6 +51,11 @@
 #define flash_full_flag()				flashFlags.isFull
 
 // Device IDs for AT25DF161
+//#define DATAFLASH_MANUFACTURER_ID			0x1F
+//#define DATAFLASH_DEVICE_ID0				0x46
+//#define DATAFLASH_DEVICE_ID1				0x02
+
+// Device IDs for AT25DF321
 #define DATAFLASH_MANUFACTURER_ID			0x1F
 #define DATAFLASH_DEVICE_ID0				0x47
 #define DATAFLASH_DEVICE_ID1				0x01
