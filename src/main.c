@@ -62,7 +62,7 @@ int main( void ){
 		main_supply_on();
 		#else
 		debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_BUTTON, "Powered on via button");
-		systemFlags.button.powerOnMethod = POWER_ON_MODE_USB;
+		systemFlags.button.powerOnMethod = POWER_ON_MODE_BUTTON;
 		#endif
 		
 	}else{

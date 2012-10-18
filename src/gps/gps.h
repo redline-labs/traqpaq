@@ -93,6 +93,20 @@
 #define ID_MTK001_ID3				'0'
 #define ID_MTK001_ID4				'1'
 
+// Startup message from GPS receiver
+#define ID_MTK010_ID0				'T'
+#define ID_MTK010_ID1				'K'
+#define ID_MTK010_ID2				'0'
+#define ID_MTK010_ID3				'1'
+#define ID_MTK010_ID4				'0'
+
+// Startup message from GPS receiver
+#define ID_MTK011_ID0				'T'
+#define ID_MTK011_ID1				'K'
+#define ID_MTK011_ID2				'0'
+#define ID_MTK011_ID3				'1'
+#define ID_MTK011_ID4				'1'
+
 // Debug 499 response from GPS receiver
 #define ID_MTK599_ID0				'T'
 #define ID_MTK599_ID1				'K'
@@ -142,6 +156,12 @@
 #define PMTK001_UNSUPPORTED_CMD		0x31
 #define PMTK001_VALID_CMD_FAILED	0x32
 #define PMTK001_VALID_CMD			0x33
+
+#define TOKEN_PMTK010_SYSMSG		1
+#define PMTK010_SYSMSG_UNKNOWN		0
+#define PMTK010_SYSMSG_STARTUP		1
+
+#define TOKEN_PMTK011_SYSID			1
 
 #define TOKEN_PMTK599_SERIAL_B0		3
 #define TOKEN_PMTK599_SERIAL_B1		4
@@ -205,6 +225,32 @@ struct tGPSLine {
 	signed int endLongitude;
 };
 
+enum tGPSStatus {
+	GPS_STATUS_UNKNOWN		= 0,
+	GPS_STATUS_STARTED		= 1,
+	GPS_STATUS_ERROR		= 2	
+};
+
+enum tGPSCmdResponse {
+	GPS_NO_RESPONSE			= 0,
+	GPS_INVALID_COMMAND		= 1,
+	GPS_UNSUPPORTED_COMMAND	= 2,
+	GPS_VALID_CMD_FAILED	= 3,
+	GPS_VALID_CMD			= 4
+};
+
+struct tGPSError {
+	unsigned char checksumErrors;
+	unsigned char rmcMsgTimeouts;
+	unsigned char ggaMsgTimeouts;
+	unsigned char unrecognizedMsgs;
+};
+
+struct tGPSLastCmd {
+	unsigned int msgID;
+	enum tGPSCmdResponse response;
+};
+
 struct tGPSInfo {
 	unsigned int	serial_number;
 	unsigned char	serial_number_valid;
@@ -222,14 +268,27 @@ struct tGPSInfo {
 	unsigned char	satellites;
 	unsigned char	record_flag;
 	
-	struct tGPSPoint current_location;	
+	struct	tGPSPoint current_location;		// Last received position data
+	enum	tGPSStatus status;				// GPS Receiver status
+	struct	tGPSError error;				// Error counts
+	struct	tGPSLastCmd lastCmd;			// Response from last sent command
 };
 
 
 #define deg2rad(x)			((x) * RADIANS_CONVERSION)
 #define rad2deg(x)			((x) / RADIANS_CONVERSION)
 
-#define GPS_MSG_TIMEOUT				900		// Timeout in milliseconds since receiving a RMC message
+#define incrementErrorCount(counter)		if(counter < 255) counter++
+
+// Timeout in milliseconds for message timeout
+#define GPS_GGA_MSG_TIMEOUT				900
+#define GPS_RMC_MSG_TIMEOUT				900
+
+// Timer ID's
+#define GPS_GGA_MSG_TIMER_ID		0
+#define GPS_RMC_MSG_TIMER_ID		1
+#define GPS_SWINFO_TIMER_ID			2
+#define GPS_HWINFO_TIMER_ID			3
 
 #define GPS_MODE_NO_FIX				0
 #define GPS_MODE_2D_FIX				1
@@ -259,8 +318,7 @@ void gps_warm_start( void );
 
 void gps_send_request(enum tGpsCommand command, unsigned int *pointer, unsigned char data, unsigned char delay, unsigned char resume);
 void gps_messageTimeout( xTimerHandle xTimer );
-void gps_getReceiverSWInfo( xTimerHandle xTimer );
-void gps_getReceiverHWInfo( xTimerHandle xTimer );
+void gps_getReceiverInfo( xTimerHandle xTimer );
 unsigned char gps_convertASCIIHex(unsigned char byte1, unsigned char byte2);
 
 #endif /* GPS_H_ */

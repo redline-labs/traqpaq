@@ -41,6 +41,8 @@ void fuel_task_init( void ){
 	// Initialize the Fuel system flags
 	systemFlags.fuel.lowBattery = TRUE;
 	
+	//charge_setRate(CHARGE_RATE_HIGH);
+	
 	xTaskCreate(fuel_task, configTSK_FUEL_TASK_NAME, configTSK_FUEL_TASK_STACK_SIZE, NULL, configTSK_FUEL_TASK_PRIORITY, configTSK_FUEL_TASK_HANDLE);
 }
 

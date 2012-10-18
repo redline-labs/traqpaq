@@ -38,7 +38,7 @@ xQueueHandle gpsManagerQueue;
 unsigned char rxBuffer[GPS_MSG_MAX_STRLEN];
 unsigned char gpsTokens[MAX_SIGNALS_SENTENCE];
 
-xTimerHandle xMessageTimer;
+xTimerHandle xGGAMessageTimer, xRMCMessageTimer;
 xTimerHandle xReceiverSWInfoTimer, xReceiverHWInfoTimer;
 
 struct tGPSInfo gpsInfo;
@@ -59,6 +59,31 @@ __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
 void gps_task_init( void ){
 	struct tGPSRequest request;
 	
+	// Initialize information about the GPS receiver
+	gpsInfo.serial_number_valid = FALSE;
+	gpsInfo.sw_date_valid = FALSE;
+	gpsInfo.sw_version_valid = FALSE;
+	gpsInfo.part_number_valid = FALSE;
+	
+	gpsInfo.mode = 0;
+	gpsInfo.satellites = 0;
+	gpsInfo.record_flag = FALSE;
+	
+	gpsInfo.error.checksumErrors = 0;
+	gpsInfo.error.ggaMsgTimeouts = 0;
+	gpsInfo.error.rmcMsgTimeouts = 0;
+	gpsInfo.error.unrecognizedMsgs = 0;
+	
+	gpsInfo.lastCmd.msgID = 0;
+	gpsInfo.lastCmd.response = GPS_NO_RESPONSE;
+	
+	gpsInfo.status = GPS_STATUS_UNKNOWN;
+	
+	gpsInfo.current_location.heading = 0;
+	gpsInfo.current_location.latitude = 0;
+	gpsInfo.current_location.longitude = 0;
+	
+	// Set up the GPS manager task
 	#if( TRAQPAQ_GPS_EXTERNAL_LOGGING == FALSE )
 	if(systemFlags.button.powerOnMethod == POWER_ON_MODE_BUTTON){
 		gpsRxdQueue		= xQueueCreate( GPS_RXD_QUEUE_SIZE,     sizeof(int)     );
@@ -105,39 +130,46 @@ void gps_task( void *pvParameters ){
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Task Started");
 	
-	// Initialize information about the GPS receiver
-	gpsInfo.serial_number_valid = FALSE;
-	gpsInfo.sw_date_valid = FALSE;
-	gpsInfo.sw_version_valid = FALSE;
-	gpsInfo.part_number_valid = FALSE;
-	
-	gpsInfo.mode = 0;
-	gpsInfo.satellites = 0;
-	gpsInfo.record_flag = FALSE;
-	gpsInfo.current_location.heading = 0;
-	gpsInfo.current_location.latitude = 0;
-	gpsInfo.current_location.longitude = 0;
-	
 	// Pull the GPS out of reset and enable the ISR
 	gps_enable_interrupts();
 	gps_reset();
 	
-	#if (TRAQPAQ_GPS_TTF_TEST_MODE == TRUE)
-	gps_warm_start();
-	#endif
-	
-	xMessageTimer = xTimerCreate( "gpsMessageTimer", (GPS_MSG_TIMEOUT / portTICK_RATE_MS), pdFALSE, 0, gps_messageTimeout );			// Start the GPS message timeout detection
-	xReceiverSWInfoTimer = xTimerCreate( "GetReceiverSWInfoTimer", (GPS_MSG_TX_TIME / portTICK_RATE_MS), 1, NULL, gps_getReceiverSWInfo );	// Start the delay for requesting receiver info
-	xReceiverHWInfoTimer = xTimerCreate( "GetReceiverHWInfoTimer", 2*(GPS_MSG_TX_TIME / portTICK_RATE_MS), 1, NULL, gps_getReceiverHWInfo );
+	xGGAMessageTimer = xTimerCreate( "gpsGGAMessageTimer",								// Setup the GGA message timeout
+									(GPS_GGA_MSG_TIMEOUT / portTICK_RATE_MS),
+									TRUE,
+									GPS_GGA_MSG_TIMER_ID,
+									gps_messageTimeout );
+								  
+	xRMCMessageTimer = xTimerCreate( "gpsRMCMessageTimer",								// Setup the GGA message timeout
+									(GPS_RMC_MSG_TIMEOUT / portTICK_RATE_MS),
+									TRUE,
+									GPS_RMC_MSG_TIMER_ID,
+									gps_messageTimeout );
+								 
+	xReceiverSWInfoTimer = xTimerCreate( "getReceiverSWInfoTimer",					// Start the delay for requesting receiver info
+										 (GPS_MSG_TX_TIME / portTICK_RATE_MS),
+										 FALSE,
+										 GPS_SWINFO_TIMER_ID,
+										 gps_getReceiverInfo );
+										 
+	xReceiverHWInfoTimer = xTimerCreate( "getReceiverHWInfoTimer",
+										 2 * (GPS_MSG_TX_TIME / portTICK_RATE_MS),
+										 FALSE,
+										 GPS_HWINFO_TIMER_ID,
+										 gps_getReceiverInfo );
+										 
+	// Kick off the timers
 	xTimerStart(xReceiverSWInfoTimer, pdFALSE);
 	xTimerStart(xReceiverHWInfoTimer, pdFALSE);
+	
+	xTimerStart(xRMCMessageTimer, pdFALSE);
+	xTimerStart(xGGAMessageTimer, pdFALSE);
 	
 	while(TRUE){
 		// Check for pending requests
 		if( xQueueReceive(gpsManagerQueue, &request, pdFALSE) == pdTRUE ){
 			switch(request.command){
 				case(GPS_MGR_REQUEST_START_RECORDING):
-					//flash_send_request(FLASH_REQUEST_SET_DATESTAMP, NULL, NULL, datestamp, FALSE, pdFALSE);
 					flash_send_request(FLASH_MGR_SET_DATESTAMP, NULL, NULL, datestamp, FALSE, pdFALSE);
 					lapTime = 0;
 					oldLapTime = 0xFFFFFFFF;
@@ -147,15 +179,12 @@ void gps_task( void *pvParameters ){
 				case(GPS_MGR_REQUEST_STOP_RECORDING):
 					gpsInfo.record_flag = FALSE;
 					recordIndex = 0;
-					//flash_send_request(FLASH_REQUEST_END_CURRENT_RECORD, NULL, NULL, NULL, FALSE, 20);
 					flash_send_request(FLASH_MGR_END_CURRENT_RECORD, NULL, NULL, NULL, FALSE, 20);
 					break;
 					
 				case(GPS_MGR_REQUEST_SET_FINISH_POINT):
 					// Load the track, and then tell the dataflash that we are using it
-					//flash_send_request(FLASH_REQUEST_READ_TRACK, &trackList, sizeof(trackList), request.data, TRUE, 20);
 					flash_send_request(FLASH_MGR_READ_TRACK, &trackList, sizeof(trackList), request.data, TRUE, 20);
-					//flash_send_request(FLASH_REQUEST_SET_TRACK, NULL, NULL, request.data, FALSE, 20);
 					flash_send_request(FLASH_MGR_SET_TRACK, NULL, NULL, request.data, FALSE, 20);
 					finishLine = gps_find_finish_line(trackList.latitude, trackList.longitude, trackList.heading);
 					break;
@@ -167,12 +196,15 @@ void gps_task( void *pvParameters ){
 					trackList.latitude = gpsInfo.current_location.latitude;
 					trackList.isEmpty = FALSE;
 					trackList.reserved = 0xA5;
-					//flash_send_request(FLASH_REQUEST_ADD_TRACK, &trackList, NULL, NULL, FALSE, pdFALSE);
 					flash_send_request(FLASH_MGR_ADD_TRACK, &trackList, NULL, NULL, FALSE, pdFALSE);
 					break;
 					
 				case(GPS_MGR_REQUEST_SHUTDOWN):
-					xTimerStop(xMessageTimer, pdFALSE);
+					xTimerStop(xRMCMessageTimer, pdFALSE);
+					xTimerStop(xGGAMessageTimer, pdFALSE);
+					xTimerStop(xReceiverHWInfoTimer, pdFALSE);
+					xTimerStop(xReceiverSWInfoTimer, pdFALSE);
+					
 					gpio_clr_gpio_pin(GPS_RESET);	// Put the GPS into reset
 					debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Task shut down");
 					wdt_send_request(WDT_REQUEST_GPS_SHUTDOWN_COMPLETE, NULL);
@@ -207,9 +239,7 @@ void gps_task( void *pvParameters ){
 		xQueueReceive(gpsRxdQueue, &rxdChar, portMAX_DELAY);
 		
 		if( rxdChar == GPS_MSG_END_CHAR ){
-			// Reset the time since receiving a message
-			xTimerReset(xMessageTimer, pdFALSE);
-				
+
 			if( gps_received_checksum() == calculatedChecksum ){
 					
 				gps_buffer_tokenize();
@@ -220,6 +250,9 @@ void gps_task( void *pvParameters ){
 				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_GGA_ID0) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_GGA_ID1) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_GGA_ID2) ){
+					
+					// Reset the GGA message timeout timer
+					xTimerReset(xGGAMessageTimer, pdFALSE);
 					
 					// Convert Time!
 					gpsData.data[recordIndex].latitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_LATITUDE		]]) );
@@ -272,10 +305,6 @@ void gps_task( void *pvParameters ){
 					if(oldMode != gpsData.currentMode){
 						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_ANTENNA, gpsData.currentMode, pdFALSE);
 						oldMode = gpsData.currentMode;
-						
-						#if (TRAQPAQ_GPS_TTF_TEST_MODE == TRUE)
-						debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "GPS Mode changed");
-						#endif
 					}
 					
 					// Save the last coordinates for detecting the intersection
@@ -292,6 +321,9 @@ void gps_task( void *pvParameters ){
 				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_RMC_ID0) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_RMC_ID1) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_RMC_ID2) ){
+						
+					// Reset the RMC message timeout timer
+					xTimerReset(xRMCMessageTimer, pdFALSE);
 						
 					// More Converting!!
 					gpsData.data[recordIndex].speed		= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_SPEED	]]) ) & 0xFFFF;
@@ -314,26 +346,59 @@ void gps_task( void *pvParameters ){
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_MTK001_ID2) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK001_ID3) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK001_ID4) ){
-						
+					
+					gpsInfo.lastCmd.msgID = atoi( &rxBuffer[gpsTokens[TOKEN_PMTK001_CMD]] );
+					
 					switch( rxBuffer[gpsTokens[TOKEN_PMTK001_FLAG]] ){
 						case(PMTK001_INVALID_CMD):
+							gpsInfo.lastCmd.response = GPS_INVALID_COMMAND;
 							debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Invalid Command");
 							break;
 							
 						case(PMTK001_UNSUPPORTED_CMD):
+							gpsInfo.lastCmd.response = GPS_UNSUPPORTED_COMMAND;
 							debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Unsupported Command");
 							break;
 							
 						case(PMTK001_VALID_CMD_FAILED):
+							gpsInfo.lastCmd.response = GPS_VALID_CMD_FAILED;
 							debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Command Failed");
 							break;
 							
 						case(PMTK001_VALID_CMD):
+							gpsInfo.lastCmd.response = GPS_VALID_CMD;
 							debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Command Succeeded");
 							break;
 					}
 					
+				}else				
+				
+				//--------------------------
+				// PMTK010 Message Received (System Startup)
+				//--------------------------
+				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_MTK010_ID0) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_MTK010_ID1) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_MTK010_ID2) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK010_ID3) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK010_ID4) ){
+						
+					gpsInfo.status = GPS_STATUS_STARTED;		// TODO: Look at flag in this message for true GPS status.
+					
 				}else
+				
+				//--------------------------
+				// PMTK011 Message Received (System Startup and System ID)
+				//--------------------------
+				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_MTK011_ID0) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_MTK011_ID1) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_MTK011_ID2) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK011_ID3) &
+					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK011_ID4) ){
+					
+					asm("nop");		// TODO: Replace with something that actually verifies the System ID
+					
+				}else
+				
 				//--------------------------
 				// PMTK599 Message Received (Receiver Part Number and Serial Number)
 				//--------------------------
@@ -377,6 +442,10 @@ void gps_task( void *pvParameters ){
 					
 					gpsInfo.sw_version_valid = TRUE;
 					gpsInfo.sw_date_valid = TRUE;
+
+				}else{
+					// Unsupported command received
+					incrementErrorCount(gpsInfo.error.unrecognizedMsgs);
 					asm("nop");
 				}
 				
@@ -392,7 +461,6 @@ void gps_task( void *pvParameters ){
 						
 						recordIndex++;
 						if(recordIndex == RECORD_DATA_PER_PAGE){
-							//flash_send_request(FLASH_REQUEST_ADD_RECORDDATA, &gpsData, sizeof(gpsData), NULL, TRUE, 20);
 							flash_send_request(FLASH_MGR_ADD_RECORD_DATA, &gpsData, sizeof(gpsData), NULL, TRUE, 20);
 							recordIndex = 0;
 						}
@@ -402,6 +470,7 @@ void gps_task( void *pvParameters ){
 				
 			}else{
 				// Invalid CRC received!
+				incrementErrorCount(gpsInfo.error.checksumErrors);
 				debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Invalid Checksum Received");
 			}				
 			
@@ -644,22 +713,35 @@ void gps_send_request(enum tGpsCommand command, unsigned int *pointer, unsigned 
 }
 
 void gps_messageTimeout( xTimerHandle xTimer ){
-	debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "Message Timer Expired");
-	debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Setting Message Rate");
+	switch( (unsigned int)pvTimerGetTimerID(xTimer) ){
+		case( GPS_GGA_MSG_TIMER_ID ):
+			incrementErrorCount(gpsInfo.error.ggaMsgTimeouts);
+			debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "GGA Message Timer Expired");
+			break;
+		
+		case( GPS_RMC_MSG_TIMER_ID ):
+			incrementErrorCount(gpsInfo.error.rmcMsgTimeouts);
+			debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "RMC Message Timer Expired");
+			break;
+	}
+	
 	gps_set_messaging_rate(GPS_MESSAGING_100MS);
 }
 
-void gps_getReceiverSWInfo( xTimerHandle xTimer ){
-	// Software version and date	
-	usart_write_line(GPS_USART, "$PMTK605*31");
-	usart_putchar(GPS_USART, GPS_MSG_CR);
-	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
-}
-
-
-void gps_getReceiverHWInfo( xTimerHandle xTimer ){
-	// Reciever part number and serial number
-	usart_write_line(GPS_USART, "$PMTK499,1C0,21*77");
-	usart_putchar(GPS_USART, GPS_MSG_CR);
-	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
+void gps_getReceiverInfo( xTimerHandle xTimer ){
+	switch( (unsigned int)pvTimerGetTimerID(xTimer) ){
+		case( GPS_SWINFO_TIMER_ID ):
+			// Software version and date
+			usart_write_line(GPS_USART, "$PMTK605*31");
+			usart_putchar(GPS_USART, GPS_MSG_CR);
+			usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
+			break;
+		
+		case( GPS_HWINFO_TIMER_ID ):
+			// Reciever part number and serial number
+			usart_write_line(GPS_USART, "$PMTK499,1C0,21*77");
+			usart_putchar(GPS_USART, GPS_MSG_CR);
+			usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
+			break;
+	}			
 }

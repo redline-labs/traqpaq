@@ -164,7 +164,7 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_DBG_DF_CHIP_ERASE):
 				data_length = 1;
-				flash_send_request(FLASH_MGR_CHIP_ERASE, &usbTxBuffer, NULL, NULL, TRUE, pdFALSE);
+				flash_send_request(FLASH_MGR_CHIP_ERASE, &usbTxBuffer, NULL, NULL, FALSE, pdFALSE);
 				break;
 				
 			case(USB_CMD_WRITE_OTP):
@@ -242,8 +242,6 @@ void usb_task( void *pvParameters ){
 				usbTxBuffer[data_length++] = (gpsInfo.current_location.longitude >>  0) & 0xFF;
 				
 				// Heading
-				usbTxBuffer[data_length++] = (gpsInfo.current_location.heading >> 24) & 0xFF;
-				usbTxBuffer[data_length++] = (gpsInfo.current_location.heading >> 16) & 0xFF;
 				usbTxBuffer[data_length++] = (gpsInfo.current_location.heading >>  8) & 0xFF;
 				usbTxBuffer[data_length++] = (gpsInfo.current_location.heading >>  0) & 0xFF;
 				break;
