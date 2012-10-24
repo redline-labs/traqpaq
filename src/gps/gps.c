@@ -382,7 +382,7 @@ void gps_task( void *pvParameters ){
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK010_ID3) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK010_ID4) ){
 					
-					if( atoi(rxBuffer[gpsTokens[TOKEN_PMTK010_SYSMSG]]) == PMTK010_SYSMSG_STARTUP ){
+					if( rxBuffer[gpsTokens[TOKEN_PMTK010_SYSMSG] + SYSMSG_OFFSET] == PMTK010_SYSMSG_STARTUP ){
 						gpsInfo.status = GPS_STATUS_STARTED;
 					}else{
 						gpsInfo.status = GPS_STATUS_UNKNOWN;
