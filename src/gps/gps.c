@@ -314,7 +314,7 @@ void gps_task( void *pvParameters ){
 						
 					processedGGA = TRUE;
 					
-				}
+				}else 
 				//--------------------------
 				// RMC Message Received
 				//--------------------------
@@ -381,8 +381,12 @@ void gps_task( void *pvParameters ){
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_MTK010_ID2) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK010_ID3) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK010_ID4) ){
-						
-					gpsInfo.status = GPS_STATUS_STARTED;		// TODO: Look at flag in this message for true GPS status.
+					
+					if( atoi(rxBuffer[gpsTokens[TOKEN_PMTK010_SYSMSG]]) == PMTK010_SYSMSG_STARTUP ){
+						gpsInfo.status = GPS_STATUS_STARTED;
+					}else{
+						gpsInfo.status = GPS_STATUS_UNKNOWN;
+					}						
 					
 				}else
 				
@@ -394,8 +398,8 @@ void gps_task( void *pvParameters ){
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_MTK011_ID2) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK011_ID3) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK011_ID4) ){
-					
-					asm("nop");		// TODO: Replace with something that actually verifies the System ID
+						
+					// TODO: Replace with something that actually verifies the System ID
 					
 				}else
 				
@@ -437,8 +441,8 @@ void gps_task( void *pvParameters ){
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK705_ID3) &
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK705_ID4) ){
 						
-					strlcpy( &gpsInfo.sw_version, &rxBuffer[gpsTokens[TOKEN_PMTK705_SW_VERSION]], GPS_INFO_SW_VERSION_SIZE );
-					strlcpy( &gpsInfo.sw_date, &rxBuffer[gpsTokens[TOKEN_PMTK705_SW_DATE]], GPS_INFO_SW_DATE_SIZE );
+					strlcpy( &gpsInfo.sw_version, &rxBuffer[gpsTokens[TOKEN_PMTK705_SW_VERSION]], sizeof(gpsInfo.sw_version) );
+					strlcpy( &gpsInfo.sw_date, &rxBuffer[gpsTokens[TOKEN_PMTK705_SW_DATE]], sizeof(gpsInfo.sw_date) );
 					
 					gpsInfo.sw_version_valid = TRUE;
 					gpsInfo.sw_date_valid = TRUE;
@@ -446,7 +450,6 @@ void gps_task( void *pvParameters ){
 				}else{
 					// Unsupported command received
 					incrementErrorCount(gpsInfo.error.unrecognizedMsgs);
-					asm("nop");
 				}
 				
 				

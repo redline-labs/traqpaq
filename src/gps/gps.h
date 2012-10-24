@@ -66,7 +66,7 @@
 #define RADIANS_CONVERSION			0.0174532925	// Value of (Pi / 180)
 
 // Indices for pointing areas of each message
-#define MAX_SIGNALS_SENTENCE		20
+#define MAX_SIGNALS_SENTENCE		40				// Support for debug messages (specifically PMTK599 message)
 
 #define TOKEN_MESSAGE_ID			0
 
@@ -183,7 +183,7 @@
 #define GPS_INFO_SW_DATE_SIZE		9	// Number of characters of SW date string, YYYYMMDD, plus null character
 #define GPS_INFO_PART_NUMBER_SIZE	8	// Number of characters of Part Number String, plus null character
 
-#define GPS_MSG_TX_TIME				500
+#define GPS_MSG_TX_TIME				250
 
 
 enum tGpsCommand {

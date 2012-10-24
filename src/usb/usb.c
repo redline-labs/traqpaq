@@ -278,17 +278,17 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_DBG_GPS_INFO_PN):	// 68d
 				usbTxBuffer[0] = gpsInfo.part_number_valid;
-				data_length = strlcpy(&usbTxBuffer[1], gpsInfo.part_number, GPS_INFO_PART_NUMBER_SIZE) + 1;
+				data_length = strlcpy(&usbTxBuffer[1], gpsInfo.part_number, sizeof(gpsInfo.part_number)) + 1;
 				break;
 				
 			case(USB_DBG_GPS_INFO_SW_VER):	// 69d
 				usbTxBuffer[0] = gpsInfo.sw_version_valid;
-				data_length = strlcpy(&usbTxBuffer[1], gpsInfo.sw_version, GPS_INFO_SW_VERSION_SIZE) + 1;
+				data_length = strlcpy(&usbTxBuffer[1], gpsInfo.sw_version, sizeof(gpsInfo.sw_version)) + 1;
 				break;
 				
 			case(USB_DBG_GPS_INFO_SW_DATE):	// 70d
 				usbTxBuffer[0] = gpsInfo.sw_date_valid;
-				data_length = strlcpy(&usbTxBuffer[1], gpsInfo.sw_date, GPS_INFO_SW_DATE_SIZE) + 1;
+				data_length = strlcpy(&usbTxBuffer[1], gpsInfo.sw_date, sizeof(gpsInfo.sw_date)) + 1;
 				break;
 
 
