@@ -185,6 +185,12 @@
 #define GPS_INFO_PART_NUMBER_SIZE	8	// Number of characters of Part Number String, plus null character
 
 #define GPS_MSG_TX_TIME				250
+#define GPS_DEAD_STARTUP_TIME		500
+
+#define GPS_BAUD_RATE_CHANGE_DELAY	100
+
+#define GPS_UNKNOWN_MESSAGES_TOLERANCE	10
+#define GPS_RESET_MAX_TRIES				3
 
 
 enum tGpsCommand {
@@ -229,7 +235,8 @@ struct tGPSLine {
 enum tGPSStatus {
 	GPS_STATUS_UNKNOWN		= 0,
 	GPS_STATUS_STARTED		= 1,
-	GPS_STATUS_ERROR		= 2	
+	GPS_STATUS_SICK			= 2,
+	GPS_STATUS_DEAD			= 3
 };
 
 enum tGPSCmdResponse {
@@ -245,6 +252,8 @@ struct tGPSError {
 	unsigned char rmcMsgTimeouts;
 	unsigned char ggaMsgTimeouts;
 	unsigned char unrecognizedMsgs;
+	unsigned char rxDataError;
+	unsigned char resetCount;
 };
 
 struct tGPSLastCmd {
@@ -282,14 +291,15 @@ struct tGPSInfo {
 #define incrementErrorCount(counter)		if(counter < 255) counter++
 
 // Timeout in milliseconds for message timeout
-#define GPS_GGA_MSG_TIMEOUT				900
-#define GPS_RMC_MSG_TIMEOUT				900
+#define GPS_GGA_MSG_TIMEOUT				200
+#define GPS_RMC_MSG_TIMEOUT				200
 
 // Timer ID's
 #define GPS_GGA_MSG_TIMER_ID		0
 #define GPS_RMC_MSG_TIMER_ID		1
 #define GPS_SWINFO_TIMER_ID			2
 #define GPS_HWINFO_TIMER_ID			3
+#define GPS_DEAD_TIMER_ID			4
 
 #define GPS_MODE_NO_FIX				0
 #define GPS_MODE_2D_FIX				1
@@ -321,5 +331,6 @@ void gps_send_request(enum tGpsCommand command, unsigned int *pointer, unsigned 
 void gps_messageTimeout( xTimerHandle xTimer );
 void gps_getReceiverInfo( xTimerHandle xTimer );
 unsigned char gps_convertASCIIHex(unsigned char byte1, unsigned char byte2);
+void gps_dead( xTimerHandle xTimer );
 
 #endif /* GPS_H_ */

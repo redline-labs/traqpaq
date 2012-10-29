@@ -242,6 +242,7 @@
 #define GPS_RXD						AVR32_USART3_RXD_0_0_PIN
 #define GPS_RXD_FUNCTION			AVR32_USART3_RXD_0_0_FUNCTION
 #define GPS_USART_BAUD				115200
+#define GPS_USART_BAUD_SLOW			9600
 #define GPS_USART_IRQ           	AVR32_USART3_IRQ
 
 
@@ -280,6 +281,6 @@
 
 // Function Prototypes
 void board_init(void);
-
+int board_changeBaud(volatile avr32_usart_t *usart, unsigned int baudrate);
 
 #endif // USER_BOARD_H

@@ -40,19 +40,27 @@ unsigned char gpsTokens[MAX_SIGNALS_SENTENCE];
 
 xTimerHandle xGGAMessageTimer, xRMCMessageTimer;
 xTimerHandle xReceiverSWInfoTimer, xReceiverHWInfoTimer;
+xTimerHandle xReceiverDeadTimer;
 
 struct tGPSInfo gpsInfo;
 
 __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
 	int rxd;
 	
-	usart_read_char(GPS_USART, &rxd);
-	
-	#if( TRAQPAQ_GPS_ECHO_MODE == TRUE )
-	usart_putchar(DEBUG_USART, rxd);
-	#endif
-	
-	xQueueSendFromISR(gpsRxdQueue, &rxd, pdFALSE);
+	switch( usart_read_char(GPS_USART, &rxd) ){
+		case( USART_RX_ERROR ):
+			usart_reset_status(GPS_USART);
+			incrementErrorCount(gpsInfo.error.rxDataError);
+			break;
+			
+		case( USART_SUCCESS ):
+			xQueueSendFromISR(gpsRxdQueue, &rxd, pdFALSE);
+			break;
+		
+		case( USART_RX_EMPTY ):
+			incrementErrorCount(gpsInfo.error.rxDataError);
+			break;
+	}
 }
 
 
@@ -73,6 +81,8 @@ void gps_task_init( void ){
 	gpsInfo.error.ggaMsgTimeouts = 0;
 	gpsInfo.error.rmcMsgTimeouts = 0;
 	gpsInfo.error.unrecognizedMsgs = 0;
+	gpsInfo.error.rxDataError = 0;
+	gpsInfo.error.resetCount = 0;
 	
 	gpsInfo.lastCmd.msgID = 0;
 	gpsInfo.lastCmd.response = GPS_NO_RESPONSE;
@@ -134,36 +144,38 @@ void gps_task( void *pvParameters ){
 	gps_enable_interrupts();
 	gps_reset();
 	
-	xGGAMessageTimer = xTimerCreate( "gpsGGAMessageTimer",								// Setup the GGA message timeout
+	xGGAMessageTimer = xTimerCreate( "gpsGGAMessageTimer",
 									(GPS_GGA_MSG_TIMEOUT / portTICK_RATE_MS),
 									TRUE,
 									GPS_GGA_MSG_TIMER_ID,
 									gps_messageTimeout );
-								  
-	xRMCMessageTimer = xTimerCreate( "gpsRMCMessageTimer",								// Setup the GGA message timeout
+	
+	xRMCMessageTimer = xTimerCreate( "gpsRMCMessageTimer",
 									(GPS_RMC_MSG_TIMEOUT / portTICK_RATE_MS),
 									TRUE,
 									GPS_RMC_MSG_TIMER_ID,
 									gps_messageTimeout );
-								 
-	xReceiverSWInfoTimer = xTimerCreate( "getReceiverSWInfoTimer",					// Start the delay for requesting receiver info
-										 (GPS_MSG_TX_TIME / portTICK_RATE_MS),
-										 FALSE,
-										 GPS_SWINFO_TIMER_ID,
-										 gps_getReceiverInfo );
-										 
+	
+	xReceiverSWInfoTimer = xTimerCreate( "getReceiverSWInfoTimer",
+										(GPS_MSG_TX_TIME / portTICK_RATE_MS),
+										FALSE,
+										GPS_SWINFO_TIMER_ID,
+										gps_getReceiverInfo );
+	
 	xReceiverHWInfoTimer = xTimerCreate( "getReceiverHWInfoTimer",
-										 2 * (GPS_MSG_TX_TIME / portTICK_RATE_MS),
-										 FALSE,
-										 GPS_HWINFO_TIMER_ID,
-										 gps_getReceiverInfo );
+										2 * (GPS_MSG_TX_TIME / portTICK_RATE_MS),
+										FALSE,
+										GPS_HWINFO_TIMER_ID,
+										gps_getReceiverInfo );
+	
+	xReceiverDeadTimer = xTimerCreate( "gpsDeadTimer",
+										(GPS_DEAD_STARTUP_TIME / portTICK_RATE_MS),
+										FALSE,
+										GPS_DEAD_TIMER_ID,
+										gps_dead );
 										 
 	// Kick off the timers
-	xTimerStart(xReceiverSWInfoTimer, pdFALSE);
-	xTimerStart(xReceiverHWInfoTimer, pdFALSE);
-	
-	xTimerStart(xRMCMessageTimer, pdFALSE);
-	xTimerStart(xGGAMessageTimer, pdFALSE);
+	xTimerStart(xReceiverDeadTimer, pdFALSE);
 	
 	while(TRUE){
 		// Check for pending requests
@@ -383,8 +395,23 @@ void gps_task( void *pvParameters ){
 					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK010_ID4) ){
 					
 					if( rxBuffer[gpsTokens[TOKEN_PMTK010_SYSMSG] + SYSMSG_OFFSET] == PMTK010_SYSMSG_STARTUP ){
+						
+						// Hooray, we are up and running!
 						gpsInfo.status = GPS_STATUS_STARTED;
+						debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Receiver is talking!");
+						
+						// Kill the GPS Dead Timer
+						xTimerStop(xReceiverDeadTimer, pdFALSE);
+						
+						// Kick off the message timeout and hardware info timers
+						xTimerStart(xReceiverSWInfoTimer, pdFALSE);
+						xTimerStart(xReceiverHWInfoTimer, pdFALSE);
+						xTimerStart(xRMCMessageTimer, pdFALSE);
+						xTimerStart(xGGAMessageTimer, pdFALSE);
+		
 					}else{
+						
+						// We still don't know what is happening with the receiver
 						gpsInfo.status = GPS_STATUS_UNKNOWN;
 					}						
 					
@@ -450,6 +477,13 @@ void gps_task( void *pvParameters ){
 				}else{
 					// Unsupported command received
 					incrementErrorCount(gpsInfo.error.unrecognizedMsgs);
+					
+					// Check if we have too many unknown messages (use exact compare to make sure we do this only once
+					if( gpsInfo.error.unrecognizedMsgs == GPS_UNKNOWN_MESSAGES_TOLERANCE){
+						debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Lots of unrecognized messages - fixing!");
+						gps_set_messages();
+					}
+					
 				}
 				
 				
@@ -716,19 +750,21 @@ void gps_send_request(enum tGpsCommand command, unsigned int *pointer, unsigned 
 }
 
 void gps_messageTimeout( xTimerHandle xTimer ){
-	switch( (unsigned int)pvTimerGetTimerID(xTimer) ){
-		case( GPS_GGA_MSG_TIMER_ID ):
-			incrementErrorCount(gpsInfo.error.ggaMsgTimeouts);
-			debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "GGA Message Timer Expired");
-			break;
-		
-		case( GPS_RMC_MSG_TIMER_ID ):
-			incrementErrorCount(gpsInfo.error.rmcMsgTimeouts);
-			debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "RMC Message Timer Expired");
-			break;
-	}
 	
-	gps_set_messaging_rate(GPS_MESSAGING_100MS);
+		// Lets figure out what message timed out
+		switch( (unsigned int)pvTimerGetTimerID(xTimer) ){
+			case( GPS_GGA_MSG_TIMER_ID ):
+			debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "GGA Message Timer Expired");
+			incrementErrorCount(gpsInfo.error.ggaMsgTimeouts);
+			break;
+			
+			case( GPS_RMC_MSG_TIMER_ID ):
+			debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "RMC Message Timer Expired");
+			incrementErrorCount(gpsInfo.error.rmcMsgTimeouts);
+			break;
+		}
+		
+		gps_set_messaging_rate(GPS_MESSAGING_100MS);
 }
 
 void gps_getReceiverInfo( xTimerHandle xTimer ){
@@ -741,10 +777,53 @@ void gps_getReceiverInfo( xTimerHandle xTimer ){
 			break;
 		
 		case( GPS_HWINFO_TIMER_ID ):
-			// Reciever part number and serial number
+			// Receiver part number and serial number
 			usart_write_line(GPS_USART, "$PMTK499,1C0,21*77");
 			usart_putchar(GPS_USART, GPS_MSG_CR);
 			usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
 			break;
 	}			
+}
+
+void gps_dead( xTimerHandle xTimer ){
+	int rxdChar;
+	
+	if( gpsInfo.error.resetCount < GPS_RESET_MAX_TRIES  ){
+		
+		// Lets kick the receiver and see if it comes back properly
+		gpsInfo.status = GPS_STATUS_SICK;
+		incrementErrorCount(gpsInfo.error.resetCount);
+		debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "Receiver is not talking - kicking receiver");
+		gps_reset();
+		
+		// Reset the timer and lets try again
+		xTimerReset(xReceiverDeadTimer, pdFALSE);
+		
+	}else{
+		// Something is up. The only thing possible is incorrect baud rate.  Lets try fixing it
+		gpsInfo.status = GPS_STATUS_DEAD;
+		debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "Resetting didn't help - Drastic measures!");
+		
+		gps_disable_interrupts();
+		
+		board_changeBaud(GPS_USART, GPS_USART_BAUD_SLOW);
+		
+		vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_BAUD_RATE_CHANGE_DELAY) );
+		
+		usart_write_line(GPS_USART, "$PMTK251,115200*1F");
+		usart_putchar(GPS_USART, GPS_MSG_CR);
+		usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
+		
+		// Wait for the data to clock out then change the baud rate back
+		while( !usart_tx_empty(GPS_USART) );
+		
+		board_changeBaud(GPS_USART, GPS_USART_BAUD);
+		
+		// Flush the Rx Register and re-enable interrupts
+		usart_read_char(GPS_USART, &rxdChar);
+		gps_enable_interrupts();
+		
+		// Restart the receiver and hope for the best
+		gps_reset();
+	}
 }

@@ -331,3 +331,24 @@ void board_init(void){
 	adc_enable(ADC, ADC_VCC_CHANNEL);
 	adc_enable(ADC, ADC_VEE_CHANNEL);
 }
+
+int board_changeBaud(volatile avr32_usart_t *usart, unsigned int baudrate){
+	unsigned int over = (APPL_PBA_SPEED >= 16 * baudrate) ? 16 : 8;
+	unsigned int cd_fp = ((1 << AVR32_USART_BRGR_FP_SIZE) * APPL_PBA_SPEED + (over * baudrate) / 2) / (over * baudrate);
+	unsigned int cd = cd_fp >> AVR32_USART_BRGR_FP_SIZE;
+	unsigned int fp = cd_fp & ((1 << AVR32_USART_BRGR_FP_SIZE) - 1);
+
+	if (cd < 1 || cd > (1 << AVR32_USART_BRGR_CD_SIZE) - 1)
+	return USART_INVALID_INPUT;
+
+	/*usart->mr = (usart->mr & ~(AVR32_USART_MR_USCLKS_MASK |
+	AVR32_USART_MR_SYNC_MASK |
+	AVR32_USART_MR_OVER_MASK)) |
+	AVR32_USART_MR_USCLKS_MCK << AVR32_USART_MR_USCLKS_OFFSET |
+	((over == 16) ? AVR32_USART_MR_OVER_X16 : AVR32_USART_MR_OVER_X8) << AVR32_USART_MR_OVER_OFFSET;*/
+
+	usart->brgr = cd << AVR32_USART_BRGR_CD_OFFSET |
+				  fp << AVR32_USART_BRGR_FP_OFFSET;
+
+	return USART_SUCCESS;
+}
