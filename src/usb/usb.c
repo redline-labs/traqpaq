@@ -198,16 +198,14 @@ void usb_task( void *pvParameters ){
 				break;
 				
 			case(USB_CMD_WRITE_SAVEDTRACKS):	// 25d
-				//flash_send_request(FLASH_REQUEST_ERASE_TRACKS, NULL, NULL, NULL, TRUE, pdFALSE);
 				flash_send_request(FLASH_MGR_ERASE_TRACKS, NULL, NULL, NULL, TRUE, pdFALSE);
 			
-				strlcpy(&trackList.name, "Burn Pit", TRACKLIST_MAX_STRLEN);
-				trackList.heading = 900;
-				trackList.longitude = -83472585;
-				trackList.latitude = 42558330;
+				strlcpy(&trackList.name, "12 Mile", TRACKLIST_MAX_STRLEN);
+				trackList.heading = 2700;
+				trackList.longitude = -83506786;
+				trackList.latitude =   42495199;
 				trackList.isEmpty = FALSE;
 				trackList.reserved = 0xA5;
-				//flash_send_request(FLASH_REQUEST_ADD_TRACK, &trackList, NULL, NULL, TRUE, pdFALSE);
 				flash_send_request(FLASH_MGR_ADD_TRACK, &trackList, NULL, NULL, TRUE, pdFALSE);
 
 				usbTxBuffer[data_length++] = TRUE;
@@ -226,6 +224,11 @@ void usb_task( void *pvParameters ){
 				userPrefs.screenPWMMin = BACKLIGHT_DEFAULT_MIN;
 				flash_send_request(FLASH_MGR_WRITE_USER_PREFS, NULL, NULL, NULL, FALSE, pdFALSE);
 				usbTxBuffer[data_length++] = TRUE;
+				break;
+				
+			case(USB_DBG_DF_ARB_READ):
+				data_length = (usbRxBuffer[1] << 8) + usbRxBuffer[2];
+				flash_send_request(FLASH_MGR_READ_PAGE, &usbTxBuffer, data_length, (usbRxBuffer[3] << 8) + usbRxBuffer[4], TRUE, pdFALSE);
 				break;
 				
 			case(USB_DBG_GPS_CURRENT_POSITION):		// 64d
@@ -299,9 +302,9 @@ void usb_task( void *pvParameters ){
 		}
 		
 		// Send the response
-		if(data_length){
+		//if(data_length){		// Temporary fix: still set up bulk_in_received callback even though not sending data
 			udi_vendor_bulk_in_run(&usbTxBuffer, data_length, main_vendor_bulk_in_received);
-		}		
+		//}		
 	}
 }
 
