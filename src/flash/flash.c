@@ -140,76 +140,83 @@ void flash_task( void *pvParameters ){
 		flash_clr_hold();
 		
 		switch(request.command){
-			//case(FLASH_REQUEST_END_CURRENT_RECORD):
+
 			case(FLASH_MGR_END_CURRENT_RECORD):
 				
 				recordTable.recordEmpty = FALSE;
+				recordTable.endAddress--;		// Really the last byte of the page
 				flash_UpdateSector(FLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
 				
 				// Get the new record table ready!
 				recordTableIndex++;
+				recordTable.endAddress++;
+				
 				recordTable.recordEmpty = TRUE;
 				recordTable.startAddress = recordTable.endAddress; 
 				recordTable.trackID = 0xFF;
 					
 				break;
 				
-			//case(FLASH_REQUEST_ADD_RECORDDATA):
+
 			case(FLASH_MGR_ADD_RECORD_DATA):
 				if(recordTable.endAddress < FLASH_ADDR_RECORDDATA_END){
 					flash_WriteFromBuffer(recordTable.endAddress, request.length, request.pointer);
 					recordTable.endAddress += FLASH_PAGE_SIZE;
 				}				
 				break;
+				
+			case(FLASH_MGR_READ_PAGE):
+				flash_ReadToBuffer( request.index * FLASH_PAGE_SIZE, request.length, request.pointer);
+				break;
 			
-			//case(FLASH_REQUEST_ERASE_RECORD):
+
 			case(FLASH_MGR_ERASE_RECORD):
 				 // Not implemented yet!
 				break;
 				
-			//case(FLASH_REQUEST_READ_RECORDTABLE):
+
 			case(FLASH_MGR_READ_RECORDTABLE):
 				flash_ReadToBuffer(FLASH_ADDR_RECORDTABLE_START + ( request.index * sizeof(recordTable) ), sizeof(recordTable), request.pointer);
 				break;
 				
-			//case(FLASH_REQUEST_READ_RECORDDATA):
+
 			case(FLASH_MGR_READ_RECORDATA):
 				flash_ReadToBuffer(FLASH_ADDR_RECORDDATA_START + (request.index * FLASH_PAGE_SIZE), FLASH_PAGE_SIZE, request.pointer);
 				break;
 				
-			//case(FLASH_REQUEST_READ_TRACK):
+
 			case(FLASH_MGR_READ_TRACK):
 				flash_ReadToBuffer(FLASH_ADDR_TRACKLIST_START + (request.index * sizeof(trackList)), sizeof(trackList), request.pointer);
 				break;
 				
-			//case(FLASH_REQUEST_ADD_TRACK):
+
 			case(FLASH_MGR_ADD_TRACK):
 				flash_UpdateSector(FLASH_ADDR_TRACKLIST_START + (trackCount * sizeof(trackList)), sizeof(trackList), request.pointer);
 				trackCount++;
 				break;
 				
-			//case(FLASH_REQUEST_ERASE_TRACKS):
+
 			case(FLASH_MGR_ERASE_TRACKS):
 				flash_eraseTracks();
 				trackCount = 0;
 				break;
 				
-			//case(FLASH_REQUEST_READ_OTP):
+
 			case(FLASH_MGR_READ_OTP):
 				flash_ReadOTP(request.index, request.length, request.pointer);
 				break;
 				
-			//case(FLASH_REQUEST_SECTOR_ERASE):
+
 			case(FLASH_MGR_SECTOR_ERASE):
 				flash_eraseBlock(FLASH_CMD_BLOCK_ERASE_4KB, (request.index * FLASH_4KB) );
 				break;
 				
-			//case(FLASH_REQUEST_BUSY):
+
 			case(FLASH_MGR_BUSY):
 				*(request.pointer) = flash_is_busy();
 				break;
 				
-			//case(FLASH_REQUEST_CHIP_ERASE):
+
 			case(FLASH_MGR_CHIP_ERASE):
 				*(request.pointer) = flash_chipErase();
 				recordTableIndex = 0;
@@ -217,17 +224,17 @@ void flash_task( void *pvParameters ){
 				recordTable.endAddress = FLASH_ADDR_RECORDDATA_START;
 				break;
 				
-			//case(FLASH_REQUEST_IS_FLASH_FULL):
+
 			case(FLASH_MGR_IS_FLASH_FULL):
 				*(request.pointer) = flashIsFull;
 				break;
 				
-			//case(FLASH_REQUEST_USED_SPACE):
+
 			case(FLASH_MGR_USED_SPACE):				
 				*(request.pointer) = (((recordTable.endAddress - FLASH_ADDR_RECORDDATA_START) * 100) / (FLASH_ADDR_RECORDDATA_END - FLASH_ADDR_RECORDDATA_START));
 				break;
 				
-			//case(FLASH_REQUEST_ERASE_RECORDED_DATA):
+
 			case(FLASH_MGR_ERASE_RECORDED_DATA):
 				recordTableIndex = 0;
 				recordTable.startAddress = FLASH_ADDR_RECORDDATA_START;
@@ -236,23 +243,23 @@ void flash_task( void *pvParameters ){
 				flash_eraseRecordedData();
 				break;
 				
-			//case(FLASH_REQUEST_WRITE_USER_PREFS):
+
 			case(FLASH_MGR_WRITE_USER_PREFS):
 				userPrefs.crc = flash_calculate_userPrefs_crc();
 				flash_UpdateSector(FLASH_ADDR_USERPREFS_START, sizeof(userPrefs), &userPrefs);
 				break;
 			
-			//case(FLASH_REQUEST_SET_TRACK):
+
 			case(FLASH_MGR_SET_TRACK):
 				recordTable.trackID = (unsigned char)request.index;
 				break;
 				
-			//case(FLASH_REQUEST_SET_DATESTAMP):
+
 			case(FLASH_MGR_SET_DATESTAMP):
 				recordTable.datestamp = request.index;
 				break;
 				
-			//case(FLASH_REQUEST_SHUTDOWN):
+
 			case(FLASH_MGR_REQUEST_SHUTDOWN):
 				if(recordTable.startAddress != recordTable.endAddress){
 					// Need to close current record
