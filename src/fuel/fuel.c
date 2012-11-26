@@ -149,6 +149,13 @@ void fuel_task( void *pvParameters ){
 		// Read charge status
 		// ---------------------------------
 		if( oldChargeStatus != charge_state() ){
+			
+			// Check if we should recalibrate the battery meter (end of charge cycle)
+			if( (oldChargeStatus == CHARGE_STATUS_CHARGING) && (charge_state() == CHARGE_STATUS_COMPLETE) ){
+				fuel_updateAccumulatedCurrent(BATTERY_CAPACITY_COUNTS);
+				debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FUEL, "Recalibrated battery accumulated current");
+			}
+			
 			oldChargeStatus = charge_state();
 			lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_CHARGE, oldChargeStatus, pdFALSE);
 		}			
