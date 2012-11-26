@@ -619,8 +619,8 @@ unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, sign
 	// Calculate the denominator
     denominator = (x2 - x1)*(y4 - y3) - (y2 - y1)*(x4 - x3);
     
-    ua = (float)((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denominator;
-    ub = (float)((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)) / denominator;
+    ua = ((float)((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3))) / denominator;
+    ub = ((float)((x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3))) / denominator;
 
     // Calulate the point of intersection
     //long = x1+ua*(x2 - x1);
@@ -630,15 +630,16 @@ unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, sign
 		// Paths intersected!
 		
 		// Check course
+		// GOTCHA: Angles are with one assumed decimal point!
 		angleDiff = travelHeading - finishHeading;
 		
-		if(angleDiff > 180){
-			angleDiff -= 360;
-		}else if(angleDiff < - 180){
-			angleDiff += 360;
+		if(angleDiff > 1800){
+			angleDiff -= 3600;
+		}else if(angleDiff < -1800){
+			angleDiff += 3600;
 		}
 		
-		if( angleDiff <= THRESHOLD_ANGLE ){
+		if( abs(angleDiff) <= THRESHOLD_ANGLE ){
 			return TRUE;
 		}else{
 			return FALSE;
