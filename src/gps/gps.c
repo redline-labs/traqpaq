@@ -633,10 +633,10 @@ unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, sign
 		// GOTCHA: Angles are with one assumed decimal point!
 		angleDiff = travelHeading - finishHeading;
 		
-		if(angleDiff > 1800){
-			angleDiff -= 3600;
-		}else if(angleDiff < -1800){
-			angleDiff += 3600;
+		if(angleDiff > 18000){
+			angleDiff -= 36000;
+		}else if(angleDiff < -18000){
+			angleDiff += 36000;
 		}
 		
 		if( abs(angleDiff) <= THRESHOLD_ANGLE ){

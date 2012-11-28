@@ -61,7 +61,7 @@
 #define THRESHOLD_DISTANCE_FEET		25			// Threshold (+/-) in feet for finish line gate
 #define EARTH_RADIUS_FEET			20891000	// Approximate radius of earth in feet;
 #define THRESHOLD_DISTANCE			THRESHOLD_DISTANCE_FEET / EARTH_RADIUS_FEET // Do not modify, instead modify 'THRESHOLD_DISTANCE_FEET'
-#define THRESHOLD_ANGLE				450			// Threshold (+/-) in degrees for finish line gate  
+#define THRESHOLD_ANGLE				4500			// Threshold (+/-) in degrees for finish line gate, two assumed decimal places
 
 #define RADIANS_CONVERSION			0.0174532925	// Value of (Pi / 180)
 
