@@ -669,17 +669,17 @@ struct tGPSLine gps_find_finish_line(signed int latitude, signed int longitude, 
 	
 	// Add 90 degrees to heading, make sure it is between 0 and 360,
 	// and finally shift the decimal back in
-	angle = deg2rad(((heading + 900) % 3600) / 10);
+	angle = deg2rad((float)((heading + 9000) % 36000) / (float)100);
 	
 	// Copy the heading on the point to the heading for the line
 	finish.heading = heading;
 	
 	// Project the THRESHOLD_DISTANCE along the perpendicular angle
-	vect = sin(angle) * THRESHOLD_DISTANCE * 60 * 1000000;
+	vect = (int)(sin(angle) * THRESHOLD_DISTANCE * 60.0 * 1000000.0);
 	finish.startLongitude	= longitude + vect;
 	finish.endLongitude		= longitude - vect;
 	
-	vect = cos(angle) * THRESHOLD_DISTANCE * 60 * 1000000;
+	vect = (int)(cos(angle) * THRESHOLD_DISTANCE * 60.0 * 1000000.0);
 	finish.startLatitude	= latitude + vect;
 	finish.endLatitude		= latitude - vect;
 	
