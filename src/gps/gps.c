@@ -630,7 +630,7 @@ unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, sign
 		// Paths intersected!
 		
 		// Check course
-		// GOTCHA: Angles are with one assumed decimal point!
+		// GOTCHA: Angles are with two assumed decimal points!
 		angleDiff = travelHeading - finishHeading;
 		
 		if(angleDiff > 18000){

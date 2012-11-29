@@ -86,10 +86,13 @@ void fuel_task( void *pvParameters ){
 	// ---------------------------------	
 	batteryInfo = fuel_readBatteryInfo();
 	
-	if( batteryInfo.crc != fuel_calculateBatteryInfoCRC(&batteryInfo) ){
+	// Check validity of info read from EE (zero CRC is also considered invalid data)
+	if( (batteryInfo.crc != fuel_calculateBatteryInfoCRC(&batteryInfo)) || (batteryInfo.crc == 0) ){
 		batteryInfo.capacity = BATTERY_CAPACITY_COUNTS;
 		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FUEL, "Battery Info CRC failed");
 	}
+	
+	
 	
 	
 	// ---------------------------------
@@ -123,7 +126,7 @@ void fuel_task( void *pvParameters ){
 			
 		}
 
-		lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_BATTERY, (accumulated_current * 100) / batteryInfo.capacity, pdFALSE);
+		lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_BATTERY, (int)((float)(accumulated_current * 100.0) / (float)(batteryInfo.capacity)), pdFALSE);
 		
 		
 		// ---------------------------------
@@ -200,6 +203,10 @@ void fuel_task( void *pvParameters ){
 					
 				case(FUEL_MGR_REQUEST_UPDATE_ACCUM):
 					fuel_updateAccumulatedCurrent(BATTERY_CAPACITY_COUNTS);
+					break;
+					
+				case(FUEL_MGR_REQUEST_WRITE_BATTERY_INFO):
+					*(request.pointer) = fuel_writeBatteryInfo(BATTERY_CAPACITY_COUNTS, 0, 100);
 					break;
 			}
 			
