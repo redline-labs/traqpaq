@@ -47,6 +47,7 @@
 #define TRAQPAQ_DEBUG_ENABLED			TRUE
 #define TRAQPAQ_BATTERY_TEST_MODE		FALSE
 #define TRAQPAQ_GPS_TTF_TEST_MODE		FALSE
+#define TRAQPAQ_32MB_FLASH				TRUE
 
 #if( (TRAQPAQ_DEBUG_ENABLED == TRUE) && (TRAQPAQ_GPS_ECHO_MODE == TRUE) )
 #error "Debug Mode and GPS Echo Mode both turned on!"

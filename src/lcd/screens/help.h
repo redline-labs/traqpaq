@@ -35,6 +35,7 @@ if(lcd_redraw_required()){
 	menu_addItem(&mainMenu, "Module Info",			LCDFSM_MODULE_INFO);
 	#if( TRAQPAQ_DEBUG_ENABLED == TRUE )
 	menu_addItem(&mainMenu, "Technical Info",		LCDFSM_TECHNICAL_INFO);
+	menu_addItem(&mainMenu, "Module Status",		LCDFSM_MODULE_STATUS);
 	#endif
 	
 	lcd_redraw_complete();

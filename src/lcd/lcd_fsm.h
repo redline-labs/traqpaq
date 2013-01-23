@@ -112,6 +112,7 @@ enum tLcdScreens {
 	LCDFSM_TECHNICAL_INFO,
 	LCDFSM_DISCLAIMER,
 	LCDFSM_MODULE_INFO,
+	LCDFSM_MODULE_STATUS,
 
 	// ---------------------------------
 	// Main Menu -> Review Session

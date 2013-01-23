@@ -118,8 +118,11 @@ struct __attribute__ ((packed)) tTracklist {
 #define FLASH_ADDR_RECORDTABLE_START		0x00001000
 #define FLASH_ADDR_RECORDTABLE_END			0x00001FFF	// Align to 4KB sector
 
-#define FLASH_ADDR_RECORDDATA_START			0x00002000	// Size is remainder of 16Mb
-#define FLASH_ADDR_RECORDDATA_END			0x001FFFFF	// Dataflash End Address
-
+#define FLASH_ADDR_RECORDDATA_START			0x00002000	// Size is remainder of flash
+#if (TRAQPAQ_32MB_FLASH == TRUE)
+#	define FLASH_ADDR_RECORDDATA_END		0x003FFFFF	// Dataflash End Address
+#else
+#	define FLASH_ADDR_RECORDDATA_END		0x001FFFFF	// Dataflash End Address
+#endif
 
 #endif /* DATAFLASH_LAYOUT_H_ */

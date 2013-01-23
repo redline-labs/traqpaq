@@ -126,6 +126,8 @@ extern struct tLCDTopBar topBar;
 
 #define LCD_PERIPHERIAL_FADE_TIME		10			// Seconds for the peripherial ring to display
 
+#define LCD_REDRAW_TIME					1
+
 
 // Color Definitions
 // Bits: 15 14 13 12 11 10 9  8  7  6  5  4  3  2  1  0
@@ -324,9 +326,13 @@ unsigned char lcd_sendButtonRequest(unsigned char button);
 void lcd_clearPeripheral( void );
 void lcd_resetPeripheralTimer( void );
 
-void lcd_updateLapTimer( unsigned int ticks, struct tLCDLabel *hours, struct tLCDLabel *minutes, struct tLCDLabel *seconds, struct tLCDLabel *milli );
+void lcd_updateLapTimer( unsigned int ticks, struct tLCDLabel *hours, struct tLCDLabel *minutes, struct tLCDLabel *seconds, struct tLCDLabel *milli, unsigned char forceUpdate);
 
 void integer_to_hexascii(unsigned short number, unsigned char *string);
+
+void lcd_redrawTimerCallback( void );
+void lcd_resetRedrawTimer( void );
+void lcd_stopRedrawTimer( void );
 
 struct tLCDProgressBar {
 	unsigned short start_x;

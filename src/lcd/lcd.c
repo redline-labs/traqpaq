@@ -43,13 +43,16 @@
 const unsigned char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
 extern struct tFlashOTP flashOTP;
+extern struct tGPSInfo gpsInfo;
 
 volatile unsigned short id;
+volatile unsigned char redraw = TRUE;	// TODO: Fix this non-sense
 
 // Queues
 xQueueHandle lcdWidgetsManagerQueue;
 xQueueHandle lcdButtonsManagerQueue;
 xTimerHandle xPeripherialTimer;
+xTimerHandle xScreenRedrawTimer;
 
 // Create task for FreeRTOS
 void lcd_task_init( void ){
@@ -59,6 +62,12 @@ void lcd_task_init( void ){
 										pdFALSE,				// Auto-reload
 										NULL,					// Timer ID
 										(tmrTIMER_CALLBACK)lcd_clearPeripheral );	// Callback
+										
+		xScreenRedrawTimer = xTimerCreate( "RedrawTimer",	// Timer Name
+										(portTickType) (LCD_REDRAW_TIME * configTICK_RATE_HZ),	// Timer period (in ticks)
+										pdFALSE,				// Auto-reload
+										NULL,					// Timer ID
+										(tmrTIMER_CALLBACK)lcd_redrawTimerCallback );	// Callback
 										
 		xTaskCreate(lcd_gui_task_normal, configTSK_GUI_TASK_NAME, configTSK_GUI_TASK_STACK_SIZE, NULL, configTSK_GUI_TASK_PRIORITY, configTSK_GUI_TASK_HANDLE);
 		
@@ -88,7 +97,6 @@ void lcd_gui_task_normal( void *pvParameters ){
 	
 	unsigned char button;
 	unsigned short lcd_fsm = LCDFSM_MAINMENU;		// Useful for testing new screens!
-	unsigned char redraw = TRUE;
 	
 	lcdWidgetsManagerQueue = xQueueCreate(LCD_WIDGET_QUEUE_SIZE, sizeof(request));
 	lcdButtonsManagerQueue	= xQueueCreate(LCD_BUTTON_QUEUE_SIZE, sizeof(unsigned char));
@@ -178,11 +186,11 @@ void lcd_gui_task_normal( void *pvParameters ){
 					break;
 					
 				case(LCD_REQUEST_UPDATE_LAPTIME):
-					lcd_updateLapTimer( request.data, &lapHourLabel, &lapMinuteLabel, &lapSecondLabel, &lapMilliLabel );
+					lcd_updateLapTimer( request.data, &lapHourLabel, &lapMinuteLabel, &lapSecondLabel, &lapMilliLabel, FALSE );
 					break;
 					
 				case(LCD_REQUEST_UPDATE_OLDLAPTIME):
-					lcd_updateLapTimer( request.data, &oldLapHourLabel, &oldLapMinuteLabel, &oldLapSecondLabel, &oldLapMilliLabel );
+					lcd_updateLapTimer( request.data, &oldLapHourLabel, &oldLapMinuteLabel, &oldLapSecondLabel, &oldLapMilliLabel, TRUE );
 					break;
 			}
 		}
@@ -330,6 +338,10 @@ void lcd_gui_task_normal( void *pvParameters ){
 				
 			case(LCDFSM_MODULE_INFO):
 				#include "screens/help/module_info.h"
+				break;
+				
+			case(LCDFSM_MODULE_STATUS):
+				#include "screens/help/status.h"
 				break;
 			
 			
@@ -1116,27 +1128,39 @@ void lcd_resetPeripheralTimer( void ){
 	xTimerReset( xPeripherialTimer, 20 );
 }
 
-void lcd_updateLapTimer( unsigned int ticks, struct tLCDLabel *hours, struct tLCDLabel *minutes, struct tLCDLabel *seconds, struct tLCDLabel *milli ){
+void lcd_updateLapTimer( unsigned int ticks, struct tLCDLabel *hours, struct tLCDLabel *minutes, struct tLCDLabel *seconds, struct tLCDLabel *milli, unsigned char forceUpdate ){
 	static unsigned int lastHour, lastMinute, lastSecond;
 	unsigned char tempString[3];	// Two for the digits and one for the null character
 	
 	lcd_updateLabel(milli, itoa( (ticks % 10), &tempString, 10, FALSE));
 					
 	ticks = ticks / 10;		// Lop off the milliseconds
-	if(ticks != lastSecond){
+	if( (ticks != lastSecond) || forceUpdate ){
 		lcd_updateLabel(seconds, itoa( ticks % 60, &tempString, 10, TRUE));
 		lastSecond = ticks;
 	}
 					
 	ticks = ticks / 60;		// Lop off the seconds
-	if(ticks != lastMinute){
+	if( (ticks != lastMinute) || forceUpdate ){
 		lcd_updateLabel(minutes, itoa( ticks % 60, &tempString, 10, TRUE));
 		lastMinute = ticks;	
 	}
 					
 	ticks = ticks / 60;		// Lop off the minutes
-	if(ticks != lastHour){
+	if( (ticks != lastHour) || forceUpdate ){
 		lcd_updateLabel(hours, itoa( ticks, &tempString, 10, TRUE));
 		lastMinute = ticks;	
 	}
+}
+
+void lcd_redrawTimerCallback( void ){
+	lcd_force_redraw();
+}
+
+void lcd_resetRedrawTimer( void ){
+	xTimerReset( xScreenRedrawTimer, 20 );
+}
+
+void lcd_stopRedrawTimer( void ){
+	xTimerStop( xScreenRedrawTimer, 20 );
 }

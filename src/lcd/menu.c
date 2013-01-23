@@ -237,4 +237,5 @@ void menu_clear(struct tMenu *menu){
 	lcd_drawFilledRectangle(LCD_MIN_X, MENU_Y_START, LCD_MAX_X, LCD_MIN_Y, COLOR_WHITE);
 	menu->numItems = 0;
 	menu->selectedIndex = 0;
+	menu->displayIndex = 0;
 }

@@ -332,5 +332,6 @@ void gps_messageTimeout( xTimerHandle xTimer );
 void gps_getReceiverInfo( xTimerHandle xTimer );
 unsigned char gps_convertASCIIHex(unsigned char byte1, unsigned char byte2);
 void gps_dead( xTimerHandle xTimer );
+void gps_setSbasMode(unsigned char enableSBAS);
 
 #endif /* GPS_H_ */

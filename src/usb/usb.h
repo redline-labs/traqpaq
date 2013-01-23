@@ -64,6 +64,7 @@
 #define USB_CMD_REQ_BATTERY_INSTANT		0x06
 #define USB_CMD_REQ_BATTERY_ACCUM		0x07
 #define USB_CMD_REQ_BATTERY_UPDATE		0x08
+#define USB_CMD_WRITE_BATTERY_INFO		0x09
 
 // Commands to interact with the dataflash
 #define USB_CMD_READ_USERPREFS			0x10
@@ -85,9 +86,7 @@
 #define USB_DBG_SEND_DF_CMD				0x30	// Send a command to the dataflash
 #define USB_DBG_READ_PM_PGOOD1			0x31	// Read the PM_PGOOD1 for the power supply
 #define USB_DBG_READ_PM_PGOOD3			0x32	// Read the PM_PGOOD3 for the power supply
-#define USB_DBG_READ_ADC_VCC			0x33	// Read the ADC value for VCC
-#define USB_DBG_READ_ADC_VEE			0x34	// Read the ADC value for VEE
-#define USB_DBG_READ_ADC_3V3			0x35	// Read the ADC value for 3V3
+#define USB_DBG_READ_ADC				0x33	// Read the ADC values
 #define USB_DBG_SEND_GPS_CMD			0x36	// Send a command to the GPS
 #define USB_DBG_READ_CHG_STAT			0x37	// Read the status for the charging
 #define USB_DBG_SEND_FUEL_CMD			0x38	// Send a command to the fuel gauge

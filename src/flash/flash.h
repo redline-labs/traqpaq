@@ -34,7 +34,12 @@
 #include "hal.h"
 
 #define FLASH_VERSION					"1.10"
-#define FLASH_DRIVER_TYPE				"AT25DF321"
+
+#if (TRAQPAQ_32MB_FLASH == TRUE)
+#	define FLASH_DRIVER_TYPE				"AT25DF321"
+#else
+#	define FLASH_DRIVER_TYPE				"AT25DF161"
+#endif
 
 #define flash_clr_wp()					gpio_set_gpio_pin(DATAFLASH_WP)
 #define flash_set_wp()					gpio_clr_gpio_pin(DATAFLASH_WP)
@@ -50,15 +55,17 @@
 #define flash_clr_full_flag()			flashFlags.isFull = FALSE
 #define flash_full_flag()				flashFlags.isFull
 
-// Device IDs for AT25DF161
-//#define DATAFLASH_MANUFACTURER_ID			0x1F
-//#define DATAFLASH_DEVICE_ID0				0x46
-//#define DATAFLASH_DEVICE_ID1				0x02
-
-// Device IDs for AT25DF321
-#define DATAFLASH_MANUFACTURER_ID			0x1F
-#define DATAFLASH_DEVICE_ID0				0x47
-#define DATAFLASH_DEVICE_ID1				0x01
+#if (TRAQPAQ_32MB_FLASH == TRUE)
+	// Device IDs for AT25DF321
+#	define DATAFLASH_MANUFACTURER_ID		0x1F
+#	define DATAFLASH_DEVICE_ID0				0x47
+#	define DATAFLASH_DEVICE_ID1				0x01
+#else
+	// Device IDs for AT25DF161
+#	define DATAFLASH_MANUFACTURER_ID		0x1F
+#	define DATAFLASH_DEVICE_ID0				0x46
+#	define DATAFLASH_DEVICE_ID1				0x02
+#endif
 
 // Read Commands
 #define DATAFLASH_CMD_READ_ARRAY			0x03	// Up to 50MHz operation
@@ -170,7 +177,7 @@
 #define DATAFLASH_STATUS_GLOBAL_UNPROTECT	0x00
 
 
-#define FLASH_4KB						4096	// Number of bytes in 4KB
+#define FLASH_4KB							4096	// Number of bytes in 4KB
 #define DATAFLASH_32KB						32768	// Number of bytes in 32KB
 
 

@@ -126,7 +126,7 @@ void fuel_task( void *pvParameters ){
 			
 		}
 
-		lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_BATTERY, (int)((float)(accumulated_current * 100.0) / (float)(batteryInfo.capacity)), pdFALSE);
+		lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_BATTERY, (int)((accumulated_current * 100) / (batteryInfo.capacity)), pdFALSE);
 		
 		
 		// ---------------------------------
@@ -207,6 +207,15 @@ void fuel_task( void *pvParameters ){
 					
 				case(FUEL_MGR_REQUEST_WRITE_BATTERY_INFO):
 					*(request.pointer) = fuel_writeBatteryInfo(BATTERY_CAPACITY_COUNTS, 0, 100);
+					break;
+					
+				case(FUEL_MGR_REQUEST_ADC_VALUES):
+					*(request.pointer++) = (adcValues.main >> 8);
+					*(request.pointer++) = (adcValues.main >> 0);
+					*(request.pointer++) = (adcValues.vcc >> 8);
+					*(request.pointer++) = (adcValues.vcc >> 0);
+					*(request.pointer++) = (adcValues.vee >> 8);
+					*(request.pointer++) = (adcValues.vee >> 0);
 					break;
 			}
 			

@@ -828,3 +828,14 @@ void gps_dead( xTimerHandle xTimer ){
 		gps_reset();
 	}
 }
+
+void gps_setSbasMode(unsigned char enableSBAS){
+	if(enableSBAS == TRUE){
+		usart_write_line(GPS_USART, "$PMTK513,1*28");
+	}else{
+		usart_write_line(GPS_USART, "$PMTK513,0*29");
+	}
+	
+	usart_putchar(GPS_USART, GPS_MSG_CR);
+	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
+}

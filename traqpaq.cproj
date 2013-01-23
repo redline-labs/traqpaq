@@ -917,6 +917,9 @@
     <Compile Include="src\lcd\screens\help\module_info.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\lcd\screens\help\status.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\lcd\screens\help\technical_info.h">
       <SubType>compile</SubType>
     </Compile>

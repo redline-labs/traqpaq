@@ -123,7 +123,11 @@ void usb_task( void *pvParameters ){
 				usbTxBuffer[data_length++] = TRUE;
 				break;
 				
-					
+			case(USB_CMD_WRITE_BATTERY_INFO):
+				fuel_send_request(FUEL_MGR_REQUEST_WRITE_BATTERY_INFO, NULL, &responseU8, TRUE, NULL);
+				usbTxBuffer[data_length++] = responseU8;
+				break;
+				
 			case(USB_CMD_READ_OTP):
 				data_length = usbRxBuffer[1];
 				flash_send_request(FLASH_MGR_READ_OTP, &usbTxBuffer, usbRxBuffer[1], usbRxBuffer[2], TRUE, pdFALSE);
@@ -137,6 +141,11 @@ void usb_task( void *pvParameters ){
 			case(USB_CMD_READ_RECORDDATA):	// 19d
 				data_length = (usbRxBuffer[1] << 8) + usbRxBuffer[2];
 				flash_send_request(FLASH_MGR_READ_RECORDATA, &usbTxBuffer, (usbRxBuffer[1] << 8) + usbRxBuffer[2], (usbRxBuffer[3] << 8) + usbRxBuffer[4], TRUE, pdFALSE);
+				break;
+				
+			case(USB_DBG_READ_ADC):			// 51d
+				fuel_send_request(FUEL_MGR_REQUEST_ADC_VALUES, NULL, &usbTxBuffer, TRUE, NULL);
+				data_length = 6;	// TODO: Change from magic number
 				break;
 				
 			case(USB_DBG_DF_SECTOR_ERASE):
@@ -201,7 +210,7 @@ void usb_task( void *pvParameters ){
 				flash_send_request(FLASH_MGR_ERASE_TRACKS, NULL, NULL, NULL, TRUE, pdFALSE);
 			
 				strlcpy(&trackList.name, "12 Mile", TRACKLIST_MAX_STRLEN);
-				trackList.heading = 2700;
+				trackList.heading = 27000;
 				trackList.longitude = -83506786;
 				trackList.latitude =   42495199;
 				trackList.isEmpty = FALSE;
@@ -213,7 +222,6 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_CMD_READ_SAVEDTRACKS):		// 17d
 				data_length = sizeof(trackList);
-				//flash_send_request(FLASH_REQUEST_READ_TRACK, &usbTxBuffer, NULL, (usbRxBuffer[1] << 8) + (usbRxBuffer[2] << 0), TRUE, pdFALSE);
 				flash_send_request(FLASH_MGR_READ_TRACK, &usbTxBuffer, NULL, (usbRxBuffer[1] << 8) + (usbRxBuffer[2] << 0), TRUE, pdFALSE);
 				break;
 				
