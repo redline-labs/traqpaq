@@ -41,7 +41,7 @@ xQueueHandle flashManagerQueue;
 struct tFlashOTP		flashOTP;
 struct tFlashRequest	request;
 struct tUserPrefs		userPrefs;
-struct tFlashFlags		flashFlags;
+struct tFlashDevice		flash;
 
 void flash_task_init( void ){
 	
@@ -54,8 +54,11 @@ void flash_task_init( void ){
 	flash_clr_hold();
 	
 	// Check the dataflash device ID
-	if( !flash_checkID() ){
-		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Incorrect Device ID");
+	if( flash_initDevice() == UNKNOWN_DEVICE ){
+		debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_FLASH, "Did not recognize flash");
+		
+		// Stop!
+		while(TRUE);
 	}
 	
 	// Read out the OTP registers
@@ -285,7 +288,7 @@ void flash_task( void *pvParameters ){
 }
 
 
-unsigned char flash_checkID(void){
+enum tFlashDevice flash_initDevice(void){
 	unsigned short spiResponse[3];
 		
 	spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
@@ -302,11 +305,44 @@ unsigned char flash_checkID(void){
 
 	spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
 	
-	if( (spiResponse[0] == DATAFLASH_MANUFACTURER_ID) & (spiResponse[1] == DATAFLASH_DEVICE_ID0) & (spiResponse[2] == DATAFLASH_DEVICE_ID1) ){
-		return DATAFLASH_RESPONSE_OK;
+	if( (spiResponse[0] == FLASH_ATMEL_AT25DF321_MAN_ID) & (spiResponse[1] == FLASH_ATMEL_AT25DF321_ID0) & (spiResponse[2] == FLASH_ATMEL_AT25DF321_ID1) ){
+		flash.device = ATMEL_AT25DF321;
+		
+		flash.layout.userPrefsStart		= FLASH_AT25DF321_USERPREFS_START;
+		flash.layout.userPrefsEnd		= FLASH_AT25DF321_USERPREFS_END;
+		flash.layout.trackListStart		= FLASH_AT25DF321_TRACKLIST_START;
+		flash.layout.trackListEnd		= FLASH_AT25DF321_TRACKLIST_END;
+		flash.layout.recordTableStart	= FLASH_AT25DF321_RECORDTABLE_START;
+		flash.layout.recordTableEnd		= FLASH_AT25DF321_RECORDTABLE_END;
+		flash.layout.recordDataStart	= FLASH_AT25DF321_RECORDDATA_START;
+		flash.layout.recordDataEnd		= FLASH_AT25DF321_RECORDDATA_END;
+		
+	}else if( (spiResponse[0] == FLASH_ATMEL_AT25DF161_MAN_ID) & (spiResponse[1] == FLASH_ATMEL_AT25DF161_ID0) & (spiResponse[2] == FLASH_ATMEL_AT25DF161_ID1) ){
+		flash.device = ATMEL_AT25DF161;
+		
+		flash.layout.userPrefsStart		= FLASH_AT25DF161_USERPREFS_START;
+		flash.layout.userPrefsEnd		= FLASH_AT25DF161_USERPREFS_END;
+		flash.layout.trackListStart		= FLASH_AT25DF161_TRACKLIST_START;
+		flash.layout.trackListEnd		= FLASH_AT25DF161_TRACKLIST_END;
+		flash.layout.recordTableStart	= FLASH_AT25DF161_RECORDTABLE_START;
+		flash.layout.recordTableEnd		= FLASH_AT25DF161_RECORDTABLE_END;
+		flash.layout.recordDataStart	= FLASH_AT25DF161_RECORDDATA_START;
+		flash.layout.recordDataEnd		= FLASH_AT25DF161_RECORDDATA_END;
+		
 	}else{
-		return DATAFLASH_RESPONSE_FAILURE;
+		flash.device = UNKNOWN_DEVICE;
+		
+		flash.layout.userPrefsStart		= NULL;
+		flash.layout.userPrefsEnd		= NULL;
+		flash.layout.trackListStart		= NULL;
+		flash.layout.trackListEnd		= NULL;
+		flash.layout.recordTableStart	= NULL;
+		flash.layout.recordTableEnd		= NULL;
+		flash.layout.recordDataStart	= NULL;
+		flash.layout.recordDataEnd		= NULL;
 	}
+	
+	return flash.device;
 }
 
 

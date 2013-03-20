@@ -33,13 +33,7 @@
 
 #include "hal.h"
 
-#define FLASH_VERSION					"1.10"
-
-#if (TRAQPAQ_32MB_FLASH == TRUE)
-#	define FLASH_DRIVER_TYPE				"AT25DF321"
-#else
-#	define FLASH_DRIVER_TYPE				"AT25DF161"
-#endif
+#define FLASH_VERSION					"1.20"
 
 #define flash_clr_wp()					gpio_set_gpio_pin(DATAFLASH_WP)
 #define flash_set_wp()					gpio_clr_gpio_pin(DATAFLASH_WP)
@@ -47,25 +41,24 @@
 #define flash_clr_hold()				gpio_set_gpio_pin(DATAFLASH_HOLD)
 #define flash_set_hold()				gpio_clr_gpio_pin(DATAFLASH_HOLD)
 
-#define flash_set_busy_flag()			flashFlags.isBusy = TRUE
-#define flash_clr_busy_flag()			flashFlags.isBusy = FALSE
-#define flash_busy_flag()				flashFlags.isBusy
+#define flash_set_busy_flag()			flash.flags.isBusy = TRUE
+#define flash_clr_busy_flag()			flash.flags.isBusy = FALSE
+#define flash_busy_flag()				flash.flags.isBusy
 
-#define flash_set_full_flag()			flashFlags.isFull = TRUE
-#define flash_clr_full_flag()			flashFlags.isFull = FALSE
-#define flash_full_flag()				flashFlags.isFull
+#define flash_set_full_flag()			flash.flags.isFull = TRUE
+#define flash_clr_full_flag()			flash.flags.isFull = FALSE
+#define flash_full_flag()				flash.flags.isFull
 
-#if (TRAQPAQ_32MB_FLASH == TRUE)
-	// Device IDs for AT25DF321
-#	define DATAFLASH_MANUFACTURER_ID		0x1F
-#	define DATAFLASH_DEVICE_ID0				0x47
-#	define DATAFLASH_DEVICE_ID1				0x01
-#else
-	// Device IDs for AT25DF161
-#	define DATAFLASH_MANUFACTURER_ID		0x1F
-#	define DATAFLASH_DEVICE_ID0				0x46
-#	define DATAFLASH_DEVICE_ID1				0x02
-#endif
+// Device IDs for AT25DF321
+#define FLASH_ATMEL_AT25DF321_MAN_ID		0x1F
+#define FLASH_ATMEL_AT25DF321_ID0			0x47
+#define FLASH_ATMEL_AT25DF321_ID1			0x01
+
+// Device IDs for AT25DF161
+#define FLASH_ATMEL_AT25DF161_MAN_ID		0x1F
+#define FLASH_ATMEL_AT25DF161_ID0			0x46
+#define FLASH_ATMEL_AT25DF161_ID1			0x02
+
 
 // Read Commands
 #define DATAFLASH_CMD_READ_ARRAY			0x03	// Up to 50MHz operation
@@ -213,11 +206,37 @@ struct tFlashFlags {
 	unsigned char isBusy;
 	unsigned char isFull;	
 };
+
+enum tFlashDevice {
+	ATMEL_AT25DF161,
+	ATMEL_AT25DF321,
+	UNKNOWN_DEVICE
+};
+
+struct tFlashLayout {
+	unsigned int userPrefsStart;
+	unsigned int userPrefsEnd;
 	
+	unsigned int trackListStart;
+	unsigned int trackListEnd;
+	
+	unsigned int recordTableStart;
+	unsigned int recordTableEnd;
+	
+	unsigned int recordDataStart;
+	unsigned int recordDataEnd;
+};
+
+struct tFlash {
+	enum tFlashDevice device;
+	union tDataflashStatus status;
+	struct tFlashFlags flags;
+	struct tFlashLayout layout;
+};
 
 void flash_task_init( void );
 void flash_task( void *pvParameters );
-unsigned char flash_checkID( void );
+enum tFlashDevice  flash_initDevice( void );
 union tDataflashStatus flash_readStatus( void );
 unsigned char flash_GlobalUnprotect( void );
 unsigned char flash_WriteEnable( void );
