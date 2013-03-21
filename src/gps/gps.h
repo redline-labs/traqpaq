@@ -30,7 +30,7 @@
 #ifndef GPS_H_
 #define GPS_H_
 
-#define GPS_VERSION					"1.00"
+#define GPS_VERSION					"1.10"
 
 #define gps_enable_interrupts()		GPS_USART->ier |= AVR32_USART_IER_RXRDY_MASK
 #define gps_disable_interrupts()	GPS_USART->idr |= AVR32_USART_IER_RXRDY_MASK
@@ -291,8 +291,13 @@ struct tGPSInfo {
 #define incrementErrorCount(counter)		if(counter < 255) counter++
 
 // Timeout in milliseconds for message timeout
-#define GPS_GGA_MSG_TIMEOUT				200
-#define GPS_RMC_MSG_TIMEOUT				200
+#if( TRAQPAQ_UBLOX_GPS == TRUE )
+	#define GPS_GGA_MSG_TIMEOUT				400
+	#define GPS_RMC_MSG_TIMEOUT				400
+#else
+	#define GPS_GGA_MSG_TIMEOUT				200
+	#define GPS_RMC_MSG_TIMEOUT				200
+#endif
 
 // Timer ID's
 #define GPS_GGA_MSG_TIMER_ID		0

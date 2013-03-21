@@ -41,7 +41,7 @@ xQueueHandle flashManagerQueue;
 struct tFlashOTP		flashOTP;
 struct tFlashRequest	request;
 struct tUserPrefs		userPrefs;
-struct tFlashDevice		flash;
+struct tFlash			flash;
 
 void flash_task_init( void ){
 	
@@ -56,21 +56,16 @@ void flash_task_init( void ){
 	// Check the dataflash device ID
 	if( flash_initDevice() == UNKNOWN_DEVICE ){
 		debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_FLASH, "Did not recognize flash");
-		
-		// Stop!
-		while(TRUE);
 	}
 	
-	// Read out the OTP registers
+	// Read out the OTP registers, and check validity
 	flash_ReadOTP(OTP_START_INDEX, OTP_LENGTH, &flashOTP);
-	
-	// Check validity of OTP
 	if( flash_calculate_otp_crc() != flashOTP.crc ){
 		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Invalid OTP CRC");
 	}
 	
 	// Load user preferences!
-	flash_ReadToBuffer(FLASH_ADDR_USERPREFS_START, sizeof(userPrefs), &userPrefs);
+	flash_ReadToBuffer(flash.layout.userPrefsStart, sizeof(userPrefs), &userPrefs);
 	if(flash_calculate_userPrefs_crc() != userPrefs.crc){
 		// If CRC is bad, load defaults!
 		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Invalid User Prefs CRC");
@@ -101,7 +96,7 @@ void flash_task( void *pvParameters ){
 	// Record Table Initialization
 	//--------------------------
 	while( recordTableIndex < RECORDS_TOTAL_POSSIBLE ){
-		flash_ReadToBuffer(FLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
+		flash_ReadToBuffer(flash.layout.recordTableStart + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
 		if(recordTable.recordEmpty) break;
 		recordTableIndex++;
 	}
@@ -109,11 +104,11 @@ void flash_task( void *pvParameters ){
 	// Figure out the start address of the new record table entry
 	if(recordTableIndex == 0){
 		// There is no previous record table entry
-		recordTable.startAddress = FLASH_ADDR_RECORDDATA_START;
-		recordTable.endAddress = FLASH_ADDR_RECORDDATA_START;
+		recordTable.startAddress = flash.layout.recordDataStart;
+		recordTable.endAddress = flash.layout.recordDataStart;
 	}else{
 		// Peek at the last available record
-		flash_ReadToBuffer(FLASH_ADDR_RECORDTABLE_START + (sizeof(prevRecordTable) * (recordTableIndex - 1)), sizeof(prevRecordTable), &prevRecordTable);
+		flash_ReadToBuffer(flash.layout.recordTableStart + (sizeof(prevRecordTable) * (recordTableIndex - 1)), sizeof(prevRecordTable), &prevRecordTable);
 		recordTable.startAddress = (prevRecordTable.endAddress + 1);
 		recordTable.endAddress = recordTable.startAddress;
 	}
@@ -130,7 +125,6 @@ void flash_task( void *pvParameters ){
 	}*/
 	
 	flash_set_wp();
-	flash_set_hold();
 	flash_clr_busy_flag();
 	
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FLASH, "Ready for requests");
@@ -140,7 +134,6 @@ void flash_task( void *pvParameters ){
 		
 		flash_set_busy_flag();
 		flash_clr_wp();
-		flash_clr_hold();
 		
 		switch(request.command){
 
@@ -148,7 +141,7 @@ void flash_task( void *pvParameters ){
 				
 				recordTable.recordEmpty = FALSE;
 				recordTable.endAddress--;		// Really the last byte of the page
-				flash_UpdateSector(FLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
+				flash_UpdateSector(flash.layout.recordTableStart + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
 				
 				// Get the new record table ready!
 				recordTableIndex++;
@@ -162,7 +155,7 @@ void flash_task( void *pvParameters ){
 				
 
 			case(FLASH_MGR_ADD_RECORD_DATA):
-				if(recordTable.endAddress < FLASH_ADDR_RECORDDATA_END){
+				if(recordTable.endAddress < flash.layout.recordDataEnd){
 					flash_WriteFromBuffer(recordTable.endAddress, request.length, request.pointer);
 					recordTable.endAddress += FLASH_PAGE_SIZE;
 				}				
@@ -179,22 +172,22 @@ void flash_task( void *pvParameters ){
 				
 
 			case(FLASH_MGR_READ_RECORDTABLE):
-				flash_ReadToBuffer(FLASH_ADDR_RECORDTABLE_START + ( request.index * sizeof(recordTable) ), sizeof(recordTable), request.pointer);
+				flash_ReadToBuffer(flash.layout.recordTableStart + ( request.index * sizeof(recordTable) ), sizeof(recordTable), request.pointer);
 				break;
 				
 
 			case(FLASH_MGR_READ_RECORDATA):
-				flash_ReadToBuffer(FLASH_ADDR_RECORDDATA_START + (request.index * FLASH_PAGE_SIZE), FLASH_PAGE_SIZE, request.pointer);
+				flash_ReadToBuffer(flash.layout.recordDataStart + (request.index * FLASH_PAGE_SIZE), FLASH_PAGE_SIZE, request.pointer);
 				break;
 				
 
 			case(FLASH_MGR_READ_TRACK):
-				flash_ReadToBuffer(FLASH_ADDR_TRACKLIST_START + (request.index * sizeof(trackList)), sizeof(trackList), request.pointer);
+				flash_ReadToBuffer(flash.layout.trackListStart + (request.index * sizeof(trackList)), sizeof(trackList), request.pointer);
 				break;
 				
 
 			case(FLASH_MGR_ADD_TRACK):
-				flash_UpdateSector(FLASH_ADDR_TRACKLIST_START + (trackCount * sizeof(trackList)), sizeof(trackList), request.pointer);
+				flash_UpdateSector(flash.layout.trackListStart + (trackCount * sizeof(trackList)), sizeof(trackList), request.pointer);
 				trackCount++;
 				break;
 				
@@ -223,8 +216,8 @@ void flash_task( void *pvParameters ){
 			case(FLASH_MGR_CHIP_ERASE):
 				*(request.pointer) = flash_chipErase();
 				recordTableIndex = 0;
-				recordTable.startAddress = FLASH_ADDR_RECORDDATA_START;
-				recordTable.endAddress = FLASH_ADDR_RECORDDATA_START;
+				recordTable.startAddress = flash.layout.recordDataStart;
+				recordTable.endAddress = flash.layout.recordDataStart;
 				break;
 				
 
@@ -234,14 +227,14 @@ void flash_task( void *pvParameters ){
 				
 
 			case(FLASH_MGR_USED_SPACE):				
-				*(request.pointer) = (((recordTable.endAddress - FLASH_ADDR_RECORDDATA_START) * 100) / (FLASH_ADDR_RECORDDATA_END - FLASH_ADDR_RECORDDATA_START));
+				*(request.pointer) = (((recordTable.endAddress - flash.layout.recordDataStart) * 100) / (flash.layout.recordDataEnd - flash.layout.recordDataStart));
 				break;
 				
 
 			case(FLASH_MGR_ERASE_RECORDED_DATA):
 				recordTableIndex = 0;
-				recordTable.startAddress = FLASH_ADDR_RECORDDATA_START;
-				recordTable.endAddress = FLASH_ADDR_RECORDDATA_START;
+				recordTable.startAddress = flash.layout.recordDataStart;
+				recordTable.endAddress = flash.layout.recordDataStart;
 
 				flash_eraseRecordedData();
 				break;
@@ -249,7 +242,7 @@ void flash_task( void *pvParameters ){
 
 			case(FLASH_MGR_WRITE_USER_PREFS):
 				userPrefs.crc = flash_calculate_userPrefs_crc();
-				flash_UpdateSector(FLASH_ADDR_USERPREFS_START, sizeof(userPrefs), &userPrefs);
+				flash_UpdateSector(flash.layout.userPrefsStart, sizeof(userPrefs), &userPrefs);
 				break;
 			
 
@@ -267,7 +260,7 @@ void flash_task( void *pvParameters ){
 				if(recordTable.startAddress != recordTable.endAddress){
 					// Need to close current record
 					recordTable.recordEmpty = FALSE;
-					flash_UpdateSector(FLASH_ADDR_RECORDTABLE_START + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
+					flash_UpdateSector(flash.layout.recordTableStart + (sizeof(recordTable) * recordTableIndex), sizeof(recordTable), &recordTable);
 				}
 				debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FLASH, "Task shut down");
 				wdt_send_request(WDT_REQUEST_DATAFLASH_SHUTDOWN_COMPLETE, NULL);
@@ -275,8 +268,7 @@ void flash_task( void *pvParameters ){
 				break;
 		}
 		
-		flash_clr_wp();
-		flash_clr_hold();
+		flash_set_wp();
 		flash_clr_busy_flag();
 		
 		// Resume requesting task if it has been suspended
@@ -429,17 +421,17 @@ unsigned char flash_UpdateSector(unsigned long startAddress, unsigned short leng
 
 unsigned char flash_eraseTracks(){
 	unsigned short i;
-	unsigned char userPrefsBuffer[FLASH_ADDR_USERPREFS_END - FLASH_ADDR_USERPREFS_START + 1];
+	unsigned char userPrefsBuffer[flash.layout.userPrefsEnd - flash.layout.userPrefsStart + 1];
 	
 	// Copy the user prefs to buffer
-	flash_ReadToBuffer(FLASH_ADDR_USERPREFS_START, FLASH_ADDR_USERPREFS_END - FLASH_ADDR_USERPREFS_START + 1, &userPrefsBuffer);
+	flash_ReadToBuffer(flash.layout.userPrefsStart, flash.layout.userPrefsEnd - flash.layout.userPrefsStart + 1, &userPrefsBuffer);
 	
 	// Erase the sector
-	if( flash_eraseBlock(FLASH_CMD_BLOCK_ERASE_4KB, FLASH_ADDR_USERPREFS_START) == DATAFLASH_RESPONSE_FAILURE ){
+	if( flash_eraseBlock(FLASH_CMD_BLOCK_ERASE_4KB, flash.layout.userPrefsStart) == DATAFLASH_RESPONSE_FAILURE ){
 		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Erase Failed");
 	}
 	
-	for(i = FLASH_ADDR_USERPREFS_START; i < FLASH_ADDR_USERPREFS_END; i += FLASH_PAGE_SIZE){
+	for(i = flash.layout.userPrefsStart; i < flash.layout.userPrefsEnd; i += FLASH_PAGE_SIZE){
 		if( flash_WriteFromBuffer(i, FLASH_PAGE_SIZE, &(userPrefsBuffer[i])) == DATAFLASH_RESPONSE_FAILURE ){
 			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Write Failed");
 		}
@@ -452,7 +444,7 @@ unsigned char flash_eraseRecordedData(){
 	unsigned short i;
 	unsigned char sectorBuffer[FLASH_4KB];
 
-	flash_ReadToBuffer(FLASH_ADDR_USERPREFS_START, FLASH_4KB, &sectorBuffer);
+	flash_ReadToBuffer(flash.layout.userPrefsStart, FLASH_4KB, &sectorBuffer);
 	
 	// Erase the flash
 	if( flash_chipErase() == DATAFLASH_RESPONSE_FAILURE){
@@ -461,7 +453,7 @@ unsigned char flash_eraseRecordedData(){
 
 	// Write new data back
 	for(i = 0; i < FLASH_4KB; i += FLASH_PAGE_SIZE){
-		if( flash_WriteFromBuffer(FLASH_ADDR_USERPREFS_START + i, FLASH_PAGE_SIZE, &(sectorBuffer[i])) == DATAFLASH_RESPONSE_FAILURE ){
+		if( flash_WriteFromBuffer(flash.layout.userPrefsStart + i, FLASH_PAGE_SIZE, &(sectorBuffer[i])) == DATAFLASH_RESPONSE_FAILURE ){
 			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Write Failed");
 		}
 	}	
@@ -590,7 +582,7 @@ unsigned char flash_WriteOTP(unsigned char startAddress, unsigned char length, u
 		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
 	}
 		
-	if(flash_operation_failed()){
+	if( flash_operation_failed() ){
 		return DATAFLASH_RESPONSE_FAILURE;
 	}
 	

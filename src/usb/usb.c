@@ -45,6 +45,7 @@ extern struct tFlashOTP flashOTP;
 extern struct tFlashFlags flashFlags;
 extern struct tUserPrefs userPrefs;
 extern struct tGPSInfo gpsInfo;
+extern struct tFlash flash;
 
 // Create task for FreeRTOS
 void usb_task_init( void ){
@@ -84,9 +85,8 @@ void usb_task( void *pvParameters ){
 				break;
 				
 			case(USB_CMD_REQ_SERIAL_NUMBER):
-				for(i = 0; i < OTP_SERIAL_LENGTH; i++){
-					usbTxBuffer[data_length++] = flashOTP.serial[i];
-				}					
+				memcpy(&usbTxBuffer, &flashOTP.serial, OTP_SERIAL_LENGTH);
+				data_length = OTP_SERIAL_LENGTH;					
 				break;
 				
 			case(USB_CMD_REQ_TESTER_ID):

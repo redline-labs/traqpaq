@@ -32,7 +32,6 @@ if(lcd_redraw_required()){
 
 	lcd_writeText_8x16("Used Memory", FONT_SMALL_POINTER, 50, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 50, COLOR_BLACK);
 	progressBar = lcd_createProgressBar(50, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 50, 350, LCD_MAX_Y - LCD_TOPBAR_THICKNESS - 100, COLOR_REDLINERED, COLOR_BLACK, COLOR_WHITE);
-	//flash_send_request(FLASH_REQUEST_USED_SPACE, &responseU8, NULL, NULL, TRUE, 20);
 	flash_send_request(FLASH_MGR_USED_SPACE, &responseU8, NULL, NULL, TRUE, 20);
 	lcd_updateProgressBar(&progressBar, responseU8);
 	
