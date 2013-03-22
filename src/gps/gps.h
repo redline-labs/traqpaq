@@ -32,30 +32,21 @@
 
 #define GPS_VERSION					"1.10"
 
-#define gps_enable_interrupts()		GPS_USART->ier |= AVR32_USART_IER_RXRDY_MASK
-#define gps_disable_interrupts()	GPS_USART->idr |= AVR32_USART_IER_RXRDY_MASK
+#define gps_enable_rxrdy_isr()		GPS_USART->ier |= AVR32_USART_IER_RXRDY_MASK
+#define gps_disable_rxrdy_isr()		GPS_USART->idr |= AVR32_USART_IER_RXRDY_MASK
+
+#define gps_flip_endian4(little)	( ((little & 0xFF000000) >> 24) + ((little & 0x00FF0000) >> 8) + ((little & 0x0000FF00) << 8) + ((little & 0x000000FF) << 24) )
+#define gps_flip_endian2(little)	( ((little & 0xFF00) >> 8) + ((little & 0x00FF) << 8) )
 
 #define GPS_RESET_TIME				100						// Time in milliseconds
-#define GPS_RXD_QUEUE_SIZE			(GPS_MSG_MAX_STRLEN * 2)	// Number of items to buffer in Receive Queue
+#define GPS_RXD_QUEUE_SIZE			100						// Number of items to buffer in Receive Queue
 #define GPS_MANAGER_QUEUE_SIZE		5						// Number of items to buffer in Request 
 
 #define GPS_WAIT_RXD_TIME			20						// Time (milliseconds) to wait for a received character
+#define GPS_MSG_MAX_LENGTH			108
 
-#define GPS_MSG_START_CHAR			'$'		
-#define GPS_MSG_END_CHAR			0x0A					// ASCII for LF
-#define GPS_MSG_CR					0x0D
-#define GPS_MSG_MAX_STRLEN			120						// Each message is limited to 82 characters max, including '$', CR, and LF.... Some debug messages are longer than NMEA spec
-#define GPS_DELIMITER_CHAR			','
-#define GPS_CHECKSUM_CHAR			'*'
-#define GPS_PERIOD					'.'
-
-#define GPS_NULL					0
-
-#define GPS_NORTH					'N'
-#define GPS_SOUTH					'S'
-
-#define GPS_EAST					'E'
-#define GPS_WEST					'W'
+#define GPS_CHAR_SYNC1				0xB5
+#define GPS_CHAR_SYNC2				0x62
 
 
 #define THRESHOLD_DISTANCE_FEET		15			// Threshold (+/-) in feet for finish line gate
@@ -65,125 +56,6 @@
 
 #define RADIANS_CONVERSION			0.0174532925	// Value of (Pi / 180)
 
-// Indices for pointing areas of each message
-#define MAX_SIGNALS_SENTENCE		40				// Support for debug messages (specifically PMTK599 message)
-
-#define TOKEN_MESSAGE_ID			0
-
-#define MESSAGE_OFFSET_ID0			2
-#define MESSAGE_OFFSET_ID1			3
-#define MESSAGE_OFFSET_ID2			4
-#define MESSAGE_OFFSET_ID3			5
-#define MESSAGE_OFFSET_ID4			6
-
-// GGA message from GPS receiver
-#define ID_GGA_ID0					'G'
-#define ID_GGA_ID1					'G'
-#define ID_GGA_ID2					'A'
-
-// RMC message from GPS receiver
-#define ID_RMC_ID0					'R'
-#define ID_RMC_ID1					'M'
-#define ID_RMC_ID2					'C'
-
-// Standard response from GPS receiver
-#define ID_MTK001_ID0				'T'
-#define ID_MTK001_ID1				'K'
-#define ID_MTK001_ID2				'0'
-#define ID_MTK001_ID3				'0'
-#define ID_MTK001_ID4				'1'
-
-// Startup message from GPS receiver
-#define ID_MTK010_ID0				'T'
-#define ID_MTK010_ID1				'K'
-#define ID_MTK010_ID2				'0'
-#define ID_MTK010_ID3				'1'
-#define ID_MTK010_ID4				'0'
-
-// Startup message from GPS receiver
-#define ID_MTK011_ID0				'T'
-#define ID_MTK011_ID1				'K'
-#define ID_MTK011_ID2				'0'
-#define ID_MTK011_ID3				'1'
-#define ID_MTK011_ID4				'1'
-
-// Debug 499 response from GPS receiver
-#define ID_MTK599_ID0				'T'
-#define ID_MTK599_ID1				'K'
-#define ID_MTK599_ID2				'5'
-#define ID_MTK599_ID3				'9'
-#define ID_MTK599_ID4				'9'
-
-// Debug 705 response from GPS receiver
-#define ID_MTK705_ID0				'T'
-#define ID_MTK705_ID1				'K'
-#define ID_MTK705_ID2				'7'
-#define ID_MTK705_ID3				'0'
-#define ID_MTK705_ID4				'5'
-
-#define TOKEN_GGA_UTC				1
-#define TOKEN_GGA_LATITUDE			2
-#define TOKEN_GGA_NORS				3
-#define TOKEN_GGA_LONGITUDE			4
-#define TOKEN_GGA_EORW				5
-#define TOKEN_GGA_QUALITY			6
-#define TOKEN_GGA_NUM_SATELLITES	7
-#define TOKEN_GGA_HDOP				8
-#define TOKEN_GGA_ALTITUDE			9
-#define TOKEN_GGA_ALTITUDE_UNITS	10
-#define TOKEN_GGA_GEO_SEP			11
-#define TOKEN_GGA_GEO_SEP_UNITS		12
-#define TOKEN_GGA_DIGREF_DATA_AGE	13
-#define TOKEN_GGA_DIGREF_STATION_ID	14
-
-#define TOKEN_RMC_UTC				1
-#define TOKEN_RMC_STATUS			2
-#define TOKEN_RMC_LATITUDE			3
-#define TOKEN_RMC_NORS				4
-#define TOKEN_RMC_LONGITUDE			5
-#define TOKEN_RMC_EORW				6
-#define TOKEN_RMC_SPEED				7
-#define TOKEN_RMC_TRACK				8
-#define TOKEN_RMC_DATE				9
-#define TOKEN_RMC_MAG_VAR			10
-#define TOKEN_RMC_MAG_VAR_EORW		11
-#define TOKEN_RMC_UNKNOWN			12
-
-#define TOKEN_PMTK001_CMD			1
-#define TOKEN_PMTK001_FLAG			2
-
-#define PMTK001_INVALID_CMD			0x30
-#define PMTK001_UNSUPPORTED_CMD		0x31
-#define PMTK001_VALID_CMD_FAILED	0x32
-#define PMTK001_VALID_CMD			0x33
-
-#define TOKEN_PMTK010_SYSMSG		1
-#define SYSMSG_OFFSET				2
-#define PMTK010_SYSMSG_UNKNOWN		0x30
-#define PMTK010_SYSMSG_STARTUP		0x31
-
-#define TOKEN_PMTK011_SYSID			1
-
-#define TOKEN_PMTK599_SERIAL_B0		3
-#define TOKEN_PMTK599_SERIAL_B1		4
-#define TOKEN_PMTK599_SERIAL_B2		5
-#define TOKEN_PMTK599_SERIAL_B3		6
-
-#define TOKEN_PMTK599_PARTNO_B0		12
-#define TOKEN_PMTK599_PARTNO_B1		13
-#define TOKEN_PMTK599_PARTNO_B2		14
-#define TOKEN_PMTK599_PARTNO_B3		15
-#define TOKEN_PMTK599_PARTNO_B4		16
-#define TOKEN_PMTK599_PARTNO_B5		17
-#define TOKEN_PMTK599_PARTNO_B6		18
-
-#define TOKEN_PMTK705_SW_VERSION	1
-#define TOKEN_PMTK705_SW_DATE		3
-
-#define GPS_INFO_SW_VERSION_SIZE	9	// Number of characters of SW version string, AXN_x.xx, plus null character
-#define GPS_INFO_SW_DATE_SIZE		9	// Number of characters of SW date string, YYYYMMDD, plus null character
-#define GPS_INFO_PART_NUMBER_SIZE	8	// Number of characters of Part Number String, plus null character
-
 #define GPS_MSG_TX_TIME				250
 #define GPS_DEAD_STARTUP_TIME		500
 
@@ -192,6 +64,72 @@
 #define GPS_UNKNOWN_MESSAGES_TOLERANCE	10
 #define GPS_RESET_MAX_TRIES				3
 
+
+enum tGPSMessageClasses {
+	UBX_CLASS_NAV	= 0x01,
+	UBX_CLASS_RXM	= 0x02,
+	UBX_CLASS_INF	= 0x04,
+	UBX_CLASS_ACK	= 0x05,
+	UBX_CLASS_CFG	= 0x06,
+	UBX_CLASS_MON	= 0x0A,
+	UBX_CLASS_AID	= 0x0B,
+	UBX_CLASS_TIM	= 0x0D
+}; 
+
+
+#define UBX_NAV_CLOCK		0x22
+#define UBX_NAV_DGPS		0x31
+#define UBX_NAV_DOP			0x04
+#define UBX_NAV_POSECEF		0x01
+#define UBX_NAV_POSLLH		0x02
+#define UBX_NAV_PVT			0x07
+#define UBX_NAV_SBAS		0x32
+#define UBX_NAV_SOL			0x06
+#define UBX_NAV_STATUS		0x03
+#define UBX_NAV_SVINFO		0x30
+#define UBX_NAV_TIMEGPS		0x20
+#define UBX_NAV_TIMEUTC		0x21
+#define UBX_NAV_VELECEF		0x11
+#define UBX_NAV_VELNED		0x12
+
+#define UBX_MON_VER			0x04
+#define UBX_MON_HW2			0x0B
+#define UBX_MON_HW			0x09
+#define UBX_MON_IO			0x02
+#define UBX_MON_MSGPP		0x06
+#define UBX_MON_RXBUF		0x07
+#define UBX_MON_RXR			0x21
+#define UBX_MON_TXBUF		0x08
+
+#define UBX_CFG_ANT			0x13
+#define UBX_CFG_CFG			0x09
+#define UBX_CFG_DAT			0x06
+#define UBX_CFG_GNSS		0x3E
+#define UBX_CFG_INF			0x02
+#define UBX_CFG_ITFM		0x39
+#define UBX_CFG_MSG			0x01
+#define UBX_CFG_NAV5		0x24
+#define UBX_CFG_NAVX5		0x23
+#define UBX_CFG_NMEA		0x17
+#define UBX_CFG_NVS			0x22
+#define UBX_CFG_PM2			0x3B
+#define UBX_CFG_PRT			0x00
+#define UBX_CFG_RATE		0x08
+#define UBX_CFG_RINV		0x34
+#define UBX_CFG_RST			0x04
+#define UBX_CFG_RXM			0x11
+#define UBX_CFG_SBAS		0x16
+#define UBX_CFG_TP5			0x31
+#define UBX_CFG_USB			0x1B
+
+#define UBX_ACK_ACK			0x01
+#define UBX_ACK_NAK			0x00
+
+#define UBX_INF_DEBUG		0x04
+#define UBX_INF_ERROR		0x00
+#define UBX_INF_NOTICE		0x02
+#define UBX_INF_TEST		0x03
+#define UBX_INF_WARNING		0x01
 
 enum tGpsCommand {
 	GPS_MGR_REQUEST_DATE,
@@ -240,11 +178,184 @@ enum tGPSStatus {
 };
 
 enum tGPSCmdResponse {
-	GPS_NO_RESPONSE			= 0,
-	GPS_INVALID_COMMAND		= 1,
-	GPS_UNSUPPORTED_COMMAND	= 2,
-	GPS_VALID_CMD_FAILED	= 3,
-	GPS_VALID_CMD			= 4
+	GPS_RESPONSE_NAK		= 0,
+	GPS_RESPONSE_ACK		= 1,
+	GPS_RESPONSE_UNKNOWN	= 2
+};
+
+enum tGPSStateMachine {
+	GPS_STATE_UNKNOWN,
+	GPS_STATE_SYNC1,
+	GPS_STATE_SYNC2,
+	GPS_STATE_CLASS,
+	GPS_STATE_ID,
+	GPS_STATE_LENGTH1,
+	GPS_STATE_LENGTH2,
+	GPS_STATE_PAYLOAD,
+	GPS_STATE_XSUMA,
+	GPS_STATE_XSUMB,
+	GPS_STATE_RX_COMPLETE
+};
+
+struct tUbxNavPvtValidBitfield {
+	unsigned reserved		: 5;	// Reserved bits
+	unsigned fullyResolved	: 1;	// UTC Time of Day has been fully resolved
+	unsigned validTime		: 1;	// Valid UTC Time of Day
+	unsigned validDate		: 1;	// Valid UTC Date
+};
+
+struct tUbxNavPvtFlagsBitfield {
+	unsigned reserved		: 3;	// Reserved bits
+	unsigned psmState		: 3;	// Power Save Mode State
+	unsigned diffSoln		: 1;	// Differential Corrections Applied
+	unsigned gnssFixOk		: 1;	// A Valid Fix Achieved
+};
+
+struct tUbxNavPvt {
+	unsigned int iTOW;		// Time of the week, milliseconds
+	unsigned short year;	// Year (UTC)
+	unsigned char month;	// Month (UTC)
+	unsigned char day;		// Day (UTC)
+	unsigned char hour;		// Hour (UTC)
+	unsigned char minutes;	// Minutes (UTC)
+	unsigned char seconds;	// Seconds (UTC)
+	struct tUbxNavPvtValidBitfield valid;
+	unsigned int tAcc;		// Time Accuracy Estimate (nanoseconds)
+	signed int nano;		// Fraction of a second (nanoseconds)
+	unsigned char fixType;	// GNSS Fix Type
+	struct tUbxNavPvtFlagsBitfield flags;	// Fix Status Flags
+	unsigned char reserved1;
+	unsigned char numSV;	// Number of satellites used in Nav Solution
+	signed int lon;			// Longitude (deg)
+	signed int lat;			// Latitude (deg)
+	signed int height;		// Height above ellipsoid (mm)
+	signed int hMSL;		// Height above mean sea level (mm)
+	unsigned int hAcc;		// Horizontal Accuracy Estimate (mm)
+	unsigned int vAcc;		// Vertical Accuracy Estimate (mm)
+	signed int velN;		// NED North Velocity (mm/s)
+	signed int velE;		// NED East Velocity (mm/s)
+	signed int velD;		// NED Down Velocity (mm/s)
+	signed int gSpeed;		// 2D Ground Speed (mm/s)
+	signed int heading;		// Heading of 2D motion (deg)
+	unsigned int sAcc;		// Speed Accuracy Estimate (mm/s)
+	unsigned int headingAcc;	// Heading Accuracy Estimate (deg)
+	unsigned short pDOP;	// Position Dillution of Precision (0.01)
+	unsigned short reserved2;
+	unsigned int reserved3;
+};
+
+#define UBX_MON_VER_SW_VERSION_SIZE		30
+#define UBX_MON_VER_HW_VERSION_SIZE		10
+#define UBX_MON_VER_EXTENSION_SIZE		30
+
+struct tUbxMonVer {
+	unsigned char swVersion[30];
+	unsigned char hwVersion[10];
+	unsigned char extension1[UBX_MON_VER_EXTENSION_SIZE];
+	unsigned char extension2[UBX_MON_VER_EXTENSION_SIZE];
+};
+
+#define UBX_CFG_USB_VENDOR_STRING_SIZE	32
+#define UBX_CFG_USB_PRODUCT_STRING_SIZE	32
+#define UBX_CFG_USB_SERIAL_NUMBER_SIZE	32
+
+struct tUbxCfgUsb {
+	unsigned short vendorID;
+	unsigned short productID;
+	unsigned short reserved1;
+	unsigned short reserved2;
+	unsigned short powerConsumption;
+	unsigned short flags;
+	unsigned char vendorString[UBX_CFG_USB_VENDOR_STRING_SIZE];
+	unsigned char productString[UBX_CFG_USB_PRODUCT_STRING_SIZE];
+	unsigned char serialNumber[UBX_CFG_USB_SERIAL_NUMBER_SIZE];
+};
+
+enum tUbxMonHW2CfgSource {
+	CFG_SOURCE_ROM		= 114,
+	CFG_SOURCE_OTP		= 111,
+	CFG_SOURCE_IO		= 112,
+	CFG_SOURCE_FLASH	= 102
+};
+
+struct tUbxMonHW2 {
+	signed char ofsI;					// Imbalance of I-part of complex signal, scaled +/- 128
+	unsigned char magI;					// Magnitude of I-part of complex signal
+	signed char ofsQ;					// Imbalance of Q-part of complete signal, scale +/- 128
+	unsigned char magQ;					// Magnitude of Q-part of complex signal
+	unsigned char cfgSource;			// Source of low-level configuration
+	unsigned char reserved0[3];			// Reserved
+	unsigned int lowLevelCfg;			// Low-level configuration
+	unsigned int reserved1[2];			// Reserved
+	unsigned int postStatus;			// POST Status word
+	unsigned int reserved2;				// Reserved
+};
+
+enum tUbxMonHWaPower {
+	ANTENNA_POWER_OFF		= 0,
+	ANTENNA_POWER_ON		= 1,
+	ANTENNA_POWER_UNKNOWN	= 2
+};
+
+struct tUbxMonHWFlags {
+	unsigned rtcCalib		: 1;
+	unsigned safeBoot		: 1;
+	unsigned jammingState	: 2;
+	unsigned reserved		: 4;
+};
+
+#define UBX_MON_HW_VP_SIZE	25
+
+struct tUbxMonHW {
+	unsigned int pinSel;				// Mask of Pins Set as Peripheral/PIO
+	unsigned int pinBank;				// Mask of Pins Set as Bank A/B
+	unsigned int pinDir;				// Mask of Pins set as Input/Output
+	unsigned int pinVal;				// Mask of Pins value Low/High
+	unsigned short noisePerMS;			// Noise Level as measured by the GPS Core
+	unsigned short agcCnt;				// AGC Monitor
+	unsigned char aStatus;				// Status of the Antenna Supervisor State Machine
+	unsigned char aPower;				// Current Power Status of Antenna
+	unsigned char flags;				// Flags
+	unsigned char reserved1;			// Reserved
+	unsigned int usedMask;				// Mask of Pins that are used by the virtual pin manager
+	unsigned char VP[UBX_MON_HW_VP_SIZE];	// Array of Pin Mappings for each of the physical pins
+	unsigned char jamInd;				// CW Jamming Indicator, scaled (0 = no jamming, 255 = strong jamming)
+	unsigned short reserved3;			// Reserved
+	unsigned int pinIrq;				// Mask of pins value using the PIO IRQ
+	unsigned int pullH;					// Mask of pins value using the PIO Pull High Resistor
+	unsigned int pullL;					// Mask of pins value using the PIO Pull Low Resistor
+};
+
+
+struct tUbxAckAck {
+	unsigned char clsID;				// Class ID of the acknowledged message
+	unsigned char msgID;				// Message ID of the acknowledged message
+};
+
+struct tUbxAckNak {
+	unsigned char clsID;				// Class ID of the acknowledged message
+	unsigned char msgID;				// Message ID of the acknowledged message
+};
+
+union tUBXMessages {
+	struct tUbxNavPvt NAV_PVT;
+	struct tUbxMonVer MON_VER;
+	struct tUbxMonHW  MON_HW;
+	struct tUbxMonHW2 MON_HW2;
+	struct tUbxCfgUsb CFG_USB;
+	struct tUbxAckAck ACK_ACK;
+	struct tUbxAckNak ACK_NAK;
+	unsigned char raw[GPS_MSG_MAX_LENGTH];
+};
+
+struct tGPSMessage {
+	enum tGPSMessageClasses class;
+	unsigned char id;
+	unsigned short length;
+	unsigned short rxCount;
+	union tUBXMessages messages;
+	unsigned char xsumA;
+	unsigned char xsumB;
 };
 
 struct tGPSError {
@@ -257,12 +368,25 @@ struct tGPSError {
 };
 
 struct tGPSLastCmd {
-	unsigned int msgID;
+	unsigned char id;
+	unsigned char class;
 	enum tGPSCmdResponse response;
 };
 
+struct tGPSDebug {
+	signed char ofsI;	// Imbalance of I-part of complex signal
+	unsigned char magI;	// Magnitude of I-part of complex signal
+	signed char ofsQ;	// Imbalance of Q-part of complex signal
+	unsigned char magQ;	// Magnitude of Q-part of complex signal
+};
+
+#define GPS_INFO_SW_VERSION_SIZE	30
+#define GPS_INFO_SW_DATE_SIZE		10
+#define GPS_INFO_HW_VERSION_SIZE	10
+#define GPS_INFO_SERIALNO_SIZE		32
+
 struct tGPSInfo {
-	unsigned int	serial_number;
+	unsigned char	serial_number[GPS_INFO_SERIALNO_SIZE];
 	unsigned char	serial_number_valid;
 	
 	unsigned char	sw_version[GPS_INFO_SW_VERSION_SIZE];
@@ -271,7 +395,7 @@ struct tGPSInfo {
 	unsigned char	sw_date[GPS_INFO_SW_DATE_SIZE];
 	unsigned char	sw_date_valid;
 	
-	unsigned char	part_number[GPS_INFO_PART_NUMBER_SIZE];
+	unsigned char	part_number[GPS_INFO_HW_VERSION_SIZE];
 	unsigned char	part_number_valid;
 	
 	unsigned char	mode;
@@ -282,6 +406,7 @@ struct tGPSInfo {
 	enum	tGPSStatus status;				// GPS Receiver status
 	struct	tGPSError error;				// Error counts
 	struct	tGPSLastCmd lastCmd;			// Response from last sent command
+	struct	tGPSDebug debug;				// Debug Info
 };
 
 

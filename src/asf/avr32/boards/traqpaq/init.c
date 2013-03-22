@@ -95,6 +95,20 @@ void board_init(void){
 
 	gpio_enable_module( GPS_USART_GPIO_MAP, sizeof( GPS_USART_GPIO_MAP ) / sizeof( GPS_USART_GPIO_MAP[0] ) ); // Assign GPIO to Debug USART.
 	usart_init_rs232( GPS_USART, &GPS_USART_OPTIONS, APPL_PBA_SPEED ); // Initialize Debug USART in RS232 mode.
+	
+	static const pdca_channel_options_t GPS_RX_PDCA_OPTIONS = {
+		.addr			= NULL,								// memory address
+		.pid			= AVR32_PDCA_PID_USART3_RX,			// select peripheral - data are transmit on USART TX line.
+		.size			= NULL,								// transfer counter
+		.r_addr			= NULL,								// next memory address
+		.r_size			= 0,								// next transfer counter
+		.transfer_size	= PDCA_TRANSFER_SIZE_BYTE			// select size of the transfer
+	};
+
+	// Init PDCA channel
+	pdca_init_channel(GPS_USART_RX_PDCA_CHANNEL, &GPS_RX_PDCA_OPTIONS);
+	pdca_enable_interrupt_reload_counter_zero(GPS_USART_RX_PDCA_CHANNEL);
+
 	#endif
 
 	// ------------------------------------------------------------

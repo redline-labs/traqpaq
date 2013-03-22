@@ -245,6 +245,9 @@
 #define GPS_USART_BAUD_SLOW			9600
 #define GPS_USART_IRQ           	AVR32_USART3_IRQ
 
+#define GPS_USART_TX_PDCA_CHANNEL	4
+#define GPS_USART_RX_PDCA_CHANNEL	5
+
 
 // ------------------------------------------------------------
 // Debug Definitions (USART2)

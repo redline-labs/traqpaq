@@ -34,12 +34,6 @@
 
 xQueueHandle gpsRxdQueue;
 xQueueHandle gpsManagerQueue;
-
-unsigned char rxBuffer[GPS_MSG_MAX_STRLEN];
-unsigned char gpsTokens[MAX_SIGNALS_SENTENCE];
-
-xTimerHandle xGGAMessageTimer, xRMCMessageTimer;
-xTimerHandle xReceiverSWInfoTimer, xReceiverHWInfoTimer;
 xTimerHandle xReceiverDeadTimer;
 
 struct tGPSInfo gpsInfo;
@@ -63,7 +57,6 @@ __attribute__((__interrupt__)) static void ISR_gps_rxd(void){
 	}
 }
 
-
 void gps_task_init( void ){
 	struct tGPSRequest request;
 	
@@ -84,8 +77,9 @@ void gps_task_init( void ){
 	gpsInfo.error.rxDataError = 0;
 	gpsInfo.error.resetCount = 0;
 	
-	gpsInfo.lastCmd.msgID = 0;
-	gpsInfo.lastCmd.response = GPS_NO_RESPONSE;
+	gpsInfo.lastCmd.class = 0;
+	gpsInfo.lastCmd.id = 0;
+	gpsInfo.lastCmd.response = GPS_RESPONSE_UNKNOWN;
 	
 	gpsInfo.status = GPS_STATUS_UNKNOWN;
 	
@@ -99,8 +93,8 @@ void gps_task_init( void ){
 		gpsRxdQueue		= xQueueCreate( GPS_RXD_QUEUE_SIZE,     sizeof(int)     );
 		gpsManagerQueue = xQueueCreate( GPS_MANAGER_QUEUE_SIZE, sizeof(request) );
 
-		INTC_register_interrupt(&ISR_gps_rxd, AVR32_USART3_IRQ, AVR32_INTC_INT0);
-	
+		INTC_register_interrupt( (__int_handler) &ISR_gps_rxd, AVR32_USART3_IRQ, AVR32_INTC_INT0);
+
 		xTaskCreate(gps_task, configTSK_GPS_TASK_NAME, configTSK_GPS_TASK_STACK_SIZE, NULL, configTSK_GPS_TASK_PRIORITY, configTSK_GPS_TASK_HANDLE);
 	}
 	#else
@@ -113,27 +107,19 @@ void gps_task_init( void ){
 void gps_task( void *pvParameters ){
 	unsigned char i;
 	unsigned int rxdChar;										// Temporary storage for received character queue
-	unsigned char rxIndex = 0;									// Index in received character buffer
-	
-	unsigned char processedRMC = FALSE, processedGGA = FALSE;	// Flags for processed NMEA messages
-	
-	unsigned char processChecksum = FALSE;
-	unsigned short calculatedChecksum = 0;
-	
 	unsigned char recordIndex = 0;								// Index in formatted data struct
-	
 	unsigned char oldMode = 0;
+	unsigned char calc_xsumA, calc_xsumB;
 	
 	unsigned int lapTime = 0, oldLapTime = 0;
-	unsigned short oldCourse;
-	
 	unsigned int datestamp = 0;
 	
 	struct tRecordDataPage gpsData;							// Formatted GPS Data
 	struct tGPSLine finishLine;								// Formatted coordinate pairs for "finish line"
 	struct tTracklist trackList;
-	
 	struct tGPSRequest request;
+	enum tGPSStateMachine parserState = GPS_STATUS_UNKNOWN;
+	struct tGPSMessage gpsMessage;
 
 	// Make sure the battery isn't low before continuing
 	fuel_low_battery_check();
@@ -141,32 +127,8 @@ void gps_task( void *pvParameters ){
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Task Started");
 	
 	// Pull the GPS out of reset and enable the ISR
-	gps_enable_interrupts();
+	gps_enable_rxrdy_isr();
 	gps_reset();
-	
-	xGGAMessageTimer = xTimerCreate( "gpsGGAMessageTimer",
-									(GPS_GGA_MSG_TIMEOUT / portTICK_RATE_MS),
-									TRUE,
-									GPS_GGA_MSG_TIMER_ID,
-									gps_messageTimeout );
-	
-	xRMCMessageTimer = xTimerCreate( "gpsRMCMessageTimer",
-									(GPS_RMC_MSG_TIMEOUT / portTICK_RATE_MS),
-									TRUE,
-									GPS_RMC_MSG_TIMER_ID,
-									gps_messageTimeout );
-	
-	xReceiverSWInfoTimer = xTimerCreate( "getReceiverSWInfoTimer",
-										(GPS_MSG_TX_TIME / portTICK_RATE_MS),
-										FALSE,
-										GPS_SWINFO_TIMER_ID,
-										gps_getReceiverInfo );
-	
-	xReceiverHWInfoTimer = xTimerCreate( "getReceiverHWInfoTimer",
-										2 * (GPS_MSG_TX_TIME / portTICK_RATE_MS),
-										FALSE,
-										GPS_HWINFO_TIMER_ID,
-										gps_getReceiverInfo );
 	
 	xReceiverDeadTimer = xTimerCreate( "gpsDeadTimer",
 										(GPS_DEAD_STARTUP_TIME / portTICK_RATE_MS),
@@ -174,8 +136,8 @@ void gps_task( void *pvParameters ){
 										GPS_DEAD_TIMER_ID,
 										gps_dead );
 										 
-	// Kick off the timers
-	xTimerStart(xReceiverDeadTimer, pdFALSE);
+	// Kick off the timer
+	//xTimerStart(xReceiverDeadTimer, pdFALSE);
 	
 	while(TRUE){
 		// Check for pending requests
@@ -195,7 +157,7 @@ void gps_task( void *pvParameters ){
 					break;
 					
 				case(GPS_MGR_REQUEST_SET_FINISH_POINT):
-					// Load the track, and then tell the dataflash that we are using it
+					// Load the track, and then tell the flash that we are using it
 					flash_send_request(FLASH_MGR_READ_TRACK, &trackList, sizeof(trackList), request.data, TRUE, 20);
 					flash_send_request(FLASH_MGR_SET_TRACK, NULL, NULL, request.data, FALSE, 20);
 					finishLine = gps_find_finish_line(trackList.latitude, trackList.longitude, trackList.heading);
@@ -211,12 +173,7 @@ void gps_task( void *pvParameters ){
 					flash_send_request(FLASH_MGR_ADD_TRACK, &trackList, NULL, NULL, FALSE, pdFALSE);
 					break;
 					
-				case(GPS_MGR_REQUEST_SHUTDOWN):
-					xTimerStop(xRMCMessageTimer, pdFALSE);
-					xTimerStop(xGGAMessageTimer, pdFALSE);
-					xTimerStop(xReceiverHWInfoTimer, pdFALSE);
-					xTimerStop(xReceiverSWInfoTimer, pdFALSE);
-					
+				case(GPS_MGR_REQUEST_SHUTDOWN):					
 					gpio_clr_gpio_pin(GPS_RESET);	// Put the GPS into reset
 					debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Task shut down");
 					wdt_send_request(WDT_REQUEST_GPS_SHUTDOWN_COMPLETE, NULL);
@@ -248,299 +205,438 @@ void gps_task( void *pvParameters ){
 		}
 		
 		// Service the received characters
-		xQueueReceive(gpsRxdQueue, &rxdChar, portMAX_DELAY);
+		if( (parserState != GPS_STATE_RX_COMPLETE) && (xQueueReceive(gpsRxdQueue, &rxdChar, 20) == TRUE) ){
 		
-		if( rxdChar == GPS_MSG_END_CHAR ){
-
-			if( gps_received_checksum() == calculatedChecksum ){
-					
-				gps_buffer_tokenize();
+			switch(parserState){
+				case(GPS_STATE_UNKNOWN):
+					if(rxdChar == GPS_CHAR_SYNC1) parserState = GPS_STATE_SYNC1;
+					break;
 				
-				//--------------------------
-				// GGA Message Received
-				//--------------------------
-				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_GGA_ID0) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_GGA_ID1) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_GGA_ID2) ){
-					
-					// Reset the GGA message timeout timer
-					xTimerReset(xGGAMessageTimer, pdFALSE);
-					
-					// Convert Time!
-					gpsData.data[recordIndex].latitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_LATITUDE		]]) );
-					gpsData.data[recordIndex].latitude	= gps_convert_to_decimal_degrees(gpsData.data[recordIndex].latitude);
-					
-					if( rxBuffer[gpsTokens[TOKEN_GGA_NORS]] == GPS_SOUTH){
-						gpsData.data[recordIndex].latitude *= -1;
-					}
-					
-					gpsData.data[recordIndex].longitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_LONGITUDE		]]) );
-					gpsData.data[recordIndex].longitude = gps_convert_to_decimal_degrees(gpsData.data[recordIndex].longitude);
-					
-					if( rxBuffer[gpsTokens[TOKEN_GGA_EORW]] == GPS_WEST){
-						gpsData.data[recordIndex].longitude *= -1;
-					}
-					
-					gpsData.currentMode					= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_QUALITY		]]) ) & 0xFFFF;
-					gpsData.satellites					= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_NUM_SATELLITES	]]) ) & 0xFF;
-					gpsData.data[recordIndex].altitude	= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_ALTITUDE		]]) ) & 0xFFFF;
-					
-					if(recordIndex == 0){
-						gpsData.hdop					= atoi( &(	rxBuffer[gpsTokens[TOKEN_GGA_HDOP			]]) ) & 0xFFFF;
-					}						
-					
-					// Determine if a lap was detected!
-					gpsData.data[recordIndex].lapDetected = gps_intersection(gpsInfo.current_location.longitude,	gpsInfo.current_location.latitude,
-																			gpsData.data[recordIndex].longitude,    gpsData.data[recordIndex].latitude,
-																			finishLine.startLongitude,				finishLine.startLatitude,
-																			finishLine.endLongitude,				finishLine.endLatitude,
-																			gpsInfo.current_location.heading,		finishLine.heading);
-																			 
-					if( gpsData.data[recordIndex].lapDetected && gpsInfo.record_flag){
-						if(lapTime <= oldLapTime){
-							lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_PERIPHERIAL, LCD_PERIPHERIAL_FASTER, pdFALSE);
-						}else{
-							lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_PERIPHERIAL, LCD_PERIPHERIAL_SLOWER, pdFALSE);
-						}
-						
-						oldLapTime = lapTime;
-						lapTime = 0;
-						
-						// Update the displayed lap time
-						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_OLDLAPTIME, oldLapTime, pdFALSE);
-					}
-					
-					gpsInfo.mode = gpsData.currentMode;		// TODO: Merge all mode/satellites stuff into gpsInfo??
-					gpsInfo.satellites = gpsData.satellites;
-					
-					// Update the antenna widget
-					if(oldMode != gpsData.currentMode){
-						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_ANTENNA, gpsData.currentMode, pdFALSE);
-						oldMode = gpsData.currentMode;
-					}
-					
-					// Save the last coordinates for detecting the intersection
-					gpsInfo.current_location.longitude = gpsData.data[recordIndex].longitude;
-					gpsInfo.current_location.latitude = gpsData.data[recordIndex].latitude;
-					gpsInfo.current_location.heading = gpsData.data[recordIndex].heading;
-						
-					processedGGA = TRUE;
-					
-				}else 
-				//--------------------------
-				// RMC Message Received
-				//--------------------------
-				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_RMC_ID0) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_RMC_ID1) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_RMC_ID2) ){
-						
-					// Reset the RMC message timeout timer
-					xTimerReset(xRMCMessageTimer, pdFALSE);
-						
-					// More Converting!!
-					gpsData.data[recordIndex].speed		= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_SPEED	]]) ) & 0xFFFF;
-					gpsData.data[recordIndex].heading	= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_TRACK	]]) ) & 0xFFFF;
-					datestamp							= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_DATE	]]) );
-					
-					if(recordIndex == 0){
-						gpsData.utc						= atoi( &(	rxBuffer[gpsTokens[TOKEN_RMC_UTC	]]) );
-					}
-					
-					processedRMC = TRUE;
-
-				
-				}else
-				//--------------------------
-				// PMTK001 Message Received
-				//--------------------------
-				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_MTK001_ID0) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_MTK001_ID1) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_MTK001_ID2) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK001_ID3) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK001_ID4) ){
-					
-					gpsInfo.lastCmd.msgID = atoi( &rxBuffer[gpsTokens[TOKEN_PMTK001_CMD]] );
-					
-					switch( rxBuffer[gpsTokens[TOKEN_PMTK001_FLAG]] ){
-						case(PMTK001_INVALID_CMD):
-							gpsInfo.lastCmd.response = GPS_INVALID_COMMAND;
-							debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Invalid Command");
-							break;
-							
-						case(PMTK001_UNSUPPORTED_CMD):
-							gpsInfo.lastCmd.response = GPS_UNSUPPORTED_COMMAND;
-							debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Unsupported Command");
-							break;
-							
-						case(PMTK001_VALID_CMD_FAILED):
-							gpsInfo.lastCmd.response = GPS_VALID_CMD_FAILED;
-							debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Command Failed");
-							break;
-							
-						case(PMTK001_VALID_CMD):
-							gpsInfo.lastCmd.response = GPS_VALID_CMD;
-							debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Command Succeeded");
-							break;
-					}
-					
-				}else				
-				
-				//--------------------------
-				// PMTK010 Message Received (System Startup)
-				//--------------------------
-				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_MTK010_ID0) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_MTK010_ID1) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_MTK010_ID2) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK010_ID3) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK010_ID4) ){
-					
-					if( rxBuffer[gpsTokens[TOKEN_PMTK010_SYSMSG] + SYSMSG_OFFSET] == PMTK010_SYSMSG_STARTUP ){
-						
-						// Hooray, we are up and running!
-						gpsInfo.status = GPS_STATUS_STARTED;
-						debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Receiver is talking!");
-						
-						// Kill the GPS Dead Timer
-						xTimerStop(xReceiverDeadTimer, pdFALSE);
-						
-						// Kick off the message timeout and hardware info timers
-						xTimerStart(xReceiverSWInfoTimer, pdFALSE);
-						xTimerStart(xReceiverHWInfoTimer, pdFALSE);
-						xTimerStart(xRMCMessageTimer, pdFALSE);
-						xTimerStart(xGGAMessageTimer, pdFALSE);
-		
+				case(GPS_STATE_SYNC1):
+					if(rxdChar == GPS_CHAR_SYNC2){
+						parserState = GPS_STATE_CLASS;
 					}else{
-						
-						// We still don't know what is happening with the receiver
-						gpsInfo.status = GPS_STATUS_UNKNOWN;
-					}						
-					
-				}else
-				
-				//--------------------------
-				// PMTK011 Message Received (System Startup and System ID)
-				//--------------------------
-				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_MTK011_ID0) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_MTK011_ID1) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_MTK011_ID2) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK011_ID3) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK011_ID4) ){
-						
-					// TODO: Replace with something that actually verifies the System ID
-					
-				}else
-				
-				//--------------------------
-				// PMTK599 Message Received (Receiver Part Number and Serial Number)
-				//--------------------------
-				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_MTK599_ID0) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_MTK599_ID1) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_MTK599_ID2) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK599_ID3) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK599_ID4) ){
-					
-					// Load up the serial number
-					gpsInfo.serial_number = (gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B0]], rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B0]+1]) << 24) |
-											(gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B1]], rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B1]+1]) << 16) |
-											(gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B2]], rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B2]+1]) <<  8) |	
-											(gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B3]], rxBuffer[gpsTokens[TOKEN_PMTK599_SERIAL_B3]+1]) <<  0);
-
-					// Load up the part number... Goofy, it is transmitted as Hex Byte in ASCII
-					gpsInfo.part_number[0] = gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B0]], rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B0]+1]);
-					gpsInfo.part_number[1] = gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B1]], rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B1]+1]);
-					gpsInfo.part_number[2] = gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B2]], rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B2]+1]);
-					gpsInfo.part_number[3] = gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B3]], rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B3]+1]);
-					gpsInfo.part_number[4] = gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B4]], rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B4]+1]);
-					gpsInfo.part_number[5] = gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B5]], rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B5]+1]);
-					gpsInfo.part_number[6] = gps_convertASCIIHex(rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B6]], rxBuffer[gpsTokens[TOKEN_PMTK599_PARTNO_B6]+1]);
-					gpsInfo.part_number[7] = NULL;	// Terminate the string
-					
-					gpsInfo.serial_number_valid = TRUE;
-					gpsInfo.part_number_valid = TRUE;
-				
-				}else
-				//--------------------------
-				// PMTK705 Message Received (Receiver Software Version and Date)
-				//--------------------------
-				if( (rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID0] == ID_MTK705_ID0) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID1] == ID_MTK705_ID1) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID2] == ID_MTK705_ID2) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID3] == ID_MTK705_ID3) &
-					(rxBuffer[gpsTokens[TOKEN_MESSAGE_ID] + MESSAGE_OFFSET_ID4] == ID_MTK705_ID4) ){
-						
-					strlcpy( &gpsInfo.sw_version, &rxBuffer[gpsTokens[TOKEN_PMTK705_SW_VERSION]], sizeof(gpsInfo.sw_version) );
-					strlcpy( &gpsInfo.sw_date, &rxBuffer[gpsTokens[TOKEN_PMTK705_SW_DATE]], sizeof(gpsInfo.sw_date) );
-					
-					gpsInfo.sw_version_valid = TRUE;
-					gpsInfo.sw_date_valid = TRUE;
-
-				}else{
-					// Unsupported command received
-					incrementErrorCount(gpsInfo.error.unrecognizedMsgs);
-					
-					// Check if we have too many unknown messages (use exact compare to make sure we do this only once
-					if( gpsInfo.error.unrecognizedMsgs == GPS_UNKNOWN_MESSAGES_TOLERANCE){
-						debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Lots of unrecognized messages - fixing!");
-						gps_set_messages();
+						parserState = GPS_STATE_UNKNOWN;
 					}
+					break;
+				
+				case(GPS_STATE_CLASS):
+					gpsMessage.class = (unsigned char)rxdChar;
+					parserState = GPS_STATE_ID;
+					break;
+				
+				case(GPS_STATE_ID):
+					gpsMessage.id = (unsigned char)rxdChar;
+					parserState = GPS_STATE_LENGTH1;
+					break;
+				
+				case(GPS_STATE_LENGTH1):
+					gpsMessage.length = (unsigned char)rxdChar;
+					parserState = GPS_STATE_LENGTH2;
+					break;
+				
+				case(GPS_STATE_LENGTH2):
+					gpsMessage.length = ((unsigned char)rxdChar << 8);
 					
-				}
+					if( gpsMessage.length >= GPS_MSG_MAX_LENGTH ) gpsMessage.length = GPS_MSG_MAX_LENGTH - 1;
+					
+					gpsMessage.rxCount = 0;
+					parserState = GPS_STATE_PAYLOAD;
+					break;
 				
-				
-				
-				if(processedGGA && processedRMC){
-					processedGGA = FALSE;
-					processedRMC = FALSE;
-						
-					if(gpsInfo.record_flag){
-						// Update lap time counter;
-						lcd_sendWidgetRequest(LCD_REQUEST_UPDATE_LAPTIME, lapTime++, pdFALSE);
-						
-						recordIndex++;
-						if(recordIndex == RECORD_DATA_PER_PAGE){
-							flash_send_request(FLASH_MGR_ADD_RECORD_DATA, &gpsData, sizeof(gpsData), NULL, TRUE, 20);
-							recordIndex = 0;
-						}
-						
+				case(GPS_STATE_PAYLOAD):
+					if(rxCount == gpsMessage.length) {
+						parserState = GPS_STATE_XSUMA;
+					}else{
+						gpsMessage.messages.raw[rxCount++] = (unsigned char)rxdChar;
 					}
-				}  // ProcessedGGA and ProcessedRMC
+					break;
+				
+				case(GPS_STATE_XSUMA):
+					gpsMessage.xsumA = (unsigned char)rxdChar;
+					parserState = GPS_STATE_XSUMB;
+					break;
+				
+				case(GPS_STATE_XSUMB):
+					gpsMessage.xsumB = (unsigned char)rxdChar;
+					parserState = GPS_STATE_RX_COMPLETE;
+					break;
+			}	
+		}
+		
+		
+		if( parserState == GPS_STATE_RX_COMPLETE ){
+			// Calculate the checksum
+			calc_xsumA = 0;
+			calc_xsumB = 0;
+					
+			for(i = 0; i < gpsMessage.length; i++){
+				calc_xsumA = calc_xsumA + gpsMessage.messages.raw[i];
+				calc_xsumB = calc_xsumB + calc_xsumA;
+			}
+					
+			if( (calc_xsumA != gpsMessage.xsumA) || (calc_xsumB != gpsMessage.xsumB) ){
+				// Checksums did not match!
+				parserState = GPS_STATE_UNKNOWN;
+				incrementErrorCount(gpsInfo.error.checksumErrors);
 				
 			}else{
-				// Invalid CRC received!
-				incrementErrorCount(gpsInfo.error.checksumErrors);
-				debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Invalid Checksum Received");
-			}				
-			
-			// Reset the buffer and checksum
-			rxIndex = 0;
-			calculatedChecksum = 0;
-
-		}else{
-			
-			//--------------------------
-			// Keep a running CRC calculation
-			//--------------------------
-			if( rxdChar == GPS_CHECKSUM_CHAR ){
-				processChecksum = FALSE;
-			}
-			
-			if( processChecksum ){
-				calculatedChecksum ^= rxdChar;
-			}
-			
-			if( rxdChar == GPS_MSG_START_CHAR ){
-				processChecksum = TRUE;
-			}
-			
-			//--------------------------
-			// Store the received character (skip periods!)
-			//--------------------------
-			if( (rxIndex < GPS_MSG_MAX_STRLEN) && (rxdChar != GPS_PERIOD) ){
-				rxBuffer[rxIndex++] = (rxdChar & 0xFF);
-			}
-						
-		}
+				// Checksums matched! Good message!
+				switch(gpsMessage.class){
+				
+					/////////////////////////////
+					// UBX Message Class : NAV //
+					/////////////////////////////
+					case(UBX_CLASS_NAV):
+						switch(gpsMessage.id){
+							
+							// *** NAV-PVT ***
+							case(UBX_NAV_PVT):
+								gpsData.currentMode = gpsMessage.messages.NAV_PVT.fixType;
+								gpsData.hdop = gps_flip_endian2(gpsMessage.messages.NAV_PVT.pDOP);
+								gpsData.satellites = gpsMessage.messages.NAV_PVT.numSV;
+								gpsData.utc = gps_flip_endian4(gpsMessage.messages.NAV_PVT.iTOW);
+								
+								datestamp = (gpsMessage.messages.NAV_PVT.day << 24) + (gpsMessage.messages.NAV_PVT.month << 16) + gps_flip_endian2(gpsMessage.messages.NAV_PVT.year);
 									
+								gpsData.data[recordIndex].altitude = (gps_flip_endian4(gpsMessage.messages.NAV_PVT.hMSL) / 100) & 0xFFFF;
+								gpsData.data[recordIndex].heading = (gps_flip_endian4(gpsMessage.messages.NAV_PVT.heading) / 1000) & 0xFFFF;
+								gpsData.data[recordIndex].latitude = gps_flip_endian4(gpsMessage.messages.NAV_PVT.lat);
+								gpsData.data[recordIndex].longitude = gps_flip_endian4(gpsMessage.messages.NAV_PVT.lon);
+								gpsData.data[recordIndex].speed = (gps_flip_endian4(gpsMessage.messages.NAV_PVT.gSpeed) / 100) & 0xFFFF;
+									
+								// Copy over the current position info
+								gpsInfo.mode = gpsData.currentMode;
+								gpsInfo.satellites = gpsData.satellites;
+								gpsInfo.current_location.heading = gpsData.data[recordIndex].heading;
+								gpsInfo.current_location.latitude = gpsData.data[recordIndex].latitude;
+								gpsInfo.current_location.longitude = gpsData.data[recordIndex].longitude;
+
+								// Only increment the record index (and consequently inhibit writing to flash) if the record flag is TRUE
+								if(gpsInfo.record_flag == TRUE) recordIndex++;
+									
+								// Check to see if we should trigger a write
+								if(recordIndex == RECORD_DATA_PER_PAGE){
+									flash_send_request(FLASH_MGR_ADD_RECORD_DATA, &gpsData, sizeof(gpsData), NULL, TRUE, pdFALSE);
+									recordIndex = 0;
+								}
+									
+								break;
+							
+							// *** NAV-CLOCK ***
+							case(UBX_NAV_CLOCK):
+								break;
+								
+							// *** NAV-DGPS ***
+							case(UBX_NAV_DGPS):
+								break;
+							
+							// *** NAV-DOP ***
+							case(UBX_NAV_DOP):
+								break;
+								
+							// *** NAV-POSECEF ***
+							case(UBX_NAV_POSECEF):
+								break;
+								
+							// *** NAV-POSLLH ***
+							case(UBX_NAV_POSLLH):
+								break;
+							
+							// *** NAV-PVT ***
+							case(UBX_NAV_SBAS):
+								break;
+								
+							// *** NAV-SOL ***
+							case(UBX_NAV_SOL):
+								break;
+								
+							// *** NAV-STATUS ***
+							case(UBX_NAV_STATUS):
+								break;
+								
+							// *** NAV-SVINFO ***
+							case(UBX_NAV_SVINFO):
+								break;
+								
+							// *** NAV-TIMEGPS ***
+							case(UBX_NAV_TIMEGPS):
+								break;
+								
+							// *** NAV-TIMEUTC ***
+							case(UBX_NAV_TIMEUTC):
+								break;
+								
+							// *** NAV-VELECEF ***
+							case(UBX_NAV_VELECEF):
+								break;
+								
+							// *** NAV-VELNED ***
+							case(UBX_NAV_VELNED):
+								break;
+								
+							// *** Unknown NAV Message ***
+							default:
+								incrementErrorCount(gpsInfo.error.unrecognizedMsgs);
+								break;
+						}
+						break;
+					
+					/////////////////////////////
+					// UBX Message Class : RXM //
+					/////////////////////////////
+					case(UBX_CLASS_RXM):
+						incrementErrorCount(gpsInfo.error.unrecognizedMsgs);
+						break;
+						
+					/////////////////////////////
+					// UBX Message Class : INF //
+					/////////////////////////////
+					case(UBX_CLASS_INF):
+						switch(gpsMessage.id){
+							
+							// *** INF-DEBUG ***
+							case(UBX_INF_DEBUG):
+								debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, &gpsMessage.messages.raw);
+								break;
+							
+							// *** INF-ERROR ***	
+							case(UBX_INF_ERROR):
+								debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, &gpsMessage.messages.raw);
+								break;
+								
+							// *** INF-NOTICE ***
+							case(UBX_INF_NOTICE):
+								debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, &gpsMessage.messages.raw);
+								break;
+								
+							// *** INF-TEST ***
+							case(UBX_INF_TEST):
+								debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, &gpsMessage.messages.raw);
+								break;
+								
+							// *** INF-WARNING ***
+							case(UBX_INF_WARNING):
+								debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, &gpsMessage.messages.raw);
+								break;
+								
+							// *** Unknown ***
+							default:
+								incrementErrorCount(gpsInfo.error.unrecognizedMsgs);
+								break;
+						}
+						break;
+					
+					/////////////////////////////
+					// UBX Message Class : ACK //
+					/////////////////////////////
+					case(UBX_CLASS_ACK):
+						switch(gpsMessage.id){
+							
+							// *** ACK-NAK ***
+							case(UBX_ACK_NAK):
+								gpsInfo.lastCmd.class = gpsMessage.messages.ACK_NAK.clsID;
+								gpsInfo.lastCmd.id = gpsMessage.messages.ACK_NAK.msgID;
+								gpsInfo.lastCmd.response = GPS_RESPONSE_NAK;
+								break;
+								
+							// *** ACK-ACK ***
+							case(UBX_ACK_ACK):
+								gpsInfo.lastCmd.class = gpsMessage.messages.ACK_ACK.clsID;
+								gpsInfo.lastCmd.id = gpsMessage.messages.ACK_ACK.msgID;
+								gpsInfo.lastCmd.response = GPS_RESPONSE_ACK;
+								break;
+								
+							// *** Unknown ***
+							default:
+								incrementErrorCount(gpsInfo.error.unrecognizedMsgs);
+								break;
+						}
+						break;
+						
+					/////////////////////////////
+					// UBX Message Class : CFG //
+					/////////////////////////////
+					case(UBX_CLASS_CFG):
+						switch(gpsMessage.id) {
+							
+							// *** CFG-USB ***
+							case(UBX_CFG_USB):
+								gpsInfo.sw_version_valid = TRUE;
+								memcpy(&gpsInfo.serial_number, &gpsMessage.messages.CFG_USB.serialNumber, sizeof(gpsInfo.serial_number));
+								break;
+								
+							// *** CFG-ANT ***
+							case(UBX_CFG_ANT):
+								break;
+								
+							// *** CFG-CFG ***
+							case(UBX_CFG_CFG):
+								break;
+								
+							// *** CFG-DAT ***
+							case(UBX_CFG_DAT):
+								break;
+								
+							// *** CFG-GNSS ***
+							case(UBX_CFG_GNSS):
+								break;
+								
+							// *** CFG-INF ***
+							case(UBX_CFG_INF):
+								break;
+								
+							// *** CFG-ITFM ***
+							case(UBX_CFG_ITFM):
+								break;
+							
+							// *** CFG-MSG ***
+							case(UBX_CFG_MSG):
+								break;
+								
+							// *** CFG-NAV5 ***
+							case(UBX_CFG_NAV5):
+								break;
+								
+							// *** CFG-NAVX5 ***
+							case(UBX_CFG_NAVX5):
+								break;
+							
+							// *** CFG-NMEA ***
+							case(UBX_CFG_NMEA):
+								break;
+								
+							// *** CFG-NVS ***
+							case(UBX_CFG_NVS
+								break;
+								
+							// *** CFG- ***
+							case(UBX_CFG_PM2):
+								break;
+								
+							// *** CFG-PRT ***
+							case(UBX_CFG_PRT):
+								break;
+								
+							// *** CFG-RATE ***
+							case(UBX_CFG_RATE):
+								break;
+								
+							// *** CFG-RINV ***
+							case(UBX_CFG_RINV):
+								break;
+								
+							// *** CFG-RST ***
+							case(UBX_CFG_RST):
+								break;
+								
+							// *** CFG-RXM ***
+							case(UBX_CFG_RXM):
+								break;
+								
+							// *** CFG-SBAS ***
+							case(UBX_CFG_SBAS):
+								break;
+								
+							// *** CFG-TP5 ***
+							case(UBX_CFG_TP5):
+								break;
+								
+							// *** Unknown Message ***
+							default:
+								incrementErrorCount(gpsInfo.error.unrecognizedMsgs);
+								break;
+						}
+						break;									
+							
+					/////////////////////////////
+					// UBX Message Class : MON //
+					/////////////////////////////
+					case(UBX_CLASS_MON):
+						switch(gpsMessage.id){
+							
+							// *** MON-VER ***
+							case(UBX_MON_VER):
+								gpsInfo.status = GPS_STATUS_STARTED;
+								
+								gpsInfo.sw_version_valid = TRUE;
+								memcpy(&gpsInfo.sw_version, &gpsMessage.messages.MON_VER.swVersion, sizeof(gpsInfo.sw_version));
+								
+								gpsInfo.part_number_valid = TRUE;
+								memcpy(&gpsInfo.part_number, &gpsMessage.messages.MON_VER.hwVersion, sizeof(gpsInfo.part_number));
+											
+								break;
+								
+							// *** MON-HW2 ***
+							case(UBX_MON_HW2):
+								gpsInfo.debug.ofsI = gpsMessage.messages.MON_HW2.ofsI;
+								gpsInfo.debug.magI = gpsMessage.messages.MON_HW2.magI;
+								gpsInfo.debug.ofsQ = gpsMessage.messages.MON_HW2.ofsQ;
+								gpsInfo.debug.magQ = gpsMessage.messages.MON_HW2.magQ;
+								break;
+								
+							// *** MON-HW ***
+							case(UBX_MON_HW):
+								break;
+								
+							// *** MON-IO ***
+							case(UBX_MON_IO):
+								break;
+								
+							// *** MON-MSGPP ***
+							case(UBX_MON_MSGPP):
+								break;
+								
+							// *** MON-RXBUFF ***
+							case(UBX_MON_RXBUF):
+								break;
+								
+							// *** MON-RXR ***
+							case(UBX_MON_RXR):
+								break;
+								
+							// *** MON-TXBUF ***
+							case(UBX_MON_TXBUF):
+								break;
+								
+							// *** Unknown ***
+							default:
+								incrementErrorCount(gpsInfo.error.unrecognizedMsgs);
+								break;
+						
+						}
+						break;
+						
+					/////////////////////////////
+					// UBX Message Class : AID //
+					/////////////////////////////
+					case(UBX_CLASS_AID):
+						incrementErrorCount(gpsInfo.error.unrecognizedMsgs);
+						break;
+					
+					/////////////////////////////
+					// UBX Message Class : TIM //
+					/////////////////////////////
+					case(UBX_CLASS_TIM):
+						incrementErrorCount(gpsInfo.error.unrecognizedMsgs);
+						break;
+					
+					/////////////////////////////////
+					// UBX Message Class : Unknown //
+					/////////////////////////////////
+					default:
+						incrementErrorCount(gpsInfo.error.unrecognizedMsgs);
+						break;
+						
+				}						
+			}
+			
+			// Get ready for another message
+			parserState = GPS_STATE_UNKNOWN;
+			
+		}
+		
+		
 	}		
 }
 
@@ -550,61 +646,6 @@ void gps_reset( void ){
 	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_RESET_TIME) );
 	gpio_set_gpio_pin(GPS_RESET);
 	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_RESET_TIME) );
-}
-
-
-void gps_buffer_tokenize( void ){
-	unsigned char index = 0;
-	unsigned char signalPosIndex = 0;
-
-	// Find the start of the NMEA sentence
-	while( (index < GPS_MSG_MAX_STRLEN) && (rxBuffer[index++] != GPS_MSG_START_CHAR) );
-	
-	// Store the location!
-	gpsTokens[signalPosIndex++] = index;
-				
-	// Replace commas with null!
-	while(index <= GPS_MSG_MAX_STRLEN){
-		if(rxBuffer[index] == GPS_DELIMITER_CHAR){
-			rxBuffer[index] = GPS_NULL;
-			gpsTokens[signalPosIndex++] = index + 1;
-		}
-		index++;
-	}
-	
-}
-
-
-unsigned short gps_received_checksum( void ){
-	unsigned char index = 0;
-	
-	// Find the start of the NMEA checksum
-	while( (index < GPS_MSG_MAX_STRLEN) && (rxBuffer[index] != GPS_CHECKSUM_CHAR) ){
-		index++;
-	}
-	
-	// Skip the GPS_CHECKSUM_CHAR
-	index++;
-	
-	return gps_convertASCIIHex(rxBuffer[index], rxBuffer[index + 1]);	
-}
-
-unsigned char gps_convertASCIIHex(unsigned char byte1, unsigned char byte2){
-	unsigned char converted;
-	
-	if(byte1 >= 'A'){
-		byte1 += 10 - 'A';
-	}else{
-		byte1 -= '0';
-	}
-	
-	if(byte2 >= 'A'){
-		byte2 += 10 - 'A';
-	}else{
-		byte2 -= '0';
-	}
-	
-	return ((byte1 & 0xF) << 4) + (byte2 & 0xF);
 }
 
 
@@ -647,18 +688,6 @@ unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, sign
 	}
 	
 	return FALSE;
-}
-
-signed int gps_convert_to_decimal_degrees(signed int coordinate){
-	unsigned int minutes;
-	signed int degrees;
-	
-	minutes = (coordinate % 1000000);
-	degrees = coordinate - minutes;
-	
-	degrees += ((minutes * 10) / 6);
-	
-	return degrees;
 }
 
 struct tGPSLine gps_find_finish_line(signed int latitude, signed int longitude, unsigned short heading){
@@ -712,24 +741,15 @@ void gps_set_messaging_rate(unsigned char rate){
 }
 
 void gps_set_messages( void ){
-	// Enable GGA and RMC messages only
-	usart_write_line(GPS_USART, "$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28");
-	usart_putchar(GPS_USART, GPS_MSG_CR);
-	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
+	
 }
 
 void gps_cold_start( void ){
-	// $PMTK103*30<CR><LF>
-	usart_write_line(GPS_USART, "$PMTK103*30");
-	usart_putchar(GPS_USART, GPS_MSG_CR);
-	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
+	
 }
 
 void gps_warm_start( void ){
-	// $PMTK102*31<CR><LF>
-	usart_write_line(GPS_USART, "$PMTK102*31");
-	usart_putchar(GPS_USART, GPS_MSG_CR);
-	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
+	
 }
 
 void gps_send_request(enum tGpsCommand command, unsigned int *pointer, unsigned char data, unsigned char delay, unsigned char resume){
@@ -769,21 +789,7 @@ void gps_messageTimeout( xTimerHandle xTimer ){
 }
 
 void gps_getReceiverInfo( xTimerHandle xTimer ){
-	switch( (unsigned int)pvTimerGetTimerID(xTimer) ){
-		case( GPS_SWINFO_TIMER_ID ):
-			// Software version and date
-			usart_write_line(GPS_USART, "$PMTK605*31");
-			usart_putchar(GPS_USART, GPS_MSG_CR);
-			usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
-			break;
-		
-		case( GPS_HWINFO_TIMER_ID ):
-			// Receiver part number and serial number
-			usart_write_line(GPS_USART, "$PMTK499,1C0,21*77");
-			usart_putchar(GPS_USART, GPS_MSG_CR);
-			usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
-			break;
-	}			
+	
 }
 
 void gps_dead( xTimerHandle xTimer ){
@@ -805,7 +811,7 @@ void gps_dead( xTimerHandle xTimer ){
 		gpsInfo.status = GPS_STATUS_DEAD;
 		debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "Resetting didn't help - Drastic measures!");
 		
-		gps_disable_interrupts();
+		gps_disable_rxrdy_isr();
 		
 		board_changeBaud(GPS_USART, GPS_USART_BAUD_SLOW);
 		
@@ -822,7 +828,7 @@ void gps_dead( xTimerHandle xTimer ){
 		
 		// Flush the Rx Register and re-enable interrupts
 		usart_read_char(GPS_USART, &rxdChar);
-		gps_enable_interrupts();
+		gps_enable_rxrdy_isr();
 		
 		// Restart the receiver and hope for the best
 		gps_reset();
@@ -830,12 +836,5 @@ void gps_dead( xTimerHandle xTimer ){
 }
 
 void gps_setSbasMode(unsigned char enableSBAS){
-	if(enableSBAS == TRUE){
-		usart_write_line(GPS_USART, "$PMTK513,1*28");
-	}else{
-		usart_write_line(GPS_USART, "$PMTK513,0*29");
-	}
 	
-	usart_putchar(GPS_USART, GPS_MSG_CR);
-	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
 }
