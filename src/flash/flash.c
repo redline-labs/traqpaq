@@ -54,9 +54,21 @@ void flash_task_init( void ){
 	flash_clr_hold();
 	
 	// Check the dataflash device ID
-	if( flash_initDevice() == UNKNOWN_DEVICE ){
-		debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_FLASH, "Did not recognize flash");
+	flash_initDevice();
+	switch(flash.device){
+		case(ATMEL_AT25DF161):
+			debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FLASH, "Detected Atmel AT25DF161");
+			break;
+			
+		case(ATMEL_AT25DF321):
+			debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FLASH, "Detected Atmel AT25DF321");
+			break;
+			
+		default:
+			debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_FLASH, "Did not recognize flash");
+			break;	
 	}
+
 	
 	// Read out the OTP registers, and check validity
 	flash_ReadOTP(OTP_START_INDEX, OTP_LENGTH, &flashOTP);
@@ -126,8 +138,6 @@ void flash_task( void *pvParameters ){
 	
 	flash_set_wp();
 	flash_clr_busy_flag();
-	
-	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_FLASH, "Ready for requests");
 	
 	while(TRUE){
 		xQueueReceive(flashManagerQueue, &request, portMAX_DELAY);

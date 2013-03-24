@@ -120,6 +120,8 @@ void gps_task( void *pvParameters ){
 	struct tGPSRequest request;
 	enum tGPSStateMachine parserState = GPS_STATUS_UNKNOWN;
 	struct tGPSMessage gpsMessage;
+	
+	gpsMessage.frameNumber = 0;			// Reset the Rx frame counter
 
 	// Make sure the battery isn't low before continuing
 	fuel_low_battery_check();
@@ -209,7 +211,9 @@ void gps_task( void *pvParameters ){
 		
 			switch(parserState){
 				case(GPS_STATE_UNKNOWN):
-					if(rxdChar == GPS_CHAR_SYNC1) parserState = GPS_STATE_SYNC1;
+					if(rxdChar == GPS_CHAR_SYNC1) {
+						parserState = GPS_STATE_SYNC1;
+					}						
 					break;
 				
 				case(GPS_STATE_SYNC1):
@@ -221,22 +225,38 @@ void gps_task( void *pvParameters ){
 					break;
 				
 				case(GPS_STATE_CLASS):
+					// Reset checksum
+					calc_xsumA = (unsigned char)rxdChar;
+					calc_xsumB = calc_xsumA;
+				
 					gpsMessage.class = (unsigned char)rxdChar;
 					parserState = GPS_STATE_ID;
 					break;
 				
 				case(GPS_STATE_ID):
+					// Update checksum
+					calc_xsumA += (unsigned char)rxdChar;
+					calc_xsumB += calc_xsumA;
+				
 					gpsMessage.id = (unsigned char)rxdChar;
 					parserState = GPS_STATE_LENGTH1;
 					break;
 				
 				case(GPS_STATE_LENGTH1):
+					// Update checksum
+					calc_xsumA += (unsigned char)rxdChar;
+					calc_xsumB += calc_xsumA;
+					
 					gpsMessage.length = (unsigned char)rxdChar;
 					parserState = GPS_STATE_LENGTH2;
 					break;
 				
 				case(GPS_STATE_LENGTH2):
-					gpsMessage.length = ((unsigned char)rxdChar << 8);
+					// Update checksum
+					calc_xsumA += (unsigned char)rxdChar;
+					calc_xsumB += calc_xsumA;
+				
+					gpsMessage.length += ((unsigned char)rxdChar << 8);
 					
 					if( gpsMessage.length >= GPS_MSG_MAX_LENGTH ) gpsMessage.length = GPS_MSG_MAX_LENGTH - 1;
 					
@@ -245,10 +265,14 @@ void gps_task( void *pvParameters ){
 					break;
 				
 				case(GPS_STATE_PAYLOAD):
-					if(rxCount == gpsMessage.length) {
+					// Update checksum
+					if(gpsMessage.rxCount == gpsMessage.length - 1) {
 						parserState = GPS_STATE_XSUMA;
 					}else{
-						gpsMessage.messages.raw[rxCount++] = (unsigned char)rxdChar;
+						calc_xsumA += (unsigned char)rxdChar;
+						calc_xsumB += calc_xsumA;
+					
+						gpsMessage.messages.raw[gpsMessage.rxCount++] = (unsigned char)rxdChar;
 					}
 					break;
 				
@@ -266,22 +290,18 @@ void gps_task( void *pvParameters ){
 		
 		
 		if( parserState == GPS_STATE_RX_COMPLETE ){
-			// Calculate the checksum
-			calc_xsumA = 0;
-			calc_xsumB = 0;
-					
-			for(i = 0; i < gpsMessage.length; i++){
-				calc_xsumA = calc_xsumA + gpsMessage.messages.raw[i];
-				calc_xsumB = calc_xsumB + calc_xsumA;
-			}
-					
-			if( (calc_xsumA != gpsMessage.xsumA) || (calc_xsumB != gpsMessage.xsumB) ){
+			calc_xsumA &= 0xFF;
+			calc_xsumB &= 0xFF;
+			
+			if( (calc_xsumA != gpsMessage.xsumA) ) {//|| (calc_xsumB != gpsMessage.xsumB) ){		TODO: Figure out why checksum_B does not work
 				// Checksums did not match!
 				parserState = GPS_STATE_UNKNOWN;
 				incrementErrorCount(gpsInfo.error.checksumErrors);
 				
 			}else{
 				// Checksums matched! Good message!
+				gpsMessage.frameNumber++;
+				
 				switch(gpsMessage.class){
 				
 					/////////////////////////////
@@ -292,7 +312,9 @@ void gps_task( void *pvParameters ){
 							
 							// *** NAV-PVT ***
 							case(UBX_NAV_PVT):
-								gpsData.currentMode = gpsMessage.messages.NAV_PVT.fixType;
+								// NAV_PVT is not supported on this receiver
+								
+								/*gpsData.currentMode = gpsMessage.messages.NAV_PVT.fixType;
 								gpsData.hdop = gps_flip_endian2(gpsMessage.messages.NAV_PVT.pDOP);
 								gpsData.satellites = gpsMessage.messages.NAV_PVT.numSV;
 								gpsData.utc = gps_flip_endian4(gpsMessage.messages.NAV_PVT.iTOW);
@@ -319,7 +341,7 @@ void gps_task( void *pvParameters ){
 								if(recordIndex == RECORD_DATA_PER_PAGE){
 									flash_send_request(FLASH_MGR_ADD_RECORD_DATA, &gpsData, sizeof(gpsData), NULL, TRUE, pdFALSE);
 									recordIndex = 0;
-								}
+								}*/
 									
 								break;
 							
@@ -341,6 +363,18 @@ void gps_task( void *pvParameters ){
 								
 							// *** NAV-POSLLH ***
 							case(UBX_NAV_POSLLH):
+								debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Processing NAV-POSLLH Message");
+
+								gpsData.utc = gps_flip_endian4(gpsMessage.messages.NAV_PVT.iTOW);
+								
+								gpsData.data[recordIndex].altitude = (gps_flip_endian4(gpsMessage.messages.NAV_POSLLH.hMSL) / 100) & 0xFFFF;
+								gpsData.data[recordIndex].latitude = gps_flip_endian4(gpsMessage.messages.NAV_POSLLH.lat);
+								gpsData.data[recordIndex].longitude = gps_flip_endian4(gpsMessage.messages.NAV_POSLLH.lon);
+									
+								// Copy over the current position info
+								gpsInfo.current_location.latitude = gpsData.data[recordIndex].latitude;
+								gpsInfo.current_location.longitude = gpsData.data[recordIndex].longitude;
+								
 								break;
 							
 							// *** NAV-PVT ***
@@ -507,7 +541,7 @@ void gps_task( void *pvParameters ){
 								break;
 								
 							// *** CFG-NVS ***
-							case(UBX_CFG_NVS
+							case(UBX_CFG_NVS):
 								break;
 								
 							// *** CFG- ***
@@ -735,8 +769,6 @@ void gps_set_messaging_rate(unsigned char rate){
 			break;
 	}
 	
-	usart_putchar(GPS_USART, GPS_MSG_CR);
-	usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
 	
 }
 
@@ -811,30 +843,24 @@ void gps_dead( xTimerHandle xTimer ){
 		gpsInfo.status = GPS_STATUS_DEAD;
 		debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "Resetting didn't help - Drastic measures!");
 		
-		gps_disable_rxrdy_isr();
 		
-		board_changeBaud(GPS_USART, GPS_USART_BAUD_SLOW);
-		
-		vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_BAUD_RATE_CHANGE_DELAY) );
-		
-		usart_write_line(GPS_USART, "$PMTK251,115200*1F");
-		usart_putchar(GPS_USART, GPS_MSG_CR);
-		usart_putchar(GPS_USART, GPS_MSG_END_CHAR);
-		
-		// Wait for the data to clock out then change the baud rate back
-		while( !usart_tx_empty(GPS_USART) );
-		
-		board_changeBaud(GPS_USART, GPS_USART_BAUD);
-		
-		// Flush the Rx Register and re-enable interrupts
-		usart_read_char(GPS_USART, &rxdChar);
-		gps_enable_rxrdy_isr();
-		
-		// Restart the receiver and hope for the best
-		gps_reset();
 	}
 }
 
 void gps_setSbasMode(unsigned char enableSBAS){
 	
+}
+
+void gps_sendCfgMsg(unsigned char class, unsigned char id, unsigned char rate){
+	unsigned char i, xsumA, xsumB;
+	struct tUbxCfgMsg cfgMsg;
+	
+	cfgMsg.msgClass = class;
+	cfgMsg.msgID = id;
+	cfgMsg.msgID[USART_1_PORT] = rate;
+	
+	xsumA = 0;
+	xsumB = 0;
+	
+	for(
 }

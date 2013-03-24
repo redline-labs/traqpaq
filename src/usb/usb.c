@@ -255,6 +255,7 @@ void usb_task( void *pvParameters ){
 				// Heading
 				usbTxBuffer[data_length++] = (gpsInfo.current_location.heading >>  8) & 0xFF;
 				usbTxBuffer[data_length++] = (gpsInfo.current_location.heading >>  0) & 0xFF;
+				
 				break;
 				
 			case(USB_DBG_GPS_CURRENT_MODE):
@@ -281,10 +282,10 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_DBG_GPS_INFO_SN):	// 67d
 				usbTxBuffer[data_length++] = gpsInfo.serial_number_valid;
-				usbTxBuffer[data_length++] = (gpsInfo.serial_number >> 24) & 0xFF;
-				usbTxBuffer[data_length++] = (gpsInfo.serial_number >> 16) & 0xFF;
-				usbTxBuffer[data_length++] = (gpsInfo.serial_number >>  8) & 0xFF;
-				usbTxBuffer[data_length++] = (gpsInfo.serial_number >>  0) & 0xFF;
+				//usbTxBuffer[data_length++] = (gpsInfo.serial_number >> 24) & 0xFF;
+				//usbTxBuffer[data_length++] = (gpsInfo.serial_number >> 16) & 0xFF;
+				//usbTxBuffer[data_length++] = (gpsInfo.serial_number >>  8) & 0xFF;
+				//usbTxBuffer[data_length++] = (gpsInfo.serial_number >>  0) & 0xFF;
 				break;
 				
 			case(USB_DBG_GPS_INFO_PN):	// 68d

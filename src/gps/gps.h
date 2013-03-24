@@ -337,18 +337,54 @@ struct tUbxAckNak {
 	unsigned char msgID;				// Message ID of the acknowledged message
 };
 
+struct tUbxNavPosLLH {
+	unsigned int iTOW;		// GPS Millisecond Time of Week (ms)
+	signed int lon;			// Longitude
+	signed int lat;			// Latitude
+	signed int height;		// Height above ellipsoid (mm)
+	signed int hMSL;		// Height above mean sea level (mm)
+	unsigned int hAcc;		// Horizontal accuracy estimate (mm)
+	unsigned int vAcc;		// Vertical Accuracy Estimate (mm)
+};
+
+struct tUbxNavVelNED {
+	unsigned int iTOW;		// GPS Millisecond Time of Week
+	signed int velN;		// NED north velocity
+	signed int velE;		// NED east velocity
+	signed int velD;		// NED down velocity
+	unsigned int speed;		// Speed (3-D)
+	unsigned int gSpeed;	// Ground Speed (2-D)
+	signed int heading;		// Heaidng of motion (2-D)
+	unsigned int sAcc;		// Speed Accuracy Estimate
+	unsigned int cAcc;		// Course / Heading Accuracy Estimate
+};
+
+#define	UBX_NEO_6_PORTS	6
+#define USART_1_PORT	1
+
+struct tUbxCfgMsg {
+	unsigned char msgClass;					// Message Class
+	unsigned char msgID;					// Message Identifier
+	unsigned char rate[UBX_NEO_6_PORTS];	// Send rate on I/O target
+};
+
 union tUBXMessages {
 	struct tUbxNavPvt NAV_PVT;
+	struct tUbxNavVelNED NAV_VELNED;
+	struct tUbxNavPosLLH NAV_POSLLH;
+	
 	struct tUbxMonVer MON_VER;
 	struct tUbxMonHW  MON_HW;
 	struct tUbxMonHW2 MON_HW2;
 	struct tUbxCfgUsb CFG_USB;
 	struct tUbxAckAck ACK_ACK;
 	struct tUbxAckNak ACK_NAK;
+	
 	unsigned char raw[GPS_MSG_MAX_LENGTH];
 };
 
 struct tGPSMessage {
+	unsigned int frameNumber;
 	enum tGPSMessageClasses class;
 	unsigned char id;
 	unsigned short length;
@@ -416,13 +452,8 @@ struct tGPSInfo {
 #define incrementErrorCount(counter)		if(counter < 255) counter++
 
 // Timeout in milliseconds for message timeout
-#if( TRAQPAQ_UBLOX_GPS == TRUE )
-	#define GPS_GGA_MSG_TIMEOUT				400
-	#define GPS_RMC_MSG_TIMEOUT				400
-#else
-	#define GPS_GGA_MSG_TIMEOUT				200
-	#define GPS_RMC_MSG_TIMEOUT				200
-#endif
+#define GPS_GGA_MSG_TIMEOUT				350
+#define GPS_RMC_MSG_TIMEOUT				350
 
 // Timer ID's
 #define GPS_GGA_MSG_TIMER_ID		0

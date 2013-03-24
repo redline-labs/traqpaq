@@ -44,6 +44,7 @@ const unsigned char hexLookup[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', 
 
 extern struct tFlashOTP flashOTP;
 extern struct tGPSInfo gpsInfo;
+extern struct tFlash flash;
 
 volatile unsigned short id;
 volatile unsigned char redraw = TRUE;	// TODO: Fix this non-sense

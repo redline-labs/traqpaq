@@ -76,9 +76,9 @@ int main( void ){
 	// Schedule the rest of the tasks
 	//--------------------------
 	buttons_task_init();
-	fuel_task_init();
+	//fuel_task_init();
 	flash_task_init();
-	lcd_task_init();
+	//lcd_task_init();
 	usb_task_init();
 	wdt_task_init();
 	gps_task_init();
