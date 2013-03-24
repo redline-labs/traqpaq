@@ -39,6 +39,7 @@
 #define gps_flip_endian2(little)	( ((little & 0xFF00) >> 8) + ((little & 0x00FF) << 8) )
 
 #define GPS_RESET_TIME				100						// Time in milliseconds
+#define GPS_TX_TIME					10						// Time in milliseconds in between Tx
 #define GPS_RXD_QUEUE_SIZE			100						// Number of items to buffer in Receive Queue
 #define GPS_MANAGER_QUEUE_SIZE		5						// Number of items to buffer in Request 
 
@@ -73,7 +74,8 @@ enum tGPSMessageClasses {
 	UBX_CLASS_CFG	= 0x06,
 	UBX_CLASS_MON	= 0x0A,
 	UBX_CLASS_AID	= 0x0B,
-	UBX_CLASS_TIM	= 0x0D
+	UBX_CLASS_TIM	= 0x0D,
+	NMEA			= 0xF0
 }; 
 
 
@@ -130,6 +132,21 @@ enum tGPSMessageClasses {
 #define UBX_INF_NOTICE		0x02
 #define UBX_INF_TEST		0x03
 #define UBX_INF_WARNING		0x01
+
+#define NMEA_DTM			0x0A
+#define NMEA_GBS			0x09
+#define NMEA_GGA			0x00
+#define NMEA_GLL			0x01
+#define NMEA_GPQ			0x40
+#define NMEA_GRS			0x06
+#define NMEA_GSA			0x02
+#define NMEA_GST			0x07
+#define NMEA_GSV			0x03
+#define NMEA_RMC			0x04
+#define NMEA_TXT			0x41
+#define NMEA_VTG			0x05
+#define NMEA_ZDA			0x08
+
 
 enum tGpsCommand {
 	GPS_MGR_REQUEST_DATE,
@@ -368,6 +385,12 @@ struct tUbxCfgMsg {
 	unsigned char rate[UBX_NEO_6_PORTS];	// Send rate on I/O target
 };
 
+struct tUbxCfgRate {
+	unsigned short measRate;		// Measurement Rate (in ms)
+	unsigned short navRate;			// Navigation Rate (in ms)
+	unsigned short timeRef;			// Alignment to reference time
+};
+
 union tUBXMessages {
 	struct tUbxNavPvt NAV_PVT;
 	struct tUbxNavVelNED NAV_VELNED;
@@ -456,7 +479,7 @@ struct tGPSInfo {
 #define GPS_RMC_MSG_TIMEOUT				350
 
 // Timer ID's
-#define GPS_GGA_MSG_TIMER_ID		0
+#define GPS_CFG_MSG_TIMER_ID		0
 #define GPS_RMC_MSG_TIMER_ID		1
 #define GPS_SWINFO_TIMER_ID			2
 #define GPS_HWINFO_TIMER_ID			3

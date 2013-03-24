@@ -34,7 +34,7 @@
 
 xQueueHandle gpsRxdQueue;
 xQueueHandle gpsManagerQueue;
-xTimerHandle xReceiverDeadTimer;
+xTimerHandle xReceiverDeadTimer, xReceiverTxTimer;
 
 struct tGPSInfo gpsInfo;
 
@@ -137,6 +137,12 @@ void gps_task( void *pvParameters ){
 										FALSE,
 										GPS_DEAD_TIMER_ID,
 										gps_dead );
+										
+	xReceiverTxTimer = xTimerCreate( "gpsCfgTimer",
+										(GPS_MSG_TX_TIME / portTICK_RATE_MS),
+										FALSE,
+										GPS_CFG_MSG_TIMER_ID,
+										gps_configure );
 										 
 	// Kick off the timer
 	//xTimerStart(xReceiverDeadTimer, pdFALSE);
@@ -290,8 +296,6 @@ void gps_task( void *pvParameters ){
 		
 		
 		if( parserState == GPS_STATE_RX_COMPLETE ){
-			calc_xsumA &= 0xFF;
-			calc_xsumB &= 0xFF;
 			
 			if( (calc_xsumA != gpsMessage.xsumA) ) {//|| (calc_xsumB != gpsMessage.xsumB) ){		TODO: Figure out why checksum_B does not work
 				// Checksums did not match!
@@ -682,7 +686,6 @@ void gps_reset( void ){
 	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_RESET_TIME) );
 }
 
-
 unsigned char gps_intersection(signed int x1, signed int y1, signed int x2, signed int y2, signed int x3, signed int y3, signed int x4, signed int y4, unsigned short travelHeading, unsigned short finishHeading){
 	// (x1, y1) and (x2, y2) are points for line along traveled path
     // (x3, y3) and (y4, x3) are points for the threshold line
@@ -847,20 +850,115 @@ void gps_dead( xTimerHandle xTimer ){
 	}
 }
 
+
+void gps_configure( xTimerHandle xTimer ){
+	struct tUbxCfgMsg cfgMsg;
+	
+	// Turn on the UBX_NAV_POSLLH message
+	cfgMsg.msgClass	= UBX_CLASS_NAV;
+	cfgMsg.msgID	= UBX_NAV_POSLLH;
+	cfgMsg.rate[USART_1_PORT] = 1;
+	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+	
+	
+	// Turn on the UBX_NAV_DOP message
+	cfgMsg.msgClass	= UBX_CLASS_NAV;
+	cfgMsg.msgID	= UBX_NAV_DOP;
+	cfgMsg.rate[USART_1_PORT] = 1;
+	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+	
+	// Turn on the UBX_NAV_DOP message
+	cfgMsg.msgClass	= UBX_CLASS_NAV;
+	cfgMsg.msgID	= UBX_NAV_VELNED;
+	cfgMsg.rate[USART_1_PORT] = 1;
+	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+	
+	// Turn on the UBX_NAV_TIMEUTC message
+	cfgMsg.msgClass	= UBX_CLASS_NAV;
+	cfgMsg.msgID	= UBX_NAV_TIMEUTC;
+	cfgMsg.rate[USART_1_PORT] = 1;
+	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+	
+	// Turn off the NMEA GGA message
+	cfgMsg.msgClass	= NMEA;
+	cfgMsg.msgID	= NMEA_GGA;
+	cfgMsg.rate[USART_1_PORT] = 0;
+	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+	
+	// Turn off the NMEA GLL message
+	cfgMsg.msgClass	= NMEA;
+	cfgMsg.msgID	= NMEA_GLL;
+	cfgMsg.rate[USART_1_PORT] = 0;
+	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+	
+	// Turn off the NMEA GSA message
+	cfgMsg.msgClass	= NMEA;
+	cfgMsg.msgID	= NMEA_GSA;
+	cfgMsg.rate[USART_1_PORT] = 0;
+	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+	
+	// Turn off the NMEA GSV message
+	cfgMsg.msgClass	= NMEA;
+	cfgMsg.msgID	= NMEA_GSV;
+	cfgMsg.rate[USART_1_PORT] = 0;
+	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+	
+	// Turn off the NMEA RMC message
+	cfgMsg.msgClass	= NMEA;
+	cfgMsg.msgID	= NMEA_RMC;
+	cfgMsg.rate[USART_1_PORT] = 0;
+	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+	
+	// Turn off the NMEA VTG message
+	cfgMsg.msgClass	= NMEA;
+	cfgMsg.msgID	= NMEA_VTG;
+	cfgMsg.rate[USART_1_PORT] = 0;
+	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+}
+
+
+
 void gps_setSbasMode(unsigned char enableSBAS){
 	
 }
 
-void gps_sendCfgMsg(unsigned char class, unsigned char id, unsigned char rate){
-	unsigned char i, xsumA, xsumB;
-	struct tUbxCfgMsg cfgMsg;
+void gps_sendPacket(unsigned char msgClass, unsigned char msgID, unsigned char *data, unsigned char length) {
+	unsigned char i;
+	unsigned char xsumA = 0, xsumB = 0;
 	
-	cfgMsg.msgClass = class;
-	cfgMsg.msgID = id;
-	cfgMsg.msgID[USART_1_PORT] = rate;
+	// Send sync characters
+	usart_write_char(GPS_USART, GPS_CHAR_SYNC1);
+	usart_write_char(GPS_USART, GPS_CHAR_SYNC2);
 	
-	xsumA = 0;
-	xsumB = 0;
+	// Send msg class and id fields
+	usart_write_char(GPS_USART, msgClass);
+	xsumA += *msgClass;
+	xsumB += xsumA;
+		
+	usart_write_char(GPS_USART, msgID);
+	xsumA += *msgID;
+	xsumB += xsumA;
 	
-	for(
+	// Send message length, little endian!
+	usart_write_char(GPS_USART, (length & 0xFF));
+	xsumA += (length & 0xFF);
+	xsumB += xsumA;
+	
+	usart_write_char(GPS_USART, (length >> 8) & 0xFF);
+	xsumA += (length >> 8) & 0xFF;
+	xsumB += xsumA;
+	
+	// Send out the message payload
+	for (i = 0; i < size; i++) {
+		xsumA += *data;
+		xsumB += xsumA;
+		
+		usart_write_char(GPS_USART, *data);
+	
+		data++;
+	}
+	
+	// Finally send out the checksums
+	usart_write_char(GPS_USART, xsumA);
+	usart_write_char(GPS_USART, xsumB);
 }
