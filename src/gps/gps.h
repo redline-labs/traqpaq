@@ -39,7 +39,7 @@
 #define gps_flip_endian2(little)	( ((little & 0xFF00) >> 8) + ((little & 0x00FF) << 8) )
 
 #define GPS_RESET_TIME				100						// Time in milliseconds
-#define GPS_TX_TIME					10						// Time in milliseconds in between Tx
+#define GPS_TX_TIME					2						// Time in milliseconds in between Tx
 #define GPS_RXD_QUEUE_SIZE			100						// Number of items to buffer in Receive Queue
 #define GPS_MANAGER_QUEUE_SIZE		5						// Number of items to buffer in Request 
 
@@ -228,7 +228,7 @@ struct tUbxNavPvtFlagsBitfield {
 	unsigned gnssFixOk		: 1;	// A Valid Fix Achieved
 };
 
-struct tUbxNavPvt {
+struct __attribute__ ((packed)) tUbxNavPvt {
 	unsigned int iTOW;		// Time of the week, milliseconds
 	unsigned short year;	// Year (UTC)
 	unsigned char month;	// Month (UTC)
@@ -265,7 +265,7 @@ struct tUbxNavPvt {
 #define UBX_MON_VER_HW_VERSION_SIZE		10
 #define UBX_MON_VER_EXTENSION_SIZE		30
 
-struct tUbxMonVer {
+struct __attribute__ ((packed)) tUbxMonVer {
 	unsigned char swVersion[30];
 	unsigned char hwVersion[10];
 	unsigned char extension1[UBX_MON_VER_EXTENSION_SIZE];
@@ -276,7 +276,7 @@ struct tUbxMonVer {
 #define UBX_CFG_USB_PRODUCT_STRING_SIZE	32
 #define UBX_CFG_USB_SERIAL_NUMBER_SIZE	32
 
-struct tUbxCfgUsb {
+struct __attribute__ ((packed)) tUbxCfgUsb {
 	unsigned short vendorID;
 	unsigned short productID;
 	unsigned short reserved1;
@@ -295,7 +295,7 @@ enum tUbxMonHW2CfgSource {
 	CFG_SOURCE_FLASH	= 102
 };
 
-struct tUbxMonHW2 {
+struct __attribute__ ((packed)) tUbxMonHW2 {
 	signed char ofsI;					// Imbalance of I-part of complex signal, scaled +/- 128
 	unsigned char magI;					// Magnitude of I-part of complex signal
 	signed char ofsQ;					// Imbalance of Q-part of complete signal, scale +/- 128
@@ -314,7 +314,7 @@ enum tUbxMonHWaPower {
 	ANTENNA_POWER_UNKNOWN	= 2
 };
 
-struct tUbxMonHWFlags {
+struct __attribute__ ((packed)) tUbxMonHWFlags {
 	unsigned rtcCalib		: 1;
 	unsigned safeBoot		: 1;
 	unsigned jammingState	: 2;
@@ -323,7 +323,7 @@ struct tUbxMonHWFlags {
 
 #define UBX_MON_HW_VP_SIZE	25
 
-struct tUbxMonHW {
+struct __attribute__ ((packed)) tUbxMonHW {
 	unsigned int pinSel;				// Mask of Pins Set as Peripheral/PIO
 	unsigned int pinBank;				// Mask of Pins Set as Bank A/B
 	unsigned int pinDir;				// Mask of Pins set as Input/Output
@@ -344,17 +344,17 @@ struct tUbxMonHW {
 };
 
 
-struct tUbxAckAck {
+struct __attribute__ ((packed)) tUbxAckAck {
 	unsigned char clsID;				// Class ID of the acknowledged message
 	unsigned char msgID;				// Message ID of the acknowledged message
 };
 
-struct tUbxAckNak {
+struct __attribute__ ((packed)) tUbxAckNak {
 	unsigned char clsID;				// Class ID of the acknowledged message
 	unsigned char msgID;				// Message ID of the acknowledged message
 };
 
-struct tUbxNavPosLLH {
+struct __attribute__ ((packed)) tUbxNavPosLLH {
 	unsigned int iTOW;		// GPS Millisecond Time of Week (ms)
 	signed int lon;			// Longitude
 	signed int lat;			// Latitude
@@ -364,7 +364,7 @@ struct tUbxNavPosLLH {
 	unsigned int vAcc;		// Vertical Accuracy Estimate (mm)
 };
 
-struct tUbxNavVelNED {
+struct __attribute__ ((packed)) tUbxNavVelNED {
 	unsigned int iTOW;		// GPS Millisecond Time of Week
 	signed int velN;		// NED north velocity
 	signed int velE;		// NED east velocity
@@ -379,22 +379,49 @@ struct tUbxNavVelNED {
 #define	UBX_NEO_6_PORTS	6
 #define USART_1_PORT	1
 
-struct tUbxCfgMsg {
+struct __attribute__ ((packed)) tUbxCfgMsg {
 	unsigned char msgClass;					// Message Class
 	unsigned char msgID;					// Message Identifier
 	unsigned char rate[UBX_NEO_6_PORTS];	// Send rate on I/O target
 };
 
-struct tUbxCfgRate {
+#define GPS_UBX_MSG_RATE	200		// Time in milliseconds
+#define GPS_UBX_NAV_RATE	1		// Should always equal to 1
+#define GPS_UBX_TIME_REF	1		// UTC Time = 0, GPS Time = 1
+
+struct __attribute__ ((packed)) tUbxCfgRate {
 	unsigned short measRate;		// Measurement Rate (in ms)
 	unsigned short navRate;			// Navigation Rate (in ms)
 	unsigned short timeRef;			// Alignment to reference time
+};
+
+struct __attribute__ ((packed)) tUbxNavDop {
+	unsigned int iTOW;
+	unsigned short gDOP;
+	unsigned short pDOP;
+	unsigned short tDOP;
+	unsigned short vDOP;
+	unsigned short hDOP;
+	unsigned short nDOP;
+	unsigned short eDOP;	
+};
+
+struct __attribute__ ((packed)) tUbxNavStatus {
+	unsigned int iTOW;
+	unsigned char gpsFix;
+	unsigned char flags;
+	unsigned char fixStat;
+	unsigned char flags2;
+	unsigned int ttff;	// Time to first fix (millisecond time tag)
+	unsigned int msss;	// Millisecond since startup / reset
 };
 
 union tUBXMessages {
 	struct tUbxNavPvt NAV_PVT;
 	struct tUbxNavVelNED NAV_VELNED;
 	struct tUbxNavPosLLH NAV_POSLLH;
+	struct tUbxNavDop NAV_DOP;
+	struct tUbxNavStatus NAV_STATUS;
 	
 	struct tUbxMonVer MON_VER;
 	struct tUbxMonHW  MON_HW;
@@ -406,15 +433,16 @@ union tUBXMessages {
 	unsigned char raw[GPS_MSG_MAX_LENGTH];
 };
 
-struct tGPSMessage {
+struct __attribute__ ((packed)) tGPSMessage {
 	unsigned int frameNumber;
-	enum tGPSMessageClasses class;
+	unsigned char class;
 	unsigned char id;
 	unsigned short length;
-	unsigned short rxCount;
 	union tUBXMessages messages;
+	
 	unsigned char xsumA;
 	unsigned char xsumB;
+	unsigned short rxCount;
 };
 
 struct tGPSError {
@@ -469,6 +497,11 @@ struct tGPSInfo {
 };
 
 
+struct tGPSChecksum {
+	unsigned char xsumA;
+	unsigned char xsumB;
+};
+
 #define deg2rad(x)			((x) * RADIANS_CONVERSION)
 #define rad2deg(x)			((x) / RADIANS_CONVERSION)
 
@@ -517,5 +550,8 @@ void gps_getReceiverInfo( xTimerHandle xTimer );
 unsigned char gps_convertASCIIHex(unsigned char byte1, unsigned char byte2);
 void gps_dead( xTimerHandle xTimer );
 void gps_setSbasMode(unsigned char enableSBAS);
+void gps_configure( xTimerHandle xTimer );
+void gps_sendPacket(unsigned char msgClass, unsigned char msgID, unsigned char *data, unsigned char length);
+struct tGPSChecksum gps_calculateChecksum(unsigned char *data, unsigned char length);
 
 #endif /* GPS_H_ */

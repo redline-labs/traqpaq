@@ -120,6 +120,7 @@ void gps_task( void *pvParameters ){
 	struct tGPSRequest request;
 	enum tGPSStateMachine parserState = GPS_STATUS_UNKNOWN;
 	struct tGPSMessage gpsMessage;
+	struct tGPSChecksum gpsChecksum;
 	
 	gpsMessage.frameNumber = 0;			// Reset the Rx frame counter
 
@@ -146,6 +147,7 @@ void gps_task( void *pvParameters ){
 										 
 	// Kick off the timer
 	//xTimerStart(xReceiverDeadTimer, pdFALSE);
+	xTimerStart(xReceiverTxTimer, pdFALSE);
 	
 	while(TRUE){
 		// Check for pending requests
@@ -231,62 +233,45 @@ void gps_task( void *pvParameters ){
 					break;
 				
 				case(GPS_STATE_CLASS):
-					// Reset checksum
-					calc_xsumA = (unsigned char)rxdChar;
-					calc_xsumB = calc_xsumA;
-				
 					gpsMessage.class = (unsigned char)rxdChar;
 					parserState = GPS_STATE_ID;
 					break;
 				
 				case(GPS_STATE_ID):
-					// Update checksum
-					calc_xsumA += (unsigned char)rxdChar;
-					calc_xsumB += calc_xsumA;
-				
 					gpsMessage.id = (unsigned char)rxdChar;
 					parserState = GPS_STATE_LENGTH1;
 					break;
 				
 				case(GPS_STATE_LENGTH1):
-					// Update checksum
-					calc_xsumA += (unsigned char)rxdChar;
-					calc_xsumB += calc_xsumA;
-					
 					gpsMessage.length = (unsigned char)rxdChar;
 					parserState = GPS_STATE_LENGTH2;
 					break;
 				
 				case(GPS_STATE_LENGTH2):
-					// Update checksum
-					calc_xsumA += (unsigned char)rxdChar;
-					calc_xsumB += calc_xsumA;
-				
 					gpsMessage.length += ((unsigned char)rxdChar << 8);
 					
-					if( gpsMessage.length >= GPS_MSG_MAX_LENGTH ) gpsMessage.length = GPS_MSG_MAX_LENGTH - 1;
+					if( gpsMessage.length >= GPS_MSG_MAX_LENGTH ) {
+						gpsMessage.length = GPS_MSG_MAX_LENGTH;
+					}						
 					
 					gpsMessage.rxCount = 0;
 					parserState = GPS_STATE_PAYLOAD;
 					break;
 				
 				case(GPS_STATE_PAYLOAD):
-					// Update checksum
-					if(gpsMessage.rxCount == gpsMessage.length - 1) {
-						parserState = GPS_STATE_XSUMA;
+					if(gpsMessage.rxCount == gpsMessage.length) {	
+						// This received character is checksumA
+						gpsMessage.xsumA = (unsigned char)rxdChar;
+						
+						// Skip to checksumB
+						parserState = GPS_STATE_XSUMB;
+						
 					}else{
-						calc_xsumA += (unsigned char)rxdChar;
-						calc_xsumB += calc_xsumA;
-					
 						gpsMessage.messages.raw[gpsMessage.rxCount++] = (unsigned char)rxdChar;
 					}
 					break;
 				
-				case(GPS_STATE_XSUMA):
-					gpsMessage.xsumA = (unsigned char)rxdChar;
-					parserState = GPS_STATE_XSUMB;
-					break;
-				
+
 				case(GPS_STATE_XSUMB):
 					gpsMessage.xsumB = (unsigned char)rxdChar;
 					parserState = GPS_STATE_RX_COMPLETE;
@@ -297,16 +282,49 @@ void gps_task( void *pvParameters ){
 		
 		if( parserState == GPS_STATE_RX_COMPLETE ){
 			
-			if( (calc_xsumA != gpsMessage.xsumA) ) {//|| (calc_xsumB != gpsMessage.xsumB) ){		TODO: Figure out why checksum_B does not work
+			gpsChecksum = gps_calculateChecksum(&gpsMessage.class, sizeof(gpsMessage.class) + sizeof(gpsMessage.id) + sizeof(gpsMessage.length) + gpsMessage.length);
+			
+			if( (gpsChecksum.xsumA != gpsMessage.xsumA) ) {//|| (gpsChecksum.xsumB != gpsMessage.xsumB) ){		// TODO: Figure out why checksum_B does not work
 				// Checksums did not match!
 				parserState = GPS_STATE_UNKNOWN;
 				incrementErrorCount(gpsInfo.error.checksumErrors);
+				debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, "Dropped packet");
 				
 			}else{
 				// Checksums matched! Good message!
 				gpsMessage.frameNumber++;
 				
 				switch(gpsMessage.class){
+					
+					/////////////////////////////
+					// UBX Message Class : ACK //
+					/////////////////////////////
+					case(UBX_CLASS_ACK):
+						switch(gpsMessage.id){
+							
+							// *** ACK-NAK ***
+							case(UBX_ACK_NAK):
+								debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Receiver responded NAK");
+								gpsInfo.lastCmd.class = gpsMessage.messages.ACK_NAK.clsID;
+								gpsInfo.lastCmd.id = gpsMessage.messages.ACK_NAK.msgID;
+								gpsInfo.lastCmd.response = GPS_RESPONSE_NAK;
+								break;
+								
+							// *** ACK-ACK ***
+							case(UBX_ACK_ACK):
+								debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Receiver responded ACK");
+								gpsInfo.lastCmd.class = gpsMessage.messages.ACK_ACK.clsID;
+								gpsInfo.lastCmd.id = gpsMessage.messages.ACK_ACK.msgID;
+								gpsInfo.lastCmd.response = GPS_RESPONSE_ACK;
+								break;
+								
+							// *** Unknown ***
+							default:
+								incrementErrorCount(gpsInfo.error.unrecognizedMsgs);
+								break;
+						}
+						break;
+						
 				
 					/////////////////////////////
 					// UBX Message Class : NAV //
@@ -315,38 +333,7 @@ void gps_task( void *pvParameters ){
 						switch(gpsMessage.id){
 							
 							// *** NAV-PVT ***
-							case(UBX_NAV_PVT):
-								// NAV_PVT is not supported on this receiver
-								
-								/*gpsData.currentMode = gpsMessage.messages.NAV_PVT.fixType;
-								gpsData.hdop = gps_flip_endian2(gpsMessage.messages.NAV_PVT.pDOP);
-								gpsData.satellites = gpsMessage.messages.NAV_PVT.numSV;
-								gpsData.utc = gps_flip_endian4(gpsMessage.messages.NAV_PVT.iTOW);
-								
-								datestamp = (gpsMessage.messages.NAV_PVT.day << 24) + (gpsMessage.messages.NAV_PVT.month << 16) + gps_flip_endian2(gpsMessage.messages.NAV_PVT.year);
-									
-								gpsData.data[recordIndex].altitude = (gps_flip_endian4(gpsMessage.messages.NAV_PVT.hMSL) / 100) & 0xFFFF;
-								gpsData.data[recordIndex].heading = (gps_flip_endian4(gpsMessage.messages.NAV_PVT.heading) / 1000) & 0xFFFF;
-								gpsData.data[recordIndex].latitude = gps_flip_endian4(gpsMessage.messages.NAV_PVT.lat);
-								gpsData.data[recordIndex].longitude = gps_flip_endian4(gpsMessage.messages.NAV_PVT.lon);
-								gpsData.data[recordIndex].speed = (gps_flip_endian4(gpsMessage.messages.NAV_PVT.gSpeed) / 100) & 0xFFFF;
-									
-								// Copy over the current position info
-								gpsInfo.mode = gpsData.currentMode;
-								gpsInfo.satellites = gpsData.satellites;
-								gpsInfo.current_location.heading = gpsData.data[recordIndex].heading;
-								gpsInfo.current_location.latitude = gpsData.data[recordIndex].latitude;
-								gpsInfo.current_location.longitude = gpsData.data[recordIndex].longitude;
-
-								// Only increment the record index (and consequently inhibit writing to flash) if the record flag is TRUE
-								if(gpsInfo.record_flag == TRUE) recordIndex++;
-									
-								// Check to see if we should trigger a write
-								if(recordIndex == RECORD_DATA_PER_PAGE){
-									flash_send_request(FLASH_MGR_ADD_RECORD_DATA, &gpsData, sizeof(gpsData), NULL, TRUE, pdFALSE);
-									recordIndex = 0;
-								}*/
-									
+							case(UBX_NAV_PVT):									
 								break;
 							
 							// *** NAV-CLOCK ***
@@ -359,6 +346,7 @@ void gps_task( void *pvParameters ){
 							
 							// *** NAV-DOP ***
 							case(UBX_NAV_DOP):
+								gpsData.hdop = gps_flip_endian2(gpsMessage.messages.NAV_DOP.hDOP);
 								break;
 								
 							// *** NAV-POSECEF ***
@@ -367,8 +355,6 @@ void gps_task( void *pvParameters ){
 								
 							// *** NAV-POSLLH ***
 							case(UBX_NAV_POSLLH):
-								debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Processing NAV-POSLLH Message");
-
 								gpsData.utc = gps_flip_endian4(gpsMessage.messages.NAV_PVT.iTOW);
 								
 								gpsData.data[recordIndex].altitude = (gps_flip_endian4(gpsMessage.messages.NAV_POSLLH.hMSL) / 100) & 0xFFFF;
@@ -391,6 +377,8 @@ void gps_task( void *pvParameters ){
 								
 							// *** NAV-STATUS ***
 							case(UBX_NAV_STATUS):
+								gpsData.utc = gpsMessage.messages.NAV_STATUS.iTOW;
+								gpsData.currentMode = gpsMessage.messages.NAV_STATUS.gpsFix;
 								break;
 								
 							// *** NAV-SVINFO ***
@@ -411,6 +399,9 @@ void gps_task( void *pvParameters ){
 								
 							// *** NAV-VELNED ***
 							case(UBX_NAV_VELNED):
+								gpsData.data[recordIndex].speed = (unsigned short)gps_flip_endian4(gpsMessage.messages.NAV_VELNED.gSpeed);
+								gpsData.data[recordIndex].heading = (unsigned short)gps_flip_endian4(gpsMessage.messages.NAV_VELNED.heading);
+								gpsInfo.current_location.heading = gpsData.data[recordIndex].heading;
 								break;
 								
 							// *** Unknown NAV Message ***
@@ -456,33 +447,6 @@ void gps_task( void *pvParameters ){
 							// *** INF-WARNING ***
 							case(UBX_INF_WARNING):
 								debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_GPS, &gpsMessage.messages.raw);
-								break;
-								
-							// *** Unknown ***
-							default:
-								incrementErrorCount(gpsInfo.error.unrecognizedMsgs);
-								break;
-						}
-						break;
-					
-					/////////////////////////////
-					// UBX Message Class : ACK //
-					/////////////////////////////
-					case(UBX_CLASS_ACK):
-						switch(gpsMessage.id){
-							
-							// *** ACK-NAK ***
-							case(UBX_ACK_NAK):
-								gpsInfo.lastCmd.class = gpsMessage.messages.ACK_NAK.clsID;
-								gpsInfo.lastCmd.id = gpsMessage.messages.ACK_NAK.msgID;
-								gpsInfo.lastCmd.response = GPS_RESPONSE_NAK;
-								break;
-								
-							// *** ACK-ACK ***
-							case(UBX_ACK_ACK):
-								gpsInfo.lastCmd.class = gpsMessage.messages.ACK_ACK.clsID;
-								gpsInfo.lastCmd.id = gpsMessage.messages.ACK_ACK.msgID;
-								gpsInfo.lastCmd.response = GPS_RESPONSE_ACK;
 								break;
 								
 							// *** Unknown ***
@@ -754,25 +718,6 @@ struct tGPSLine gps_find_finish_line(signed int latitude, signed int longitude, 
 
 void gps_set_messaging_rate(unsigned char rate){
 	
-	switch(rate){
-		case(GPS_MESSAGING_100MS):
-			usart_write_line(GPS_USART, "$PMTK300,100,0,0,0,0*2C");
-			break;
-			
-		case(GPS_MESSAGING_200MS):
-			usart_write_line(GPS_USART, "$PMTK300,200,0,0,0,0*2F");
-			break;
-			
-		case(GPS_MESSAGING_500MS):
-			usart_write_line(GPS_USART, "$PMTK300,500,0,0,0,0*28");
-			break;
-			
-		case(GPS_MESSAGING_1000MS):
-			usart_write_line(GPS_USART, "$PMTK300,1000,0,0,0,0*1C");
-			break;
-	}
-	
-	
 }
 
 void gps_set_messages( void ){
@@ -807,20 +752,6 @@ void gps_send_request(enum tGpsCommand command, unsigned int *pointer, unsigned 
 
 void gps_messageTimeout( xTimerHandle xTimer ){
 	
-		// Lets figure out what message timed out
-		switch( (unsigned int)pvTimerGetTimerID(xTimer) ){
-			case( GPS_GGA_MSG_TIMER_ID ):
-			debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "GGA Message Timer Expired");
-			incrementErrorCount(gpsInfo.error.ggaMsgTimeouts);
-			break;
-			
-			case( GPS_RMC_MSG_TIMER_ID ):
-			debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "RMC Message Timer Expired");
-			incrementErrorCount(gpsInfo.error.rmcMsgTimeouts);
-			break;
-		}
-		
-		gps_set_messaging_rate(GPS_MESSAGING_100MS);
 }
 
 void gps_getReceiverInfo( xTimerHandle xTimer ){
@@ -852,13 +783,25 @@ void gps_dead( xTimerHandle xTimer ){
 
 
 void gps_configure( xTimerHandle xTimer ){
+	unsigned char i;
+	
 	struct tUbxCfgMsg cfgMsg;
+	struct tUbxCfgRate cfgRate;
+	
+	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Starting to configure receiver");
+	
+	// By default, turn off all on all ports
+	for(i = 0; i < UBX_NEO_6_PORTS; i++) {
+		cfgMsg.rate[i] = 0;
+	}
 	
 	// Turn on the UBX_NAV_POSLLH message
 	cfgMsg.msgClass	= UBX_CLASS_NAV;
 	cfgMsg.msgID	= UBX_NAV_POSLLH;
 	cfgMsg.rate[USART_1_PORT] = 1;
 	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+	
+	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
 	
 	
 	// Turn on the UBX_NAV_DOP message
@@ -867,11 +810,15 @@ void gps_configure( xTimerHandle xTimer ){
 	cfgMsg.rate[USART_1_PORT] = 1;
 	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
 	
-	// Turn on the UBX_NAV_DOP message
+	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
+	
+	// Turn on the UBX_NAV_VELNED message
 	cfgMsg.msgClass	= UBX_CLASS_NAV;
 	cfgMsg.msgID	= UBX_NAV_VELNED;
 	cfgMsg.rate[USART_1_PORT] = 1;
 	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+	
+	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
 	
 	// Turn on the UBX_NAV_TIMEUTC message
 	cfgMsg.msgClass	= UBX_CLASS_NAV;
@@ -879,11 +826,23 @@ void gps_configure( xTimerHandle xTimer ){
 	cfgMsg.rate[USART_1_PORT] = 1;
 	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
 	
+	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
+	
+	// Turn on the UBX_NAV_STATUS message
+	cfgMsg.msgClass	= UBX_CLASS_NAV;
+	cfgMsg.msgID	= UBX_NAV_STATUS;
+	cfgMsg.rate[USART_1_PORT] = 1;
+	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+	
+	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
+	
 	// Turn off the NMEA GGA message
 	cfgMsg.msgClass	= NMEA;
 	cfgMsg.msgID	= NMEA_GGA;
 	cfgMsg.rate[USART_1_PORT] = 0;
 	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+	
+	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
 	
 	// Turn off the NMEA GLL message
 	cfgMsg.msgClass	= NMEA;
@@ -891,11 +850,15 @@ void gps_configure( xTimerHandle xTimer ){
 	cfgMsg.rate[USART_1_PORT] = 0;
 	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
 	
+	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
+	
 	// Turn off the NMEA GSA message
 	cfgMsg.msgClass	= NMEA;
 	cfgMsg.msgID	= NMEA_GSA;
 	cfgMsg.rate[USART_1_PORT] = 0;
 	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+	
+	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
 	
 	// Turn off the NMEA GSV message
 	cfgMsg.msgClass	= NMEA;
@@ -903,17 +866,30 @@ void gps_configure( xTimerHandle xTimer ){
 	cfgMsg.rate[USART_1_PORT] = 0;
 	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
 	
+	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
+	
 	// Turn off the NMEA RMC message
 	cfgMsg.msgClass	= NMEA;
 	cfgMsg.msgID	= NMEA_RMC;
 	cfgMsg.rate[USART_1_PORT] = 0;
 	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
 	
+	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
+	
 	// Turn off the NMEA VTG message
 	cfgMsg.msgClass	= NMEA;
 	cfgMsg.msgID	= NMEA_VTG;
 	cfgMsg.rate[USART_1_PORT] = 0;
 	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+	
+	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
+	
+	cfgRate.measRate = gps_flip_endian2(GPS_UBX_MSG_RATE);
+	cfgRate.navRate = gps_flip_endian2(GPS_UBX_NAV_RATE);
+	cfgRate.timeRef = gps_flip_endian2(GPS_UBX_TIME_REF);
+	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_RATE, &cfgRate, sizeof(cfgRate));
+	
+	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
 }
 
 
@@ -927,38 +903,56 @@ void gps_sendPacket(unsigned char msgClass, unsigned char msgID, unsigned char *
 	unsigned char xsumA = 0, xsumB = 0;
 	
 	// Send sync characters
-	usart_write_char(GPS_USART, GPS_CHAR_SYNC1);
-	usart_write_char(GPS_USART, GPS_CHAR_SYNC2);
+	usart_putchar(GPS_USART, GPS_CHAR_SYNC1);
+	usart_putchar(GPS_USART, GPS_CHAR_SYNC2);
 	
 	// Send msg class and id fields
-	usart_write_char(GPS_USART, msgClass);
-	xsumA += *msgClass;
+	usart_putchar(GPS_USART, msgClass);
+	xsumA += msgClass;
 	xsumB += xsumA;
 		
-	usart_write_char(GPS_USART, msgID);
-	xsumA += *msgID;
+	usart_putchar(GPS_USART, msgID);
+	xsumA += msgID;
 	xsumB += xsumA;
 	
 	// Send message length, little endian!
-	usart_write_char(GPS_USART, (length & 0xFF));
+	usart_putchar(GPS_USART, (length & 0xFF));
 	xsumA += (length & 0xFF);
 	xsumB += xsumA;
 	
-	usart_write_char(GPS_USART, (length >> 8) & 0xFF);
+	usart_putchar(GPS_USART, (length >> 8) & 0xFF);
 	xsumA += (length >> 8) & 0xFF;
 	xsumB += xsumA;
 	
 	// Send out the message payload
-	for (i = 0; i < size; i++) {
+	for (i = 0; i < length; i++) {
 		xsumA += *data;
 		xsumB += xsumA;
 		
-		usart_write_char(GPS_USART, *data);
+		usart_putchar(GPS_USART, *data);
 	
 		data++;
 	}
 	
 	// Finally send out the checksums
-	usart_write_char(GPS_USART, xsumA);
-	usart_write_char(GPS_USART, xsumB);
+	usart_putchar(GPS_USART, xsumA);
+	usart_putchar(GPS_USART, xsumB);
+}
+
+struct tGPSChecksum gps_calculateChecksum(unsigned char *data, unsigned char length){
+	unsigned char i;
+	
+	struct tGPSChecksum checksum;
+	
+	checksum.xsumA = 0;
+	checksum.xsumB = 0;
+	
+	for (i = 0; i < length; i++) {
+		checksum.xsumA += *data;
+		checksum.xsumB += checksum.xsumA;
+		
+		data++;
+	}
+	
+	return checksum;
 }
