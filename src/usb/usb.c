@@ -168,7 +168,7 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_DBG_DF_BUSY):
 				usbTx.msgLength = sizeof(usbTx.message.DBG_FLASH_BUSY);
-				usbTx.message.DBG_FLASH_BUSY.busy = flash_is;
+				usbTx.message.DBG_FLASH_BUSY.busy = flash.flags.isBusy;
 				break;
 				
 			case(USB_CMD_ERASE_RECORDDATA):
@@ -179,7 +179,7 @@ void usb_task( void *pvParameters ){
 					
 			case(USB_DBG_DF_IS_FLASH_FULL):
 				usbTx.msgLength = sizeof(usbTx.message.DBG_FLASH_IS_FULL);
-				usbTx.message.DBG_FLASH_IS_FULL.isFull = flash_busy_flag();
+				usbTx.message.DBG_FLASH_IS_FULL.isFull = flash.flags.isFull;
 				break;
 					
 			case(USB_DBG_DF_USED_SPACE):
@@ -229,8 +229,7 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_DBG_DF_ARB_WRITE):
 				usbTx.msgLength = sizeof(usbTx.message.DBG_FLASH_ARB_WRITE);
-				flash_send_request(FLASH_MGR_WRITE_PAGE, &usbRx.message.DBG_FLASH_ARB_WRITE.data, usbRx.msgLength, usbRx.message.DBG_FLASH_ARB_WRITE.index, TRUE, pdFALSE);
-				usbTx.message.DBG_FLASH_ARB_WRITE.success = TRUE;
+				usbTx.message.DBG_FLASH_ARB_WRITE.success = flash_send_request(FLASH_MGR_WRITE_PAGE, &usbRx.message.DBG_FLASH_ARB_WRITE.data, usbRx.msgLength, usbRx.message.DBG_FLASH_ARB_WRITE.index, TRUE, pdFALSE);
 				break;
 				
 				

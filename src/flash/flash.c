@@ -231,6 +231,7 @@ void flash_task( void *pvParameters ){
 				recordTableIndex = 0;
 				recordTable.startAddress = flash.layout.recordDataStart;
 				recordTable.endAddress = flash.layout.recordDataStart;
+				flash_chipErase();
 				break;
 				
 
