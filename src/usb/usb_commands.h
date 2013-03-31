@@ -31,6 +31,12 @@
 #ifndef USB_COMMANDS_H_
 #define USB_COMMANDS_H_
 
+// Standard header
+struct __attribute__ ((packed)) tUsbStdHeader {
+	unsigned char command;
+	unsigned short msgLength;
+};
+
 /////////////////////////////
 // USB Tx Messages         //
 /////////////////////////////
@@ -87,7 +93,13 @@ struct __attribute__ ((packed)) tUsbTxCmdReadSavedTracks {
 };
 
 struct __attribute__ ((packed)) tUsbTxCmdReadRecordTable {
-	unsigned char data[FLASH_PAGE_SIZE]
+	unsigned char recordEmpty;
+	unsigned char trackID;
+	unsigned char reserved1[2];
+
+	unsigned int datestamp;
+	unsigned int startAddress;
+	unsigned int endAddress;
 };
 
 struct __attribute__ ((packed)) tUsbTxCmdReadRecordData {
@@ -107,11 +119,7 @@ struct __attribute__ ((packed)) tUsbTxCmdWriteSavedTracks {
 };
 
 struct __attribute__ ((packed)) tUsbTxCmdReadOtp {
-	unsigned char serial[OTP_SERIAL_LENGTH];
-	unsigned char pcb_rev;
-	unsigned char tester_id;
-	unsigned char reserved;
-	unsigned short crc;
+	unsigned char data[FLASH_OTP_SIZE];
 };
 
 struct __attribute__ ((packed)) tUsbTxCmdWriteOtp {
@@ -146,6 +154,10 @@ struct __attribute__ ((packed)) tUsbTxDbgFlashUsedSpace {
 
 struct __attribute__ ((packed)) tUsbTxDbgArbRead {
 	unsigned char data[FLASH_PAGE_SIZE]
+};
+
+struct __attribute__ ((packed)) tUsbTxDbgArbWrite {
+	unsigned char success;
 };
 
 struct __attribute__ ((packed)) tUsbTxDbgGpsCurrentPosition {
@@ -251,6 +263,7 @@ union tUsbTxMessages{
 	struct tUsbTxDbgFlashFull				DBG_FLASH_IS_FULL;
 	struct tUsbTxDbgFlashUsedSpace			DBG_FLASH_USED_SPACE;
 	struct tUsbTxDbgArbRead					DBG_FLASH_ARB_READ;
+	struct tUsbTxDbgArbWrite				DBG_FLASH_ARB_WRITE;
 	struct tUsbTxDbgGpsCurrentPosition		DBG_GPS_CURRENT_POSITION;
 	struct tUsbTxDbgGpsCurrentMode			DBG_GPS_CURRENT_MODE;
 	struct tUsbTxDbgGpsInfoSerialNo			DBG_GPS_SERIAL_NUMBER;
@@ -393,6 +406,11 @@ struct __attribute__ ((packed)) tUsbRxDbgArbRead {
 	unsigned short index;
 };
 
+struct __attribute__ ((packed)) tUsbRxDbgArbWrite {
+	unsigned short index;
+	unsigned char data[FLASH_PAGE_SIZE];
+};
+
 struct __attribute__ ((packed)) tUsbRxDbgGpsCurrentPosition {
 };
 
@@ -467,6 +485,7 @@ union tUsbRxMessages{
 	struct tUsbRxDbgFlashFull				DBG_FLASH_IS_FULL;
 	struct tUsbRxDbgFlashUsedSpace			DBG_FLASH_USED_SPACE;
 	struct tUsbRxDbgArbRead					DBG_FLASH_ARB_READ;
+	struct tUsbRxDbgArbWrite				DBG_FLASH_ARB_WRITE;
 	struct tUsbRxDbgGpsCurrentPosition		DBG_GPS_CURRENT_POSITION;
 	struct tUsbRxDbgGpsCurrentMode			DBG_GPS_CURRENT_MODE;
 	struct tUsbRxDbgGpsInfoSerialNo			DBG_GPS_SERIAL_NUMBER;

@@ -41,18 +41,10 @@
 #ifndef _USB_H_
 #define _USB_H_
 
-#define USB_VERSION					0x0102
-#define USB_VERSION_ASCII			"1.02"
-
-#define USB_RX_BUFFER_SIZE			256
-#define USB_TX_BUFFER_SIZE			256
+#define USB_VERSION					0x0110
+#define USB_VERSION_ASCII			"1.10"
 
 #define USB_MANAGER_QUEUE_SIZE		5
-
-//enum tUsbCmds {
-//	USB_CMD_REQ_APPL_VER = 0;
-//	
-//};
 
 // Module info commands
 #define USB_CMD_REQ_APPL_VER			0x00
@@ -97,6 +89,7 @@
 #define USB_DBG_DF_IS_FLASH_FULL		0x3C
 #define USB_DBG_DF_USED_SPACE			0x3D	
 #define USB_DBG_DF_ARB_READ				0x3E
+#define USB_DBG_DF_ARB_WRITE			0x3F
 
 #define USB_DBG_GPS_CURRENT_POSITION	0x40
 #define USB_DBG_GPS_CURRENT_MODE		0x41
@@ -115,16 +108,6 @@
 #define USB_DBG_ACCEL_GET_ST_DATA		0x63
 
 #define USB_UNKNOWN_CMD					0xFF
-
-
-#define INDEX_CMD						0
-#define INDEX_LENGTH					1
-#define INDEX_DATA						2
-
-
-
-
-
 
 void usb_task_init( void );
 void usb_task( void *pvParameters );

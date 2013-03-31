@@ -174,7 +174,11 @@ void flash_task( void *pvParameters ){
 			case(FLASH_MGR_READ_PAGE):
 				flash_ReadToBuffer( request.index * FLASH_PAGE_SIZE, request.length, request.pointer);
 				break;
-			
+				
+			case(FLASH_MGR_WRITE_PAGE):
+				flash_WriteFromBuffer( request.index * FLASH_PAGE_SIZE, request.length, request.pointer);
+				break;
+				
 
 			case(FLASH_MGR_ERASE_RECORD):
 				 // Not implemented yet!
@@ -224,7 +228,6 @@ void flash_task( void *pvParameters ){
 				
 
 			case(FLASH_MGR_CHIP_ERASE):
-				*(request.pointer) = flash_chipErase();
 				recordTableIndex = 0;
 				recordTable.startAddress = flash.layout.recordDataStart;
 				recordTable.endAddress = flash.layout.recordDataStart;
@@ -473,6 +476,10 @@ unsigned char flash_eraseRecordedData(){
 
 unsigned char flash_ReadToBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){
 	unsigned short dummyData;
+	
+	if(length < 8){		// TODO: Need to investigate why reads under 8 bytes bomb out
+		return DATAFLASH_RESPONSE_FAILURE;
+	}
 
 	spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
 	
@@ -504,6 +511,10 @@ unsigned char flash_ReadToBuffer(unsigned long startAddress, unsigned short leng
 }
 
 unsigned char flash_WriteFromBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){
+	
+	if(length < 8){		// TODO: Need to investigate why reads under 8 bytes bomb out
+		return DATAFLASH_RESPONSE_FAILURE;
+	}
 
 	while( flash_is_busy() ){
 		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
@@ -733,6 +744,8 @@ unsigned short flash_calculate_userPrefs_crc( void ){
 unsigned char flash_send_request(unsigned char command, unsigned char *pointer, unsigned short length, unsigned int index, unsigned char resume, unsigned char delay){
 	struct tFlashRequest request;
 	
+	unsigned char success = FALSE;
+	
 	request.command = command;
 	request.pointer = pointer;
 	request.length = length;
@@ -743,11 +756,11 @@ unsigned char flash_send_request(unsigned char command, unsigned char *pointer, 
 		request.handle = xTaskGetCurrentTaskHandle();
 	}
 	
-	xQueueSend(flashManagerQueue, &request, delay);
+	success = xQueueSend(flashManagerQueue, &request, delay);
 	
-	if(resume == TRUE){
+	if( (success == TRUE) && (resume == TRUE) ){
 		vTaskSuspend(NULL);
 	}
 	
-	return TRUE;
+	return success;
 }

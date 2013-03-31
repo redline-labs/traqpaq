@@ -131,18 +131,28 @@ void usb_task( void *pvParameters ){
 				break;
 				
 			case(USB_CMD_READ_OTP):
-				usbTx.msgLength = sizeof(usbTx.message.CMD_READ_OTP);
-				flash_send_request(FLASH_MGR_READ_OTP, &usbTx.message.CMD_READ_OTP, usbRx.message.CMD_READ_OTP.length, usbRx.message.CMD_READ_OTP.index, TRUE, pdFALSE);
+				if(usbRx.message.CMD_READ_OTP.length > sizeof(usbTx.message.CMD_READ_OTP)){
+					usbTx.msgLength = sizeof(usbTx.message.CMD_READ_OTP);
+				}else{
+					usbTx.msgLength = usbRx.message.CMD_READ_OTP.length;
+				}
+				
+				flash_send_request(FLASH_MGR_READ_OTP, &usbTx.message.CMD_READ_OTP, usbTx.msgLength, usbRx.message.CMD_READ_OTP.index, TRUE, pdFALSE);
 				break;
 
 			case(USB_CMD_READ_RECORDTABLE):
-				usbTx.msgLength = sizeof(usbTx.message.CMD_READ_RECORD_TABLE);	// TODO: Look at requesting size
+				usbTx.msgLength = sizeof(usbTx.message.CMD_READ_RECORD_TABLE);
 				flash_send_request(FLASH_MGR_READ_RECORDTABLE, &usbTx.message.CMD_READ_RECORD_TABLE, usbRx.message.CMD_READ_RECORD_TABLE.length, usbRx.message.CMD_READ_RECORD_TABLE.index, TRUE, pdFALSE);
 				break;
 					
 			case(USB_CMD_READ_RECORDDATA):	// 19d
-				usbTx.msgLength = sizeof(usbTx.message.CMD_READ_RECORD_DATA);	// TODO: Look at requesting size
-				flash_send_request(FLASH_MGR_READ_RECORDATA, &usbTx.message.CMD_READ_RECORD_DATA, usbRx.message.CMD_READ_RECORD_DATA.length, usbRx.message.CMD_READ_RECORD_DATA.index, TRUE, pdFALSE);
+				// Set the size based on the request
+				if(usbRx.msgLength > sizeof(usbTx.message.CMD_READ_RECORD_DATA)) {
+					usbTx.msgLength = sizeof(usbTx.message.CMD_READ_RECORD_DATA);
+				}else{
+					usbTx.msgLength = usbRx.message.CMD_READ_RECORD_DATA.length;
+				}					
+				flash_send_request(FLASH_MGR_READ_RECORDATA, &usbTx.message.CMD_READ_RECORD_DATA, usbTx.msgLength, usbRx.message.CMD_READ_RECORD_DATA.index, TRUE, pdFALSE);
 				break;
 				
 			case(USB_DBG_READ_ADC):			// 51d
@@ -158,7 +168,7 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_DBG_DF_BUSY):
 				usbTx.msgLength = sizeof(usbTx.message.DBG_FLASH_BUSY);
-				usbTx.message.DBG_FLASH_BUSY.busy = flash_is_busy();
+				usbTx.message.DBG_FLASH_BUSY.busy = flash_is;
 				break;
 				
 			case(USB_CMD_ERASE_RECORDDATA):
@@ -169,7 +179,7 @@ void usb_task( void *pvParameters ){
 					
 			case(USB_DBG_DF_IS_FLASH_FULL):
 				usbTx.msgLength = sizeof(usbTx.message.DBG_FLASH_IS_FULL);
-				usbTx.message.DBG_FLASH_IS_FULL.isFull = flash_full_flag();
+				usbTx.message.DBG_FLASH_IS_FULL.isFull = flash_busy_flag();
 				break;
 					
 			case(USB_DBG_DF_USED_SPACE):
@@ -180,7 +190,7 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_DBG_DF_CHIP_ERASE):
 				usbTx.msgLength = sizeof(usbTx.message.DBG_FLASH_CHIP_ERASE);
-				flash_send_request(FLASH_MGR_CHIP_ERASE, &usbTx.message.DBG_FLASH_CHIP_ERASE.success, NULL, NULL, FALSE, pdFALSE);
+				usbTx.message.DBG_FLASH_CHIP_ERASE.success = flash_send_request(FLASH_MGR_CHIP_ERASE, NULL, NULL, NULL, FALSE, pdFALSE);
 				break;
 				
 			case(USB_CMD_WRITE_OTP):
@@ -193,7 +203,6 @@ void usb_task( void *pvParameters ){
 				usbTx.msgLength = sizeof(usbTx.message.CMD_WRITE_SAVED_TRACKS);
 				flash_send_request(FLASH_MGR_ERASE_TRACKS, NULL, NULL, NULL, TRUE, pdFALSE);
 				flash_send_request(FLASH_MGR_ADD_TRACK, &usbRx.message.CMD_WRITE_SAVED_TRACKS, NULL, NULL, TRUE, pdFALSE);
-
 				usbTx.message.CMD_WRITE_SAVED_TRACKS.success = TRUE;
 				break;
 		
@@ -204,18 +213,26 @@ void usb_task( void *pvParameters ){
 				
 			case(USB_CMD_WRITE_USERPREFS):	// 24d
 				usbTx.msgLength = sizeof(usbTx.message.CMD_WRITE_USER_PREFS);
-				//userPrefs.screenFadeTime = BACKLIGHT_DEFAULT_FADETIME;
-				//userPrefs.screenOffTime = BACKLIGHT_DEFAULT_OFFTIME;
-				//userPrefs.screenPWMMax = BACKLIGHT_DEFAULT_MAX;
-				//userPrefs.screenPWMMin = BACKLIGHT_DEFAULT_MIN;
 				flash_send_request(FLASH_MGR_WRITE_USER_PREFS, NULL, NULL, NULL, FALSE, pdFALSE);	// TODO: Change to usbRx data
 				usbTx.message.CMD_WRITE_USER_PREFS.success = TRUE;		// TODO: Have Flash mgr set success
 				break;
 				
 			case(USB_DBG_DF_ARB_READ):
-				usbTx.msgLength = sizeof(usbTx.message.DBG_FLASH_ARB_READ);	//TODO: Have it set by the usbRx request
-				flash_send_request(FLASH_MGR_READ_PAGE, &usbTx.message.DBG_FLASH_ARB_READ.data, usbRx.message.DBG_FLASH_ARB_READ.length, usbRx.message.DBG_FLASH_ARB_READ.index, TRUE, pdFALSE);
+				if(usbRx.message.DBG_FLASH_ARB_READ.length > sizeof(usbTx.message.DBG_FLASH_ARB_READ)){
+					usbTx.msgLength = sizeof(usbTx.message.DBG_FLASH_ARB_READ);
+				}else{
+					usbTx.msgLength = usbRx.message.DBG_FLASH_ARB_READ.length;
+				}
+
+				flash_send_request(FLASH_MGR_READ_PAGE, &usbTx.message.DBG_FLASH_ARB_READ.data, usbTx.msgLength, usbRx.message.DBG_FLASH_ARB_READ.index, TRUE, pdFALSE);
 				break;
+				
+			case(USB_DBG_DF_ARB_WRITE):
+				usbTx.msgLength = sizeof(usbTx.message.DBG_FLASH_ARB_WRITE);
+				flash_send_request(FLASH_MGR_WRITE_PAGE, &usbRx.message.DBG_FLASH_ARB_WRITE.data, usbRx.msgLength, usbRx.message.DBG_FLASH_ARB_WRITE.index, TRUE, pdFALSE);
+				usbTx.message.DBG_FLASH_ARB_WRITE.success = TRUE;
+				break;
+				
 				
 			case(USB_DBG_GPS_CURRENT_POSITION):		// 64d
 				usbTx.msgLength = sizeof(usbTx.message.DBG_GPS_CURRENT_POSITION);

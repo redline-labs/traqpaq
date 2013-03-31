@@ -218,6 +218,7 @@ void board_init(void){
 	};
 		
 	pdca_init_channel(FLASH_SPI_RX_PDCA_CHANNEL, &pdcaFlashRx);
+	pdca_disable(FLASH_SPI_RX_PDCA_CHANNEL);
 		
 	
 	// ------------------------------------------------------------
