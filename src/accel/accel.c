@@ -218,7 +218,7 @@ unsigned char accel_read( struct tAccelSample *sample ){
 	pdca_enable(ACCEL_SPI_TX_PDCA_CHANNEL);
 	
 	// Wait for transfer to complete, too quick to put task to sleep ( ~13.8us )
-	while(pdca_get_transfer_status(ACCEL_SPI_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE);
+	while( !(pdca_get_transfer_status(ACCEL_SPI_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE) );
 	
 	spi_unselectChip(ACCEL_SPI, ACCEL_SPI_NPCS);
 	

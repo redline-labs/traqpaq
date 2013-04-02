@@ -161,7 +161,11 @@ void debug_task( void *pvParameters ) {
 		pdca_enable(DEBUG_TX_PDCA_CHANNEL);
 
 		while( !(pdca_get_transfer_status(DEBUG_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE) ){
-			vTaskDelay( (portTickType)TASK_DELAY_MS( DEBUG_PDCA_DELAY_TIME ) );
+			if( xTaskGetSchedulerState() == taskSCHEDULER_RUNNING ) {
+				vTaskDelay( (portTickType)TASK_DELAY_MS( DEBUG_PDCA_DELAY_TIME ) );
+			}else{
+				asm("nop");
+			}				
 		}
 
 		usart_putchar(DEBUG_USART, DEBUG_CR);

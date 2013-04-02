@@ -498,8 +498,12 @@ unsigned char flash_ReadToBuffer(unsigned long startAddress, unsigned short leng
 	pdca_enable(FLASH_SPI_RX_PDCA_CHANNEL);
 	pdca_enable(FLASH_SPI_TX_PDCA_CHANNEL);
 	
-	while(pdca_get_transfer_status(FLASH_SPI_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE){
-		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PDCA_CHECK_TIME ) );
+	while( !(pdca_get_transfer_status(FLASH_SPI_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE) ){
+		if( xTaskGetSchedulerState() == taskSCHEDULER_RUNNING ) {
+			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PDCA_CHECK_TIME ) );
+		}else{
+			asm("nop");
+		}			
 	}
 	
 	spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
@@ -535,8 +539,12 @@ unsigned char flash_WriteFromBuffer(unsigned long startAddress, unsigned short l
 	pdca_load_channel(FLASH_SPI_TX_PDCA_CHANNEL, bufferPointer, length);
 	pdca_enable(FLASH_SPI_TX_PDCA_CHANNEL);
 	
-	while(pdca_get_transfer_status(FLASH_SPI_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE){
-		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PDCA_CHECK_TIME ) );
+	while( !(pdca_get_transfer_status(FLASH_SPI_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE) ){
+		if( xTaskGetSchedulerState() == taskSCHEDULER_RUNNING ) {
+			vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PDCA_CHECK_TIME ) );
+		}else{
+			asm("nop");
+		}			
 	}
 	
 	spi_unselectChip(FLASH_SPI, FLASH_SPI_NPCS);
