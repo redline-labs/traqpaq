@@ -34,8 +34,9 @@
 #define DEBUG_CR					0x0D
 #define DEBUG_LF					0x0A
 
-#define DEBUG_MAX_STRLEN			40
+#define DEBUG_MAX_STRLEN			60
 #define DEBUG_QUEUE_SIZE			15
+#define DEBUG_PDCA_DELAY_TIME		2
 
 enum tDebugSender {
 	DEBUG_SENDER_WDT,
@@ -66,6 +67,7 @@ enum tDebugPriority {
 struct tDebugLog {
 	enum tDebugPriority priority;
 	enum tDebugSender sender;
+	unsigned short strLen;
 	unsigned char text[DEBUG_MAX_STRLEN];
 };
 

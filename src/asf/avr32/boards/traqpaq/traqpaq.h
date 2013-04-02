@@ -256,6 +256,9 @@
 #define DEBUG_USART_BAUD			115200
 #define DEBUG_USART_IRQ           	AVR32_USART2_IRQ
 
+#define DEBUG_TX_PDCA_CHANNEL		4
+#define DEBUG_RX_PDCA_CHANNEL		5
+
 
 // ------------------------------------------------------------
 // Fuel Gauge Definitions (TWI)

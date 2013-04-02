@@ -118,8 +118,32 @@ void board_init(void){
 
 		gpio_enable_module(DEBUG_USART_GPIO_MAP, sizeof(DEBUG_USART_GPIO_MAP) / sizeof(DEBUG_USART_GPIO_MAP[0]));	// Assign GPIO to Debug USART.
 		usart_init_rs232(DEBUG_USART, &DEBUG_USART_OPTIONS, APPL_PBA_SPEED);	// Initialize Debug USART in RS232 mode.
-	#endif
 	
+		static const pdca_channel_options_t pdcaDebugTx = {
+			.addr = NULL,								// memory address
+			.pid = AVR32_PDCA_PID_USART2_TX,			// select peripheral - SPI transfer channel
+			.size = NULL,								// transfer counter
+			.r_addr = NULL,								// next memory address
+			.r_size = NULL,								// next transfer counter
+			.transfer_size = PDCA_TRANSFER_SIZE_BYTE	// select size of the transfer
+		};
+	
+		pdca_init_channel(DEBUG_TX_PDCA_CHANNEL, &pdcaDebugTx);
+		pdca_disable(DEBUG_TX_PDCA_CHANNEL);
+	
+		static const pdca_channel_options_t pdcaDebugRx = {
+			.addr = NULL,								// memory address
+			.pid = AVR32_PDCA_PID_USART2_RX,			// select peripheral - SPI transfer channel
+			.size = NULL,								// transfer counter
+			.r_addr = NULL,								// next memory address
+			.r_size = NULL,								// next transfer counter
+			.transfer_size = PDCA_TRANSFER_SIZE_BYTE	// select size of the transfer
+		};
+	
+		pdca_init_channel(DEBUG_RX_PDCA_CHANNEL, &pdcaDebugRx);
+		pdca_disable(DEBUG_RX_PDCA_CHANNEL);
+		
+	#endif
 
 	// ------------------------------------------------------------
 	// Buttons Initialization (EXTINT)

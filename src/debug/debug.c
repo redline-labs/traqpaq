@@ -52,11 +52,6 @@ void debug_task_init( void ){
 	#if( TRAQPAQ_DEBUG_ENABLED == TRUE )
 	debugLogQueue = xQueueCreate(DEBUG_QUEUE_SIZE, sizeof(debugRequest));
 	
-	xTaskCreate(debug_task, configTSK_DEBUG_TASK_NAME, configTSK_DEBUG_TASK_STACK_SIZE, NULL, configTSK_DEBUG_TASK_PRIORITY, configTSK_DEBUG_TASK_HANDLE);
-	#endif
-}
-
-void debug_task( void *pvParameters ) {
 	usart_write_line(DEBUG_USART, "------------------------------");
 	usart_putchar(DEBUG_USART, DEBUG_CR);
 	usart_putchar(DEBUG_USART, DEBUG_LF);
@@ -67,6 +62,12 @@ void debug_task( void *pvParameters ) {
 	usart_putchar(DEBUG_USART, DEBUG_CR);
 	usart_putchar(DEBUG_USART, DEBUG_LF);
 	
+	xTaskCreate(debug_task, configTSK_DEBUG_TASK_NAME, configTSK_DEBUG_TASK_STACK_SIZE, NULL, configTSK_DEBUG_TASK_PRIORITY, configTSK_DEBUG_TASK_HANDLE);
+	#endif
+}
+
+void debug_task( void *pvParameters ) {
+		
 	#if (TRAQPAQ_GPS_ECHO_MODE == TRUE)
 	INTC_register_interrupt(&ISR_debug_rxd, AVR32_USART2_IRQ, AVR32_INTC_INT0);
 	#endif
@@ -156,7 +157,13 @@ void debug_task( void *pvParameters ) {
 			
 		}
 		
-		usart_write_line(DEBUG_USART, &(debugRequest.text));
+		pdca_load_channel(DEBUG_TX_PDCA_CHANNEL, &debugRequest.text, debugRequest.strLen);
+		pdca_enable(DEBUG_TX_PDCA_CHANNEL);
+
+		while( !(pdca_get_transfer_status(DEBUG_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE) ){
+			vTaskDelay( (portTickType)TASK_DELAY_MS( DEBUG_PDCA_DELAY_TIME ) );
+		}
+
 		usart_putchar(DEBUG_USART, DEBUG_CR);
 		usart_putchar(DEBUG_USART, DEBUG_LF);
 		
@@ -169,6 +176,7 @@ void debug_log(enum tDebugPriority priority, enum tDebugSender sender, char *str
 	
 	request.priority = priority;
 	request.sender = sender;
+	request.strLen = strlen(string);
 	
 	strlcpy(&request.text, string, DEBUG_MAX_STRLEN);
 	
