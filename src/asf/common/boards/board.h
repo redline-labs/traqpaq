@@ -80,6 +80,7 @@ extern "C" {
 #elif BOARD == TRAQPAQ
   // User-reserved area: #include the header file of your board here (if any).
   #include "traqpaq/traqpaq.h"
+  #include "traqpaq/board_macros.h"
 #elif BOARD == DUMMY_BOARD
   #include "dummy/dummy_board.h"
 #else

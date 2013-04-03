@@ -107,6 +107,8 @@
 #define USB_DBG_ACCEL_GET_NORM_DATA		0x62
 #define USB_DBG_ACCEL_GET_ST_DATA		0x63
 
+#define USB_DBG_TASK_LIST				0x70
+
 #define USB_UNKNOWN_CMD					0xFF
 
 void usb_task_init( void );

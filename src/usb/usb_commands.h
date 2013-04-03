@@ -235,6 +235,10 @@ struct __attribute__ ((packed)) tUsbTxDbgGpsLoadAid {
 	unsigned char success;
 };
 
+struct __attribute__ ((packed)) tUsbTxTaskList {
+	unsigned char success;
+};
+
 
 
 union tUsbTxMessages{
@@ -279,6 +283,7 @@ union tUsbTxMessages{
 	struct tUsbTxDbgAccelNormData			DBG_ACCEL_GET_NORM_DATA;
 	struct tUsbTxDbgAccelStData				DBG_ACCEL_GET_ST_DATA;
 	struct tUsbTxDbgGpsLoadAid				DBG_GPS_LOAD_AID;
+	struct tUsbTxTaskList					DBG_TASK_LIST;
 	
 	unsigned char							raw[FLASH_PAGE_SIZE];
 };
@@ -456,7 +461,8 @@ struct __attribute__ ((packed)) tUsbRxDbgAccelStData {
 struct __attribute__ ((packed)) tUsbRxDbgGpsLoadAid {
 };
 
-
+struct __attribute__ ((packed)) tUsbRxTaskList {
+};
 
 
 union tUsbRxMessages{
@@ -501,6 +507,7 @@ union tUsbRxMessages{
 	struct tUsbRxDbgAccelNormData			DBG_ACCEL_GET_NORM_DATA;
 	struct tUsbRxDbgAccelStData				DBG_ACCEL_GET_ST_DATA;
 	struct tUsbRxDbgGpsLoadAid				DBG_GPS_LOAD_AID;
+	struct tUsbRxTaskList					DBG_TASK_LIST;
 	
 	unsigned char							raw[FLASH_PAGE_SIZE];
 };

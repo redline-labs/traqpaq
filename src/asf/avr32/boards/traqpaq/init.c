@@ -74,6 +74,11 @@ void board_init(void){
 	gpio_enable_pin_pull_up(CHARGE_STAT2);
 	gpio_enable_pin_pull_up(CHARGE_PG);
 	
+	gpio_clr_gpio_pin(GPIO_DEBUG0);			// Debug pins	TODO: Change these over to board macros
+	gpio_clr_gpio_pin(GPIO_DEBUG1);
+	gpio_clr_gpio_pin(GPIO_DEBUG2);
+	gpio_clr_gpio_pin(GPIO_DEBUG3);
+	
 
 	// ------------------------------------------------------------
 	// GPS Initialization (USART3)

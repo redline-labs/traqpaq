@@ -67,6 +67,7 @@ void debug_task_init( void ){
 }
 
 void debug_task( void *pvParameters ) {
+	unsigned char taskListBuffer[TASK_LIST_STRLEN];
 		
 	#if (TRAQPAQ_GPS_ECHO_MODE == TRUE)
 	INTC_register_interrupt(&ISR_debug_rxd, AVR32_USART2_IRQ, AVR32_INTC_INT0);
@@ -86,6 +87,12 @@ void debug_task( void *pvParameters ) {
 			
 			case(DEBUG_PRIORITY_CRITICAL):
 				usart_write_line(DEBUG_USART, "CRITICAL ");
+				break;
+				
+			case(DEBUG_PRIORITY_TASK):
+				usart_putchar(DEBUG_USART, DEBUG_CR);
+				usart_putchar(DEBUG_USART, DEBUG_LF);
+				usart_write_line(DEBUG_USART, "Task	");
 				break;
 		}
 		
@@ -155,9 +162,18 @@ void debug_task( void *pvParameters ) {
 				usart_write_line(DEBUG_USART, "[Z]: ");
 				break;
 			
+			case(DEBUG_SENDER_TASKLIST):
+				usart_write_line(DEBUG_USART, "	Stat	Pri	Stack	Num");
+				break;
 		}
 		
-		pdca_load_channel(DEBUG_TX_PDCA_CHANNEL, &debugRequest.text, debugRequest.strLen);
+		if(debugRequest.sender == DEBUG_SENDER_TASKLIST){
+			vTaskList(&taskListBuffer);
+			pdca_load_channel(DEBUG_TX_PDCA_CHANNEL, &taskListBuffer, strlen(taskListBuffer));
+		}else{
+			pdca_load_channel(DEBUG_TX_PDCA_CHANNEL, &debugRequest.text, debugRequest.strLen);
+		}
+		
 		pdca_enable(DEBUG_TX_PDCA_CHANNEL);
 
 		while( !(pdca_get_transfer_status(DEBUG_TX_PDCA_CHANNEL) & PDCA_TRANSFER_COMPLETE) ){

@@ -73,7 +73,7 @@
 /* configTOTAL_HEAP_SIZE is not used when heap_3.c is used. */
 #define configTOTAL_HEAP_SIZE     ( ( size_t ) ( 1024*25 ) )
 #define configMAX_TASK_NAME_LEN   ( 20 )
-#define configUSE_TRACE_FACILITY  0
+#define configUSE_TRACE_FACILITY  TRAQPAQ_DEBUG_ENABLED
 #define configUSE_16_BIT_TICKS    0
 #define configIDLE_SHOULD_YIELD   1
 
@@ -160,7 +160,7 @@ to exclude the API function. */
 #define configTSK_WATCHDOG_TASK_PERIOD      20
 #define configTSK_WATCHDOG_TASK_HANDLE		NULL
 
-/* Dataflash Task */
+/* Flash Task */
 #define configTSK_DATAFLASH_TASK_NAME		((const signed portCHAR *)"Flash")
 #define configTSK_DATAFLASH_TASK_STACK_SIZE	1536
 #define configTSK_DATAFLASH_TASK_PRIORITY	TASK_PRIORITY_MEDIUM
@@ -190,7 +190,7 @@ to exclude the API function. */
 
 /* Debug Task */
 #define configTSK_DEBUG_TASK_NAME			((const signed portCHAR *)"Debug")
-#define configTSK_DEBUG_TASK_STACK_SIZE		256
+#define configTSK_DEBUG_TASK_STACK_SIZE		1024
 #define configTSK_DEBUG_TASK_PRIORITY		TASK_PRIORITY_LOW
 #define configTSK_DEBUG_TASK_PERIOD			20
 #define configTSK_DEBUG_TASK_HANDLE			NULL

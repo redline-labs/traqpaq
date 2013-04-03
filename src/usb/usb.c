@@ -290,6 +290,12 @@ void usb_task( void *pvParameters ){
 				usbTx.message.DBG_GPS_SW_DATE.valid = gpsInfo.sw_date_valid;
 				memcpy(&usbTx.message.DBG_GPS_SW_DATE.swDate, gpsInfo.sw_date, sizeof(usbTx.message.DBG_GPS_SW_DATE.swDate));
 				break;
+				
+			case(USB_DBG_TASK_LIST):
+				usbTx.msgLength = sizeof(usbTx.message.DBG_TASK_LIST);
+				usbTx.message.DBG_TASK_LIST.success = TRUE;
+				debug_log(DEBUG_PRIORITY_TASK, DEBUG_SENDER_TASKLIST, "Task List");
+				break;
 
 			default:
 				// Unknown command!

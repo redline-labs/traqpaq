@@ -293,6 +293,7 @@ void gps_task( void *pvParameters ){
 			}else{
 				// Checksums matched! Good message!
 				gpsMessage.frameNumber++;
+				debug_tgl_pin0();
 				
 				switch(gpsMessage.class){
 					
