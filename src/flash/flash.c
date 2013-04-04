@@ -477,10 +477,6 @@ unsigned char flash_eraseRecordedData(){
 
 unsigned char flash_ReadToBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){
 	unsigned short dummyData;
-	
-	if(length < 8){		// TODO: Need to investigate why reads under 8 bytes bomb out
-		return DATAFLASH_RESPONSE_FAILURE;
-	}
 
 	spi_selectChip(FLASH_SPI, FLASH_SPI_NPCS);
 	
@@ -516,10 +512,6 @@ unsigned char flash_ReadToBuffer(unsigned long startAddress, unsigned short leng
 }
 
 unsigned char flash_WriteFromBuffer(unsigned long startAddress, unsigned short length, unsigned char *bufferPointer){
-	
-	if(length < 8){		// TODO: Need to investigate why reads under 8 bytes bomb out
-		return DATAFLASH_RESPONSE_FAILURE;
-	}
 
 	while( flash_is_busy() ){
 		vTaskDelay( (portTickType)TASK_DELAY_MS( DATAFLASH_PROGRAM_TIME ) );
