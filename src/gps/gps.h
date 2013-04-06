@@ -58,12 +58,18 @@
 #define RADIANS_CONVERSION			0.0174532925	// Value of (Pi / 180)
 
 #define GPS_MSG_TX_TIME				250
-#define GPS_DEAD_STARTUP_TIME		500
+#define GPS_DEAD_STARTUP_TIME		500				// Make sure this is greater than GPS_MSG_TX_TIME
 
 #define GPS_BAUD_RATE_CHANGE_DELAY	100
 
 #define GPS_UNKNOWN_MESSAGES_TOLERANCE	10
 #define GPS_RESET_MAX_TRIES				3
+
+struct tGPSRxdMessages {
+	unsigned char NAV_SOL;
+	unsigned char NAV_POSLLH;
+	unsigned char NAV_VELNED;
+};
 
 
 enum tGPSMessageClasses {
@@ -76,7 +82,7 @@ enum tGPSMessageClasses {
 	UBX_CLASS_AID	= 0x0B,
 	UBX_CLASS_TIM	= 0x0D,
 	NMEA			= 0xF0
-}; 
+};
 
 
 #define UBX_NAV_CLOCK		0x22
@@ -189,9 +195,10 @@ struct tGPSLine {
 
 enum tGPSStatus {
 	GPS_STATUS_UNKNOWN		= 0,
-	GPS_STATUS_STARTED		= 1,
-	GPS_STATUS_SICK			= 2,
-	GPS_STATUS_DEAD			= 3
+	GPS_STATUS_CONFIGURED	= 1,
+	GPS_STATUS_STARTED		= 2,
+	GPS_STATUS_SICK			= 3,
+	GPS_STATUS_DEAD			= 4
 };
 
 enum tGPSCmdResponse {
@@ -376,6 +383,26 @@ struct __attribute__ ((packed)) tUbxNavVelNED {
 	unsigned int cAcc;		// Course / Heading Accuracy Estimate
 };
 
+struct __attribute__ ((packed)) tUbxNavSol {
+	unsigned int iTOW;
+	signed int fTOW;
+	signed short week;
+	unsigned char gpsFix;
+	unsigned char flags;
+	signed int ecefX;
+	signed int ecefY;
+	signed int ecefZ;
+	unsigned int pAcc;
+	signed int ecefVX;
+	signed int ecefVY;
+	signed int ecefVZ;
+	unsigned int sAcc;
+	unsigned short pDOP;
+	unsigned char res1;
+	unsigned char numSV;
+	unsigned int res2;
+};
+
 #define	UBX_NEO_6_PORTS	6
 #define USART_1_PORT	1
 
@@ -422,6 +449,7 @@ union tUBXMessages {
 	struct tUbxNavPosLLH NAV_POSLLH;
 	struct tUbxNavDop NAV_DOP;
 	struct tUbxNavStatus NAV_STATUS;
+	struct tUbxNavSol NAV_SOL;
 	
 	struct tUbxMonVer MON_VER;
 	struct tUbxMonHW  MON_HW;

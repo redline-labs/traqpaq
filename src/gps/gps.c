@@ -34,7 +34,7 @@
 
 xQueueHandle gpsRxdQueue;
 xQueueHandle gpsManagerQueue;
-xTimerHandle xReceiverDeadTimer, xReceiverTxTimer;
+xTimerHandle xReceiverDeadTimer, xReceiverCfgTimer;
 
 struct tGPSInfo gpsInfo;
 
@@ -121,8 +121,14 @@ void gps_task( void *pvParameters ){
 	enum tGPSStateMachine parserState = GPS_STATUS_UNKNOWN;
 	struct tGPSMessage gpsMessage;
 	struct tGPSChecksum gpsChecksum;
+	struct tGPSRxdMessages gpsRxdMessages;
 	
 	gpsMessage.frameNumber = 0;			// Reset the Rx frame counter
+	
+	// Reset the flags for each solution
+	gpsRxdMessages.NAV_POSLLH = FALSE;
+	gpsRxdMessages.NAV_SOL = FALSE;
+	gpsRxdMessages.NAV_VELNED = FALSE;
 
 	// Make sure the battery isn't low before continuing
 	fuel_low_battery_check();
@@ -139,15 +145,15 @@ void gps_task( void *pvParameters ){
 										GPS_DEAD_TIMER_ID,
 										gps_dead );
 										
-	xReceiverTxTimer = xTimerCreate( "gpsCfgTimer",
+	xReceiverCfgTimer = xTimerCreate( "gpsCfgTimer",
 										(GPS_MSG_TX_TIME / portTICK_RATE_MS),
 										FALSE,
 										GPS_CFG_MSG_TIMER_ID,
 										gps_configure );
 										 
 	// Kick off the timer
-	//xTimerStart(xReceiverDeadTimer, pdFALSE);
-	xTimerStart(xReceiverTxTimer, pdFALSE);
+	xTimerStart(xReceiverDeadTimer, pdFALSE);
+	xTimerStart(xReceiverCfgTimer, pdFALSE);
 	
 	while(TRUE){
 		// Check for pending requests
@@ -309,6 +315,10 @@ void gps_task( void *pvParameters ){
 								gpsInfo.lastCmd.class = gpsMessage.messages.ACK_NAK.clsID;
 								gpsInfo.lastCmd.id = gpsMessage.messages.ACK_NAK.msgID;
 								gpsInfo.lastCmd.response = GPS_RESPONSE_NAK;
+								
+								// Kick off the next configuration step
+								if(gpsInfo.status == GPS_STATUS_UNKNOWN) gps_configure(NULL);
+																
 								break;
 								
 							// *** ACK-ACK ***
@@ -317,6 +327,10 @@ void gps_task( void *pvParameters ){
 								gpsInfo.lastCmd.class = gpsMessage.messages.ACK_ACK.clsID;
 								gpsInfo.lastCmd.id = gpsMessage.messages.ACK_ACK.msgID;
 								gpsInfo.lastCmd.response = GPS_RESPONSE_ACK;
+								
+								// Kick off the next configuration step
+								if(gpsInfo.status == GPS_STATUS_UNKNOWN) gps_configure(NULL);					
+								
 								break;
 								
 							// *** Unknown ***
@@ -347,7 +361,6 @@ void gps_task( void *pvParameters ){
 							
 							// *** NAV-DOP ***
 							case(UBX_NAV_DOP):
-								gpsData.hdop = gps_flip_endian2(gpsMessage.messages.NAV_DOP.hDOP);
 								break;
 								
 							// *** NAV-POSECEF ***
@@ -356,11 +369,14 @@ void gps_task( void *pvParameters ){
 								
 							// *** NAV-POSLLH ***
 							case(UBX_NAV_POSLLH):
+								gpsRxdMessages.NAV_POSLLH = TRUE;
+								
 								gpsData.utc = gps_flip_endian4(gpsMessage.messages.NAV_PVT.iTOW);
 								
-								gpsData.data[recordIndex].altitude = (gps_flip_endian4(gpsMessage.messages.NAV_POSLLH.hMSL) / 100) & 0xFFFF;
 								gpsData.data[recordIndex].latitude = gps_flip_endian4(gpsMessage.messages.NAV_POSLLH.lat);
 								gpsData.data[recordIndex].longitude = gps_flip_endian4(gpsMessage.messages.NAV_POSLLH.lon);
+								gpsData.data[recordIndex].altitude = (gps_flip_endian4(gpsMessage.messages.NAV_POSLLH.hMSL) / 100) & 0xFFFF;
+								
 									
 								// Copy over the current position info
 								gpsInfo.current_location.latitude = gpsData.data[recordIndex].latitude;
@@ -374,12 +390,22 @@ void gps_task( void *pvParameters ){
 								
 							// *** NAV-SOL ***
 							case(UBX_NAV_SOL):
+								gpsRxdMessages.NAV_SOL = TRUE;
+								
+								gpsData.utc = gps_flip_endian4(gpsMessage.messages.NAV_SOL.iTOW);
+								gpsData.hdop = gps_flip_endian2(gpsMessage.messages.NAV_SOL.pDOP);
+								gpsData.currentMode = gpsMessage.messages.NAV_SOL.gpsFix;
+								gpsData.satellites = gpsMessage.messages.NAV_SOL.numSV;
+								datestamp = gps_flip_endian2(gpsMessage.messages.NAV_SOL.week);
+
+								// Copy over the current position info
+								gpsInfo.satellites = gpsData.satellites;
+								gpsInfo.mode = gpsData.currentMode;
+
 								break;
 								
 							// *** NAV-STATUS ***
 							case(UBX_NAV_STATUS):
-								gpsData.utc = gpsMessage.messages.NAV_STATUS.iTOW;
-								gpsData.currentMode = gpsMessage.messages.NAV_STATUS.gpsFix;
 								break;
 								
 							// *** NAV-SVINFO ***
@@ -400,8 +426,12 @@ void gps_task( void *pvParameters ){
 								
 							// *** NAV-VELNED ***
 							case(UBX_NAV_VELNED):
+								gpsRxdMessages.NAV_VELNED = TRUE;
+								
 								gpsData.data[recordIndex].speed = (unsigned short)gps_flip_endian4(gpsMessage.messages.NAV_VELNED.gSpeed);
 								gpsData.data[recordIndex].heading = (unsigned short)gps_flip_endian4(gpsMessage.messages.NAV_VELNED.heading);
+								
+								// Copy the information over to the current location
 								gpsInfo.current_location.heading = gpsData.data[recordIndex].heading;
 								break;
 								
@@ -561,6 +591,8 @@ void gps_task( void *pvParameters ){
 							// *** MON-VER ***
 							case(UBX_MON_VER):
 								gpsInfo.status = GPS_STATUS_STARTED;
+								xTimerStop(xReceiverDeadTimer, pdFALSE);
+								debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "GPS Receiver Started Successfully");
 								
 								gpsInfo.sw_version_valid = TRUE;
 								memcpy(&gpsInfo.sw_version, &gpsMessage.messages.MON_VER.swVersion, sizeof(gpsInfo.sw_version));
@@ -572,6 +604,7 @@ void gps_task( void *pvParameters ){
 								
 							// *** MON-HW2 ***
 							case(UBX_MON_HW2):
+								debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Received Debug Info");
 								gpsInfo.debug.ofsI = gpsMessage.messages.MON_HW2.ofsI;
 								gpsInfo.debug.magI = gpsMessage.messages.MON_HW2.magI;
 								gpsInfo.debug.ofsQ = gpsMessage.messages.MON_HW2.ofsQ;
@@ -637,6 +670,22 @@ void gps_task( void *pvParameters ){
 			// Get ready for another message
 			parserState = GPS_STATE_UNKNOWN;
 			
+		}
+		
+		if(gpsRxdMessages.NAV_POSLLH && gpsRxdMessages.NAV_SOL && gpsRxdMessages.NAV_VELNED){
+			gpsRxdMessages.NAV_POSLLH = FALSE;
+			gpsRxdMessages.NAV_SOL = FALSE;
+			gpsRxdMessages.NAV_VELNED = FALSE;
+			
+			if(gpsInfo.record_flag){
+				recordIndex++;
+				if(recordIndex == RECORD_DATA_PER_PAGE){
+					debug_tgl_pin1();
+					flash_send_request(FLASH_MGR_ADD_RECORD_DATA, &gpsData, sizeof(gpsData), NULL, TRUE, 20);
+					recordIndex = 0;
+				}
+			}
+
 		}
 		
 		
@@ -777,122 +826,119 @@ void gps_dead( xTimerHandle xTimer ){
 		// Something is up. The only thing possible is incorrect baud rate.  Lets try fixing it
 		gpsInfo.status = GPS_STATUS_DEAD;
 		debug_log(DEBUG_PRIORITY_CRITICAL, DEBUG_SENDER_GPS, "Resetting didn't help - Drastic measures!");
-		
-		
 	}
 }
 
 
 void gps_configure( xTimerHandle xTimer ){
 	unsigned char i;
+	static unsigned char cfgStep = 0;
 	
 	struct tUbxCfgMsg cfgMsg;
 	struct tUbxCfgRate cfgRate;
 	
-	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Starting to configure receiver");
-	
-	// By default, turn off all on all ports
-	for(i = 0; i < UBX_NEO_6_PORTS; i++) {
-		cfgMsg.rate[i] = 0;
+	switch(cfgStep){
+		case(0):
+			debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Starting to configure receiver");
+			
+			// By default, turn off all on all ports
+			for(i = 0; i < UBX_NEO_6_PORTS; i++) {
+				cfgMsg.rate[i] = 0;
+			}
+			
+			// Turn on the UBX_NAV_POSLLH message
+			cfgMsg.msgClass	= UBX_CLASS_NAV;
+			cfgMsg.msgID	= UBX_NAV_POSLLH;
+			cfgMsg.rate[USART_1_PORT] = TRUE;
+			gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+			
+			break;
+			
+		case(1):
+			// Turn on the UBX_NAV_VELNED message
+			cfgMsg.msgClass	= UBX_CLASS_NAV;
+			cfgMsg.msgID	= UBX_NAV_VELNED;
+			cfgMsg.rate[USART_1_PORT] = TRUE;
+			gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+			break;
+			
+		case(2):
+			// Turn on the UBX_NAV_SOL message
+			cfgMsg.msgClass	= UBX_CLASS_NAV;
+			cfgMsg.msgID	= UBX_NAV_SOL;
+			cfgMsg.rate[USART_1_PORT] = TRUE;
+			gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+			break;
+			
+		case(3):
+			// Turn off the NMEA GGA message
+			cfgMsg.msgClass	= NMEA;
+			cfgMsg.msgID	= NMEA_GGA;
+			cfgMsg.rate[USART_1_PORT] = FALSE;
+			gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+			break;
+			
+		case(4):
+			// Turn off the NMEA GLL message
+			cfgMsg.msgClass	= NMEA;
+			cfgMsg.msgID	= NMEA_GLL;
+			cfgMsg.rate[USART_1_PORT] = FALSE;
+			gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+			break;
+			
+		case(5):
+			// Turn off the NMEA GSA message
+			cfgMsg.msgClass	= NMEA;
+			cfgMsg.msgID	= NMEA_GSA;
+			cfgMsg.rate[USART_1_PORT] = FALSE;
+			gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+			
+		case(6):
+			// Turn off the NMEA GSV message
+			cfgMsg.msgClass	= NMEA;
+			cfgMsg.msgID	= NMEA_GSV;
+			cfgMsg.rate[USART_1_PORT] = FALSE;
+			gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+			break;
+			
+		case(7):
+			// Turn off the NMEA RMC message
+			cfgMsg.msgClass	= NMEA;
+			cfgMsg.msgID	= NMEA_RMC;
+			cfgMsg.rate[USART_1_PORT] = FALSE;
+			gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+			break;
+			
+		case(8):
+			// Turn off the NMEA VTG message
+			cfgMsg.msgClass	= NMEA;
+			cfgMsg.msgID	= NMEA_VTG;
+			cfgMsg.rate[USART_1_PORT] = FALSE;
+			gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
+			break;
+			
+		case(9):
+			// Set messaging rate
+			cfgRate.measRate = gps_flip_endian2(GPS_UBX_MSG_RATE);
+			cfgRate.navRate = gps_flip_endian2(GPS_UBX_NAV_RATE);
+			cfgRate.timeRef = gps_flip_endian2(GPS_UBX_TIME_REF);
+			gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_RATE, &cfgRate, sizeof(cfgRate));
+			break;
+		
+		// NO MORE CASES AFTER THIS
+		case(10):
+			// Get the HW and SW versions
+			gps_sendPacket(UBX_CLASS_MON, UBX_MON_VER, NULL, NULL);
+			break;
+			
+		default:
+			debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_GPS, "Finished Configuring Receiver");
+			gpsInfo.status = GPS_STATUS_CONFIGURED;
+			break;
 	}
 	
-	// Turn on the UBX_NAV_POSLLH message
-	cfgMsg.msgClass	= UBX_CLASS_NAV;
-	cfgMsg.msgID	= UBX_NAV_POSLLH;
-	cfgMsg.rate[USART_1_PORT] = 1;
-	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
-	
-	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
-	
-	
-	// Turn on the UBX_NAV_DOP message
-	cfgMsg.msgClass	= UBX_CLASS_NAV;
-	cfgMsg.msgID	= UBX_NAV_DOP;
-	cfgMsg.rate[USART_1_PORT] = 1;
-	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
-	
-	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
-	
-	// Turn on the UBX_NAV_VELNED message
-	cfgMsg.msgClass	= UBX_CLASS_NAV;
-	cfgMsg.msgID	= UBX_NAV_VELNED;
-	cfgMsg.rate[USART_1_PORT] = 1;
-	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
-	
-	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
-	
-	// Turn on the UBX_NAV_TIMEUTC message
-	cfgMsg.msgClass	= UBX_CLASS_NAV;
-	cfgMsg.msgID	= UBX_NAV_TIMEUTC;
-	cfgMsg.rate[USART_1_PORT] = 1;
-	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
-	
-	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
-	
-	// Turn on the UBX_NAV_STATUS message
-	cfgMsg.msgClass	= UBX_CLASS_NAV;
-	cfgMsg.msgID	= UBX_NAV_STATUS;
-	cfgMsg.rate[USART_1_PORT] = 1;
-	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
-	
-	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
-	
-	// Turn off the NMEA GGA message
-	cfgMsg.msgClass	= NMEA;
-	cfgMsg.msgID	= NMEA_GGA;
-	cfgMsg.rate[USART_1_PORT] = 0;
-	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
-	
-	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
-	
-	// Turn off the NMEA GLL message
-	cfgMsg.msgClass	= NMEA;
-	cfgMsg.msgID	= NMEA_GLL;
-	cfgMsg.rate[USART_1_PORT] = 0;
-	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
-	
-	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
-	
-	// Turn off the NMEA GSA message
-	cfgMsg.msgClass	= NMEA;
-	cfgMsg.msgID	= NMEA_GSA;
-	cfgMsg.rate[USART_1_PORT] = 0;
-	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
-	
-	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
-	
-	// Turn off the NMEA GSV message
-	cfgMsg.msgClass	= NMEA;
-	cfgMsg.msgID	= NMEA_GSV;
-	cfgMsg.rate[USART_1_PORT] = 0;
-	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
-	
-	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
-	
-	// Turn off the NMEA RMC message
-	cfgMsg.msgClass	= NMEA;
-	cfgMsg.msgID	= NMEA_RMC;
-	cfgMsg.rate[USART_1_PORT] = 0;
-	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
-	
-	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
-	
-	// Turn off the NMEA VTG message
-	cfgMsg.msgClass	= NMEA;
-	cfgMsg.msgID	= NMEA_VTG;
-	cfgMsg.rate[USART_1_PORT] = 0;
-	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_MSG, &cfgMsg, sizeof(cfgMsg));
-	
-	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
-	
-	cfgRate.measRate = gps_flip_endian2(GPS_UBX_MSG_RATE);
-	cfgRate.navRate = gps_flip_endian2(GPS_UBX_NAV_RATE);
-	cfgRate.timeRef = gps_flip_endian2(GPS_UBX_TIME_REF);
-	gps_sendPacket(UBX_CLASS_CFG, UBX_CFG_RATE, &cfgRate, sizeof(cfgRate));
-	
-	vTaskDelay( (portTickType)TASK_DELAY_MS(GPS_TX_TIME) );
+	cfgStep += 1;
 }
-
 
 
 void gps_setSbasMode(unsigned char enableSBAS){
