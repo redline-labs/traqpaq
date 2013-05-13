@@ -222,6 +222,11 @@ unsigned char accel_read( struct tAccelSample *sample ){
 	
 	spi_unselectChip(ACCEL_SPI, ACCEL_SPI_NPCS);
 	
+	// Flip to big-endian
+	sample->x = accel_flip_endian16(sample->x);
+	sample->y = accel_flip_endian16(sample->y);
+	sample->z = accel_flip_endian16(sample->z);
+	
 	return ACCEL_RESPONSE_OK;
 }
 

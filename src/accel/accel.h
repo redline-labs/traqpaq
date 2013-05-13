@@ -38,6 +38,10 @@
 
 #define ACCEL_MANAGER_QUEUE_SIZE		5
 
+
+#define accel_flip_endian16(data)		(((data & 0xFF) << 8) + ((data & 0xFF00) >> 8))
+
+
 #define ACCEL_RESPONSE_OK				TRUE
 #define ACCEL_RESPONSE_ERROR			FALSE
 
@@ -130,7 +134,7 @@
 // FIFO_STATUS
 #define ACCEL_MASK_FIFO_ENTRIES			0b00111111
 
-#define ACCEL_SELF_TEST_SAMPLES			128			// Keep a power of two to make division easy
+#define ACCEL_SELF_TEST_SAMPLES			32			// Keep a power of two to make division easy
 
 #define ACCEL_SENSITIVITY				4			// 3.9mg per LSB
 #define ACCEL_SELF_TEST_SETTLE_TIME		2			// Time in milliseconds to allow the self-test to settle
