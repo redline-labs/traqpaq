@@ -180,7 +180,7 @@ enum tAccelStatus {
 	SAMPLING			= 7
 };
 
-struct tAccelInfo {
+struct __attribute__ ((packed)) tAccelInfo {
 	unsigned char available;
 	unsigned char selfTestPassed;
 	enum tAccelStatus status;

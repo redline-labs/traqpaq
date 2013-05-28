@@ -83,7 +83,6 @@ void board_init(void){
 	// ------------------------------------------------------------
 	// GPS Initialization (USART3)
 	// ------------------------------------------------------------
-	#if( TRAQPAQ_GPS_EXTERNAL_LOGGING == FALSE )
 	const gpio_map_t GPS_USART_GPIO_MAP = {
 		{GPS_TXD, GPS_TXD_FUNCTION},
 		{GPS_RXD, GPS_RXD_FUNCTION}
@@ -98,10 +97,8 @@ void board_init(void){
 		.channelmode  = USART_NORMAL_CHMODE
 	};
 
-	gpio_enable_module( GPS_USART_GPIO_MAP, sizeof( GPS_USART_GPIO_MAP ) / sizeof( GPS_USART_GPIO_MAP[0] ) ); // Assign GPIO to Debug USART.
+	gpio_enable_module( GPS_USART_GPIO_MAP, sizeof(GPS_USART_GPIO_MAP) / sizeof(GPS_USART_GPIO_MAP[0]) ); // Assign GPIO to Debug USART.
 	usart_init_rs232( GPS_USART, &GPS_USART_OPTIONS, APPL_PBA_SPEED ); // Initialize Debug USART in RS232 mode.
-
-	#endif
 
 	// ------------------------------------------------------------
 	// Debug Initialization (USART2)

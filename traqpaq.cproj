@@ -2,7 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
   <PropertyGroup>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectVersion>6.0</ProjectVersion>
+    <ProjectVersion>6.1</ProjectVersion>
     <ProjectGuid>5e06e9a0-fb29-11e0-9773-000c2967fa5f</ProjectGuid>
     <avrdevice>AT32UC3A0512</avrdevice>
     <avrdeviceseries>uc3a</avrdeviceseries>
@@ -18,20 +18,19 @@
       <ToolType>com.atmel.avrdbg.tool.jtagicemkii</ToolType>
       <ToolName>JTAGICE mkII</ToolName>
       <ToolNumber>070000004791</ToolNumber>
-      <KeepTimersRunning>true</KeepTimersRunning>
-      <OverrideVtor>false</OverrideVtor>
-      <OverrideVtorValue>
-      </OverrideVtorValue>
+      <StimuliFile>
+      </StimuliFile>
       <Channel>
         <host>127.0.0.1</host>
-        <port>49181</port>
+        <port>49749</port>
         <ssl>False</ssl>
       </Channel>
       <ToolOptions>
         <InterfaceName>JTAG</InterfaceName>
         <InterfaceProperties>
           <JtagDbgClock>200000</JtagDbgClock>
-          <JtagProgClock>1000000</JtagProgClock>
+          <SwdClock>249000</SwdClock>
+          <JtagProgClock>200000</JtagProgClock>
           <IspClock>150000</IspClock>
           <JtagInChain>false</JtagInChain>
           <JtagEnableExtResetOnStartSession>false</JtagEnableExtResetOnStartSession>
@@ -43,8 +42,8 @@
       </ToolOptions>
     </com_atmel_avrdbg_tool_jtagicemkii>
     <avrtoolinterface>JTAG</avrtoolinterface>
-    <ToolchainName>com.Atmel.AVRGCC32</ToolchainName>
-    <ToolchainFlavour>Native</ToolchainFlavour>
+    <ToolchainName>com.Atmel.AVRGCC32.C</ToolchainName>
+    <ToolchainFlavour>AVR-GCC 3.4.2.1573</ToolchainFlavour>
     <AsfFrameworkConfig>
       <framework-data>
         <options>
@@ -68,6 +67,7 @@
           <option id="common.services.usb.class.vendor.device.single" value="Add" config="" content-id="Atmel.ASF" />
           <option id="common.services.basic.clock" value="Add" config="" content-id="Atmel.ASF" />
         </options>
+        <configurations />
         <files>
           <file path="src/enum_example.c" framework="com.atmel.avr32.sf.uc3a" version="2.8.1-23114" source="avr32/drivers/usbb/_asf_v1/examples/enum_example.c" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/thirdparty/freertos/source/include/croutine.h" framework="com.atmel.avr32.sf.uc3a" version="2.8.1-23114" source="thirdparty/freertos/source/include/croutine.h" changed="False" content-id="Atmel.ASF" />
@@ -208,7 +208,11 @@
           <file path="src/asf/common/services/usb/udc/udc_desc.h" framework="" version="" source="common\services\usb\udc\udc_desc.h" changed="False" content-id="Atmel.ASF" />
           <file path="src/asf/common/services/usb/udc/udi.h" framework="" version="" source="common\services\usb\udc\udi.h" changed="False" content-id="Atmel.ASF" />
         </files>
-        <documentation help="http://asf.atmel.com/docs/2.8.1/avr32/drivers/usbb/_asf_v1/examples/enum_example_freertos/at32uc3a0512_evk1100/doxygen/html/" />
+        <documentation help="" />
+        <offline-documentation help="" />
+        <dependencies>
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.3.0" />
+        </dependencies>
       </framework-data>
     </AsfFrameworkConfig>
     <AsfVersion>2.11.1</AsfVersion>
@@ -225,14 +229,24 @@
     </com_atmel_avrdbg_tool_simulator>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
-    <OverrideVtorValue />
+    <OverrideVtorValue>
+    </OverrideVtorValue>
     <eraseonlaunchrule>0</eraseonlaunchrule>
+    <CacheFlash>true</CacheFlash>
+    <ProgFlashFromRam>true</ProgFlashFromRam>
+    <RamSnippetAddress>0x20000000</RamSnippetAddress>
+    <UncachedRange />
+    <BootSegment>2</BootSegment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <OutputFileName>traqpaq_FreeRTOS</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <ToolchainSettings>
       <Avr32Gcc xmlns="">
+        <avr32gcc.common.outputfiles.hex>True</avr32gcc.common.outputfiles.hex>
+        <avr32gcc.common.outputfiles.lss>True</avr32gcc.common.outputfiles.lss>
+        <avr32gcc.common.outputfiles.eep>True</avr32gcc.common.outputfiles.eep>
+        <avr32gcc.common.outputfiles.srec>True</avr32gcc.common.outputfiles.srec>
         <avr32gcc.compiler.symbols.DefSymbols>
           <ListValues>
             <Value>BOARD=EVK1100</Value>
@@ -296,7 +310,7 @@
         <avr32gcc.linker.general.DoNotUseDefaultLibraries />
         <avr32gcc.linker.libraries.Libraries>
           <ListValues>
-            <Value>m</Value>
+            <Value>libm</Value>
           </ListValues>
         </avr32gcc.linker.libraries.Libraries>
         <avr32gcc.linker.optimization.GarbageCollectUnusedSections>True</avr32gcc.linker.optimization.GarbageCollectUnusedSections>
@@ -408,6 +422,7 @@
         <avr32gcc.common.outputfiles.hex>True</avr32gcc.common.outputfiles.hex>
         <avr32gcc.common.outputfiles.lss>True</avr32gcc.common.outputfiles.lss>
         <avr32gcc.common.outputfiles.eep>True</avr32gcc.common.outputfiles.eep>
+        <avr32gcc.common.outputfiles.srec>True</avr32gcc.common.outputfiles.srec>
         <avr32gcc.compiler.symbols.DefSymbols>
           <ListValues>
             <Value>FREERTOS_USED</Value>
@@ -452,7 +467,7 @@
             <Value>../src/asf/common/services/usb/udc</Value>
           </ListValues>
         </avr32gcc.compiler.directories.IncludePaths>
-        <avr32gcc.compiler.optimization.level>Optimize most (-O3)</avr32gcc.compiler.optimization.level>
+        <avr32gcc.compiler.optimization.level>Optimize more (-O2)</avr32gcc.compiler.optimization.level>
         <avr32gcc.compiler.optimization.OtherFlags>-fdata-sections</avr32gcc.compiler.optimization.OtherFlags>
         <avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
         <avr32gcc.compiler.optimization.EnableFastMath>True</avr32gcc.compiler.optimization.EnableFastMath>
@@ -462,7 +477,7 @@
         <avr32gcc.linker.general.DoNotUseStandardStartFiles>True</avr32gcc.linker.general.DoNotUseStandardStartFiles>
         <avr32gcc.linker.libraries.Libraries>
           <ListValues>
-            <Value>m</Value>
+            <Value>libm</Value>
           </ListValues>
         </avr32gcc.linker.libraries.Libraries>
         <avr32gcc.linker.optimization.GarbageCollectUnusedSections>True</avr32gcc.linker.optimization.GarbageCollectUnusedSections>
@@ -999,6 +1014,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\usb\usb.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\usb\usb_commands.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\wdt\wdt.c">

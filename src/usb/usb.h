@@ -47,18 +47,18 @@
 #define USB_MANAGER_QUEUE_SIZE		5
 
 // Module info commands
-#define USB_CMD_REQ_APPL_VER			0x00
+#define USB_REQ_VERSIONS				0x00
 #define USB_CMD_REQ_HARDWARE_VER		0x01
 #define USB_CMD_REQ_SERIAL_NUMBER		0x02
 #define USB_CMD_REQ_TESTER_ID			0x03
-#define USB_CMD_REQ_BATTERY_VOLTAGE		0x04
+#define USB_REQ_BATTERY_INFO			0x04
 #define USB_CMD_REQ_BATTERY_TEMPERATURE	0x05
 #define USB_CMD_REQ_BATTERY_INSTANT		0x06
 #define USB_CMD_REQ_BATTERY_ACCUM		0x07
 #define USB_CMD_REQ_BATTERY_UPDATE		0x08
 #define USB_CMD_WRITE_BATTERY_INFO		0x09
 
-// Commands to interact with the dataflash
+// Commands to interact with the flash
 #define USB_CMD_READ_USERPREFS			0x10
 #define USB_CMD_READ_SAVEDTRACKS		0x11
 #define USB_CMD_READ_RECORDTABLE		0x12
@@ -84,7 +84,7 @@
 #define USB_DBG_SEND_FUEL_CMD			0x38	// Send a command to the fuel gauge
 
 #define USB_DBG_DF_SECTOR_ERASE			0x39
-#define USB_DBG_DF_BUSY					0x3A
+#define USB_DBG_FLASH_STATUS			0x3A
 #define USB_DBG_DF_CHIP_ERASE			0x3B
 #define USB_DBG_DF_IS_FLASH_FULL		0x3C
 #define USB_DBG_DF_USED_SPACE			0x3D	
@@ -102,7 +102,7 @@
 #define USB_DBG_STOP_RECORDING			0x51
 #define USB_DBG_RECORDING_STATUS		0x52
 
-#define USB_DBG_ACCEL_GET_STATUS		0x60
+#define USB_DBG_ACCEL_INFO				0x60
 #define USB_DBG_ACCEL_GET_FILT_DATA		0x61
 #define USB_DBG_ACCEL_GET_NORM_DATA		0x62
 #define USB_DBG_ACCEL_GET_ST_DATA		0x63

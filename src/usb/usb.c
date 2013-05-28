@@ -46,6 +46,7 @@ extern struct tFlashFlags flashFlags;
 extern struct tUserPrefs userPrefs;
 extern struct tGPSInfo gpsInfo;
 extern struct tFlash flash;
+extern struct tAccelInfo accel;
 
 // Create task for FreeRTOS
 void usb_task_init( void ){
@@ -78,71 +79,40 @@ void usb_task( void *pvParameters ){
 		usbTx.command = usbRx.command;
 		
 		switch(usbRx.command){
-			case(USB_CMD_REQ_APPL_VER):
-				usbTx.msgLength = sizeof(usbTx.message.CMD_REQ_APPL_VER);
-				usbTx.message.CMD_REQ_APPL_VER.swVerMajor = TRAQPAQ_SW_LEVEL_MAJOR;
-				usbTx.message.CMD_REQ_APPL_VER.swVerMinor = TRAQPAQ_SW_LEVEL_MINOR;
-				break;
-				
-			case(USB_CMD_REQ_HARDWARE_VER):
-				usbTx.msgLength = sizeof(usbTx.message.CMD_REQ_HARDWARE_VER);
-				usbTx.message.CMD_REQ_HARDWARE_VER.hwVer = flashOTP.pcb_rev;
-				break;
-				
-			case(USB_CMD_REQ_SERIAL_NUMBER):
-				usbTx.msgLength = sizeof(usbTx.message.CMD_REQ_SERIAL_NUMBER);
-				memcpy(&usbTx.message.CMD_REQ_SERIAL_NUMBER.serialNumber, &flashOTP.serial, OTP_SERIAL_LENGTH);				
-				break;
-				
-			case(USB_CMD_REQ_TESTER_ID):
-				usbTx.msgLength = sizeof(usbTx.message.CMD_REQ_TESTER_ID);
-				usbTx.message.CMD_REQ_TESTER_ID.testerId = flashOTP.tester_id;				
+			case(USB_REQ_VERSIONS):				// 0d
+				usbTx.msgLength = sizeof(usbTx.message.REQ_VERSIONS);
+				usbTx.message.REQ_VERSIONS.swVerMajor = TRAQPAQ_SW_LEVEL_MAJOR;
+				usbTx.message.REQ_VERSIONS.swVerMinor = TRAQPAQ_SW_LEVEL_MINOR;
+				usbTx.message.REQ_VERSIONS.hwVer = flashOTP.pcb_rev;
+				memcpy(usbTx.message.REQ_VERSIONS.serialNumber, flashOTP.serial, sizeof(usbTx.message.REQ_VERSIONS.serialNumber));
+				usbTx.message.REQ_VERSIONS.testerId = flashOTP.tester_id;
 				break;
 
-			case(USB_CMD_REQ_BATTERY_VOLTAGE):
-				usbTx.msgLength = sizeof(usbTx.message.CMD_REQ_BATTERY_VOLTAGE);
-				fuel_send_request(FUEL_MGR_REQUEST_VOLTAGE, NULL, &usbTx.message.CMD_REQ_BATTERY_VOLTAGE.batteryVoltage, TRUE, NULL);
+			case(USB_REQ_BATTERY_INFO):			// 4d
+				usbTx.msgLength = sizeof(usbTx.message.REQ_BATTERY_INFO);
+				
+				// Don't pause fuel task requests until very last request
+				fuel_send_request(FUEL_MGR_REQUEST_VOLTAGE, NULL, &usbTx.message.REQ_BATTERY_INFO.batteryVoltage, FALSE, NULL);
+				fuel_send_request(FUEL_MGR_REQUEST_TEMPERATURE, NULL, &usbTx.message.REQ_BATTERY_INFO.batteryTemperature, FALSE, NULL);
+				fuel_send_request(FUEL_MGR_REQUEST_ACCUM_CURRENT, NULL, &usbTx.message.REQ_BATTERY_INFO.accumulatedCurrent, FALSE, NULL);
+				fuel_send_request(FUEL_MGR_REQUEST_INSTANT_CURRENT, NULL, &usbTx.message.REQ_BATTERY_INFO.instantCurrent, TRUE, NULL);
 				break;
 				
-			case(USB_CMD_REQ_BATTERY_TEMPERATURE):
-				usbTx.msgLength = sizeof(usbTx.message.CMD_REQ_BATTERY_TEMPERATURE);
-				fuel_send_request(FUEL_MGR_REQUEST_TEMPERATURE, NULL, &usbTx.message.CMD_REQ_BATTERY_TEMPERATURE.batteryTemperature, TRUE, NULL);
+			case(USB_CMD_WRITE_BATTERY_INFO):	// 9d
+				// TODO: Need to fix this so it actually writes the data received
+				usbTx.msgLength = sizeof(usbTx.message.CMD_WRITE_BATTERY_INFO);
+				fuel_send_request(FUEL_MGR_REQUEST_WRITE_BATTERY_INFO, NULL, &usbRx.message.CMD_WRITE_BATTERY_INFO, TRUE, NULL);
+				usbTx.message.CMD_WRITE_BATTERY_INFO.success = TRUE;
 				break;
 				
-			case(USB_CMD_REQ_BATTERY_ACCUM):
-				usbTx.msgLength = sizeof(usbTx.message.CMD_REQ_BATTERY_ACCUMULATED);
-				fuel_send_request(FUEL_MGR_REQUEST_ACCUM_CURRENT, NULL, &usbTx.message.CMD_REQ_BATTERY_ACCUMULATED.accumulatedCurrent, TRUE, NULL);
-				break;
-				
-			case(USB_CMD_REQ_BATTERY_INSTANT):
-				usbTx.msgLength = sizeof(usbTx.message.CMD_REQ_BATTERY_INSTANT);
-				fuel_send_request(FUEL_MGR_REQUEST_INSTANT_CURRENT, NULL, &usbTx.message.CMD_REQ_BATTERY_INSTANT.instantCurrent, TRUE, NULL);
-				break;
-				
-			case(USB_CMD_REQ_BATTERY_UPDATE):	// 8d
-				usbTx.msgLength = sizeof(usbTx.message.CMD_REQ_BATTERY_UPDATE);
-				fuel_send_request(FUEL_MGR_REQUEST_UPDATE_ACCUM, NULL, NULL, TRUE, NULL);
-				usbTx.message.CMD_REQ_BATTERY_UPDATE.success = TRUE;		// TODO: Have the pass/fail determined by the fuel task
-				break;
-				
-			case(USB_CMD_WRITE_BATTERY_INFO):
-				usbTx.msgLength = sizeof(usbTx.message.CMD_REQ_WRITE_BATTERY_INFO);
-				fuel_send_request(FUEL_MGR_REQUEST_WRITE_BATTERY_INFO, NULL, &usbTx.message.CMD_REQ_WRITE_BATTERY_INFO.success, TRUE, NULL);
-				break;
-				
-			case(USB_CMD_READ_OTP):
-				if(usbRx.message.CMD_READ_OTP.length > sizeof(usbTx.message.CMD_READ_OTP)){
-					usbTx.msgLength = sizeof(usbTx.message.CMD_READ_OTP);
-				}else{
-					usbTx.msgLength = usbRx.message.CMD_READ_OTP.length;
-				}
-				
-				flash_send_request(FLASH_MGR_READ_OTP, &usbTx.message.CMD_READ_OTP, usbTx.msgLength, usbRx.message.CMD_READ_OTP.index, TRUE, pdFALSE);
+			case(USB_CMD_READ_OTP):				// 28d
+				usbTx.msgLength = sizeof(usbTx.message.CMD_READ_OTP);
+				flash_send_request(FLASH_MGR_READ_OTP, &usbTx.message.CMD_READ_OTP, usbTx.msgLength, NULL, TRUE, pdFALSE);
 				break;
 
 			case(USB_CMD_READ_RECORDTABLE):
 				usbTx.msgLength = sizeof(usbTx.message.CMD_READ_RECORD_TABLE);
-				flash_send_request(FLASH_MGR_READ_RECORDTABLE, &usbTx.message.CMD_READ_RECORD_TABLE, usbRx.message.CMD_READ_RECORD_TABLE.length, usbRx.message.CMD_READ_RECORD_TABLE.index, TRUE, pdFALSE);
+				flash_send_request(FLASH_MGR_READ_RECORDTABLE, &usbTx.message.CMD_READ_RECORD_TABLE, sizeof(usbTx.message.CMD_READ_RECORD_TABLE), usbRx.message.CMD_READ_RECORD_TABLE.index, TRUE, pdFALSE);
 				break;
 					
 			case(USB_CMD_READ_RECORDDATA):	// 19d
@@ -166,26 +136,17 @@ void usb_task( void *pvParameters ){
 				usbTx.message.DBG_FLASH_SECTOR_ERASE.success = TRUE;		// TODO: Have flash task set success
 				break;
 				
-			case(USB_DBG_DF_BUSY):
-				usbTx.msgLength = sizeof(usbTx.message.DBG_FLASH_BUSY);
-				usbTx.message.DBG_FLASH_BUSY.busy = flash.flags.isBusy;
+			case(USB_DBG_FLASH_STATUS):		// 58d
+				usbTx.msgLength = sizeof(usbTx.message.DBG_FLASH_STATUS);
+				usbTx.message.DBG_FLASH_STATUS.busy = flash.flags.isBusy;
+				usbTx.message.DBG_FLASH_STATUS.isFull = flash.flags.isFull;
+				usbTx.message.DBG_FLASH_STATUS.usedPercent = TRUE;		// TODO: Fix this part!
 				break;
 				
 			case(USB_CMD_ERASE_RECORDDATA):
 				usbTx.msgLength = sizeof(usbTx.message.CMD_ERASE_RECORD_DATA);
 				flash_send_request(FLASH_MGR_ERASE_RECORDED_DATA, NULL, NULL, NULL, FALSE, pdFALSE);
 				usbTx.message.CMD_ERASE_RECORD_DATA.success = TRUE;			// TODO: Have flash task set success
-				break;
-					
-			case(USB_DBG_DF_IS_FLASH_FULL):
-				usbTx.msgLength = sizeof(usbTx.message.DBG_FLASH_IS_FULL);
-				usbTx.message.DBG_FLASH_IS_FULL.isFull = flash.flags.isFull;
-				break;
-					
-			case(USB_DBG_DF_USED_SPACE):
-				usbTx.msgLength = sizeof(usbTx.message.DBG_FLASH_USED_SPACE);
-				flash_send_request(FLASH_MGR_USED_SPACE, NULL, NULL, NULL, FALSE, pdFALSE);		// TODO: Fix this request!
-				usbTx.message.DBG_FLASH_USED_SPACE.usedPercent = TRUE;
 				break;
 				
 			case(USB_DBG_DF_CHIP_ERASE):
@@ -207,8 +168,8 @@ void usb_task( void *pvParameters ){
 				break;
 		
 			case(USB_CMD_READ_SAVEDTRACKS):		// 17d
-				usbTx.msgLength = sizeof(usbTx.message.CMD_READ_SAVED_TRACKS);
-				flash_send_request(FLASH_MGR_READ_TRACK, &usbTx.message.CMD_READ_SAVED_TRACKS, NULL, usbRx.message.CMD_READ_SAVED_TRACKS.index, TRUE, pdFALSE);
+				usbTx.msgLength = sizeof(usbTx.message.REQ_READ_SAVED_TRACKS);
+				flash_send_request(FLASH_MGR_READ_TRACK, &usbTx.message.REQ_READ_SAVED_TRACKS, NULL, usbRx.message.REQ_READ_SAVED_TRACKS.index, TRUE, pdFALSE);
 				break;
 				
 			case(USB_CMD_WRITE_USERPREFS):	// 24d
@@ -231,7 +192,6 @@ void usb_task( void *pvParameters ){
 				usbTx.msgLength = sizeof(usbTx.message.DBG_FLASH_ARB_WRITE);
 				usbTx.message.DBG_FLASH_ARB_WRITE.success = flash_send_request(FLASH_MGR_WRITE_PAGE, &usbRx.message.DBG_FLASH_ARB_WRITE.data, usbRx.msgLength, usbRx.message.DBG_FLASH_ARB_WRITE.index, TRUE, pdFALSE);
 				break;
-				
 				
 			case(USB_DBG_GPS_CURRENT_POSITION):		// 64d
 				usbTx.msgLength = sizeof(usbTx.message.DBG_GPS_CURRENT_POSITION);
@@ -297,6 +257,20 @@ void usb_task( void *pvParameters ){
 				debug_log(DEBUG_PRIORITY_TASK, DEBUG_SENDER_TASKLIST, "Task List");
 				break;
 
+			case(USB_DBG_ACCEL_GET_FILT_DATA):	// 97d
+				usbTx.msgLength = sizeof(usbTx.message.DBG_ACCEL_GET_FILT_DATA);
+				usbTx.message.DBG_ACCEL_GET_FILT_DATA.x = accel.filteredData.x;
+				usbTx.message.DBG_ACCEL_GET_FILT_DATA.y = accel.filteredData.y;
+				usbTx.message.DBG_ACCEL_GET_FILT_DATA.z = accel.filteredData.z;
+				break;
+
+			case(USB_DBG_ACCEL_INFO):		// 96d
+				usbTx.msgLength = sizeof(usbTx.message.DBG_ACCEL_GET_STATUS);
+				usbTx.message.DBG_ACCEL_GET_STATUS.available = accel.available;
+				usbTx.message.DBG_ACCEL_GET_STATUS.selfTestPassed = accel.selfTestPassed;
+				usbTx.message.DBG_ACCEL_GET_STATUS.status = accel.status;
+				break;
+
 			default:
 				// Unknown command!
 				usbTx.command = USB_UNKNOWN_CMD;
@@ -306,7 +280,7 @@ void usb_task( void *pvParameters ){
 		}
 		
 		// Send the response
-		udi_vendor_bulk_in_run(&usbTx, usbTx.msgLength + sizeof(usbTx.command) + sizeof(usbTx.msgLength), main_vendor_bulk_in_received);	
+		udi_vendor_bulk_in_run(&usbTx, sizeof(usbTx.command) + sizeof(usbTx.msgLength) + usbTx.msgLength, main_vendor_bulk_in_received);	
 	}
 }
 

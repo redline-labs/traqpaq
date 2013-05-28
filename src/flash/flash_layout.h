@@ -70,13 +70,14 @@ struct __attribute__ ((packed)) tRecordData {
 #define RECORD_DATA_PER_PAGE	15
 
 struct __attribute__ ((packed)) tRecordDataPage {
+	unsigned char pageType;			// TODO: Define enum states for this
+	unsigned char reserved[7];
+	
 	unsigned int utc;
 	
 	unsigned short hdop;
 	unsigned char currentMode;
 	unsigned char satellites;
-	
-	unsigned char reserved[8];
 	
 	struct tRecordData data[RECORD_DATA_PER_PAGE];
 }; // 256 bytes

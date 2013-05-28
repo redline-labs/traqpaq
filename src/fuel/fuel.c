@@ -34,6 +34,7 @@
 #include "lcd/itoa.h"
 #include "adc.h"
 #include "charge.h"
+#include "string.h"
 
 xQueueHandle fuelManagerQueue;
 
@@ -206,16 +207,11 @@ void fuel_task( void *pvParameters ){
 					break;
 					
 				case(FUEL_MGR_REQUEST_WRITE_BATTERY_INFO):
-					*(request.pointer) = fuel_writeBatteryInfo(BATTERY_CAPACITY_COUNTS, 0, 100);
+					fuel_writeBatteryInfo(BATTERY_CAPACITY_COUNTS, 0, 100);
 					break;
 					
 				case(FUEL_MGR_REQUEST_ADC_VALUES):
-					*(request.pointer++) = (adcValues.main >> 8);
-					*(request.pointer++) = (adcValues.main >> 0);
-					*(request.pointer++) = (adcValues.vcc >> 8);
-					*(request.pointer++) = (adcValues.vcc >> 0);
-					*(request.pointer++) = (adcValues.vee >> 8);
-					*(request.pointer++) = (adcValues.vee >> 0);
+					memcpy(request.pointer, &adcValues, sizeof(adcValues));
 					break;
 			}
 			

@@ -39,14 +39,14 @@ xQueueHandle accelManagerQueue;
 //--------------------------
 // Structs
 //--------------------------
-struct tAccelInfo accelInfo;
+struct tAccelInfo accel;
 
 //--------------------------
 // Functions
 //--------------------------
 void accel_task_init( void ){
-	accelInfo.available = FALSE;
-	accelInfo.status = UNKNOWN;
+	accel.available = FALSE;
+	accel.status = UNKNOWN;
 	
 	//accelManagerQueue = xQueueCreate(FLASH_MANAGER_QUEUE_SIZE, sizeof(request));
 	
@@ -87,11 +87,11 @@ void accel_task( void *pvParameters ){
 	// Set up the FIFO
 	accel_setFIFOCtrl( ACCEL_MASK_FIFO_MODE_FIFO );
 	
-	if( !accel_performInit( &accelInfo ) ){
+	if( !accel_performInit( &accel ) ){
 		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_ACCEL, "Init failed");
 	}
 	
-	if( !accelInfo.selfTestPassed ){
+	if( !accel.selfTestPassed ){
 		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_ACCEL, "Self-test failed");
 	}
 	
@@ -118,9 +118,9 @@ void accel_task( void *pvParameters ){
 		};
 		
 		// Update info with a semi-filtered reading
-		accelInfo.filteredData.x = temp_x / entries;
-		accelInfo.filteredData.y = temp_y / entries;
-		accelInfo.filteredData.z = temp_z / entries;
+		accel.filteredData.x = temp_x / entries;
+		accel.filteredData.y = temp_y / entries;
+		accel.filteredData.z = temp_z / entries;
 	};
 }
 
@@ -137,13 +137,13 @@ unsigned char accel_checkID( void ){
 	spi_unselectChip(ACCEL_SPI, ACCEL_SPI_NPCS);
 	
 	if( response == ACCEL_DEVICE_ID ){
-		accelInfo.available = TRUE;
-		accelInfo.status = UNINITALIZED;
+		accel.available = TRUE;
+		accel.status = UNINITALIZED;
 		
 		return ACCEL_RESPONSE_OK;
 	}else{
-		accelInfo.available = FALSE;
-		accelInfo.status = INCORRECT_DEVID;
+		accel.available = FALSE;
+		accel.status = INCORRECT_DEVID;
 		
 		return ACCEL_RESPONSE_ERROR;
 	}
@@ -192,10 +192,10 @@ unsigned char accel_setPowerCtrl( unsigned char control ){
 	
 	spi_unselectChip(ACCEL_SPI, ACCEL_SPI_NPCS);
 	
-	if( (control & ACCEL_MASK_POWER_CTL_MEASURE) && (accelInfo.status != PERFORMING_INIT) ){
-		accelInfo.status = SAMPLING;
+	if( (control & ACCEL_MASK_POWER_CTL_MEASURE) && (accel.status != PERFORMING_INIT) ){
+		accel.status = SAMPLING;
 	}else{
-		accelInfo.status = IDLE;
+		accel.status = IDLE;
 	}
 	
 	return ACCEL_RESPONSE_OK;
