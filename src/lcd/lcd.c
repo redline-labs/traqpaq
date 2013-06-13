@@ -46,7 +46,6 @@ extern struct tFlashOTP flashOTP;
 extern struct tGPSInfo gpsInfo;
 extern struct tFlash flash;
 
-volatile unsigned short id;
 volatile unsigned char redraw = TRUE;	// TODO: Fix this non-sense
 
 // Queues
@@ -108,8 +107,6 @@ void lcd_gui_task_normal( void *pvParameters ){
 	debug_log(DEBUG_PRIORITY_INFO, DEBUG_SENDER_LCD, "Task Started");
 	
 	lcd_reset();
-	
-	id = lcd_readID();
 	
 	if( lcd_readID() != LCD_DEVICE_ID){
 		debug_log(DEBUG_PRIORITY_WARNING, DEBUG_SENDER_LCD, "Invalid Device ID");

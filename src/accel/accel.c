@@ -39,7 +39,8 @@ xQueueHandle accelManagerQueue;
 //--------------------------
 // Structs
 //--------------------------
-struct tAccelInfo accel;
+struct tAccelDevice accel;
+struct tAccelData	accelData;
 
 //--------------------------
 // Functions
@@ -62,7 +63,6 @@ void accel_task_init( void ){
 }
 
 void accel_task( void *pvParameters ){
-	struct tAccelDataPage accelData;
 	struct tAccelSample sample;
 	unsigned char i, entries;
 	signed int temp_x, temp_y, temp_z;
@@ -99,7 +99,6 @@ void accel_task( void *pvParameters ){
 	accel_setPowerCtrl( ACCEL_MASK_POWER_CTL_MEASURE );
 	
 	
-	
 	while( TRUE ){
 		temp_x = 0;
 		temp_y = 0;
@@ -118,9 +117,9 @@ void accel_task( void *pvParameters ){
 		};
 		
 		// Update info with a semi-filtered reading
-		accel.filteredData.x = temp_x / entries;
-		accel.filteredData.y = temp_y / entries;
-		accel.filteredData.z = temp_z / entries;
+		accelData.filteredData.x = temp_x / entries;
+		accelData.filteredData.y = temp_y / entries;
+		accelData.filteredData.z = temp_z / entries;
 	};
 }
 
@@ -291,26 +290,26 @@ unsigned char accel_flushFIFO( void ){
 	return ACCEL_RESPONSE_OK;
 }
 
-unsigned char accel_performInit( struct tAccelInfo *info ){
+unsigned char accel_performInit( struct tAccelData *info ){
 	unsigned char index, entries, i;
 	struct tAccelSample sample;
 	signed int x = 0, y = 0, z = 0, stx = 0, sty = 0, stz = 0, changeX = 0, changeY = 0, changeZ = 0;
 	
 	// Init accelInit data
-	info->status = PERFORMING_INIT;
-	info->selfTestPassed = FALSE;
+	accel.status = PERFORMING_INIT;
+	accel.selfTestPassed = FALSE;
 	
-	info->init.normal.x = 0;
-	info->init.normal.y = 0;
-	info->init.normal.z = 0;
+	info->normal.x = 0;
+	info->normal.y = 0;
+	info->normal.z = 0;
 	
-	info->init.test.x = 0;
-	info->init.test.y = 0;
-	info->init.test.z = 0;
+	info->selfTest.x = 0;
+	info->selfTest.y = 0;
+	info->selfTest.z = 0;
 	
 	// Check to see if the accel is available on this board 
-	if( !info->available ){
-		info->status = INIT_FAILED;
+	if( !accel.available ){
+		accel.status = INIT_FAILED;
 		return ACCEL_RESPONSE_ERROR;
 	}
 	
@@ -346,9 +345,9 @@ unsigned char accel_performInit( struct tAccelInfo *info ){
 	}
 	
 	// Average out the samples
-	info->init.normal.x = x / ACCEL_SELF_TEST_SAMPLES;
-	info->init.normal.y = y / ACCEL_SELF_TEST_SAMPLES;
-	info->init.normal.z = z / ACCEL_SELF_TEST_SAMPLES;
+	info->normal.x = x / ACCEL_SELF_TEST_SAMPLES;
+	info->normal.y = y / ACCEL_SELF_TEST_SAMPLES;
+	info->normal.z = z / ACCEL_SELF_TEST_SAMPLES;
 	
 	// Latch the self-test and allow it to settle
 	accel_selfTest( ACCEL_SELF_TEST_ENABLE );
@@ -380,9 +379,9 @@ unsigned char accel_performInit( struct tAccelInfo *info ){
 	}
 	
 	// Average out the samples
-	info->init.test.x = stx / ACCEL_SELF_TEST_SAMPLES;
-	info->init.test.y = sty / ACCEL_SELF_TEST_SAMPLES;
-	info->init.test.z = stz / ACCEL_SELF_TEST_SAMPLES;
+	info->selfTest.x = stx / ACCEL_SELF_TEST_SAMPLES;
+	info->selfTest.y = sty / ACCEL_SELF_TEST_SAMPLES;
+	info->selfTest.z = stz / ACCEL_SELF_TEST_SAMPLES;
 	
 	// Disable the self-test pin and allow it to settle
 	accel_setPowerCtrl( ACCEL_MASK_POWER_CTL_STANDBY );
@@ -390,9 +389,9 @@ unsigned char accel_performInit( struct tAccelInfo *info ){
 	vTaskDelay( (portTickType)TASK_DELAY_MS( ACCEL_SELF_TEST_SETTLE_TIME ) );	// Allow time for normal readings to come back after self test is removed
 	
 	// Find the difference between the normal and self-test measurements
-	changeX = info->init.test.x - info->init.normal.x;
-	changeY = info->init.test.y - info->init.normal.y;
-	changeZ = info->init.test.z - info->init.normal.z;
+	changeX = info->selfTest.x - info->normal.x;
+	changeY = info->selfTest.y - info->normal.y;
+	changeZ = info->selfTest.z - info->normal.z;
 	
 	// Check the results against the limits in the datasheets
 	if( (changeX >= ACCEL_SELF_TEST_X_MIN) && (changeX <= ACCEL_SELF_TEST_X_MAX) &&
@@ -400,14 +399,14 @@ unsigned char accel_performInit( struct tAccelInfo *info ){
 		(changeZ >= ACCEL_SELF_TEST_Z_MIN) && (changeZ <= ACCEL_SELF_TEST_Z_MAX) ){
 		
 		// Yes! We passed the self-test
-		info->selfTestPassed = TRUE;
-		info->status = IDLE;
+		accel.selfTestPassed = TRUE;
+		accel.status = IDLE;
 	}else{
 		
 		// Damn, we failed.  Set the availability of the accel to not available.
-		info->selfTestPassed = FALSE;
-		info->available = FALSE;
-		info->status = SELF_TEST_FAILED;
+		accel.selfTestPassed = FALSE;
+		accel.available = FALSE;
+		accel.status = SELF_TEST_FAILED;
 	}
 	
 	return ACCEL_RESPONSE_OK; 

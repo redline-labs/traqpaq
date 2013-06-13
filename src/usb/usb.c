@@ -46,7 +46,8 @@ extern struct tFlashFlags flashFlags;
 extern struct tUserPrefs userPrefs;
 extern struct tGPSInfo gpsInfo;
 extern struct tFlash flash;
-extern struct tAccelInfo accel;
+extern struct tAccelDevice accel;
+extern struct tAccelData accelData;
 
 // Create task for FreeRTOS
 void usb_task_init( void ){
@@ -59,7 +60,6 @@ void usb_task_init( void ){
 
 void usb_task( void *pvParameters ){
 	unsigned char flag;
-	unsigned short data_length;
 	unsigned char responseU8;
 	unsigned short responseU16;
 	unsigned int responseU32;
@@ -72,8 +72,6 @@ void usb_task( void *pvParameters ){
 	
 	while(TRUE){
 		xQueueReceive(usbManagerQueue, &flag, portMAX_DELAY);
-		
-		data_length = 0;
 		
 		// Assume the command is valid now, catch this in default case
 		usbTx.command = usbRx.command;
@@ -259,9 +257,9 @@ void usb_task( void *pvParameters ){
 
 			case(USB_DBG_ACCEL_GET_FILT_DATA):	// 97d
 				usbTx.msgLength = sizeof(usbTx.message.DBG_ACCEL_GET_FILT_DATA);
-				usbTx.message.DBG_ACCEL_GET_FILT_DATA.x = accel.filteredData.x;
-				usbTx.message.DBG_ACCEL_GET_FILT_DATA.y = accel.filteredData.y;
-				usbTx.message.DBG_ACCEL_GET_FILT_DATA.z = accel.filteredData.z;
+				usbTx.message.DBG_ACCEL_GET_FILT_DATA.x = accelData.filteredData.x;
+				usbTx.message.DBG_ACCEL_GET_FILT_DATA.y = accelData.filteredData.y;
+				usbTx.message.DBG_ACCEL_GET_FILT_DATA.z = accelData.filteredData.z;
 				break;
 
 			case(USB_DBG_ACCEL_INFO):		// 96d

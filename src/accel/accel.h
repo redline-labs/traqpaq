@@ -165,8 +165,7 @@ struct __attribute__ ((packed)) tAccelSample {
 
 
 struct tAccelInitData {
-	struct tAccelSample normal;
-	struct tAccelSample test;
+	
 };
 
 enum tAccelStatus {
@@ -180,13 +179,18 @@ enum tAccelStatus {
 	SAMPLING			= 7
 };
 
-struct __attribute__ ((packed)) tAccelInfo {
+struct __attribute__ ((packed)) tAccelDevice {
 	unsigned char available;
 	unsigned char selfTestPassed;
 	enum tAccelStatus status;
-	struct tAccelInitData init;
+	unsigned char reserved[2];
+};	// 8 Bytes
+
+struct __attribute__ ((packed)) tAccelData {
+	struct tAccelSample normal;
+	struct tAccelSample selfTest;
 	struct tAccelSample filteredData;
-};
+};	// 8 Bytes
 
 #define ACCEL_SAMPLES_PER_PAGE		42
 
@@ -212,6 +216,6 @@ unsigned char accel_readEntriesFIFO( void );
 unsigned char accel_selfTest( enum tAccelSelfTest flag );
 unsigned char accel_readRegister( unsigned char registerAddr );
 unsigned char accel_flushFIFO( void );
-unsigned char accel_performInit( struct tAccelInfo *info );
+unsigned char accel_performInit( struct tAccelData *info );
 
 #endif /* ACCEL_H_ */
